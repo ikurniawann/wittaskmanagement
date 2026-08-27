@@ -2,6 +2,7 @@
 
 import { Check, Copy, Link2, Loader2, XCircle } from "lucide-react";
 import { useActionState, useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -81,7 +82,12 @@ export function SummaryShareDialog({
     setTimeout(() => setCopied(false), 1500);
   };
 
-  return (
+  // Portalled to <body> for the same reason EditTaskForm is: this dialog opens
+  // from inside the task drawer, whose slide animation uses a CSS transform,
+  // and a transformed ancestor becomes the containing block for
+  // position:fixed descendants — so without the portal it centres on the
+  // DRAWER and is clipped at its edge (Owner bug report 2026-08-27).
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
       <div className="flex max-h-[85svh] w-full max-w-lg flex-col gap-4 overflow-y-auto rounded-lg border bg-card p-5 shadow-lg">
         <div className="flex flex-col gap-0.5">
@@ -222,6 +228,7 @@ export function SummaryShareDialog({
           </Button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
