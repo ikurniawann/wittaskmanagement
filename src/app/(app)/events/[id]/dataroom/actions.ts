@@ -3,6 +3,9 @@
 import { revalidatePath } from "next/cache";
 import { sessionActor } from "@/lib/auth/session-actor";
 import {
+  createFolderShare,
+  listFolderShares,
+  revokeFolderShare,
   addFolderMember,
   createFolder,
   createShare,
@@ -142,6 +145,50 @@ export async function createShareAction(
       error: error instanceof Error ? error.message : "Could not create the link.",
     };
   }
+}
+
+export async function createFolderShareAction(
+  _prev: ShareActionState,
+  formData: FormData,
+): Promise<ShareActionState> {
+  const actor = await sessionActor();
+  if (!actor) return { error: "Not signed in." };
+  const eventId = String(formData.get("eventId") ?? "");
+  try {
+    const created = await createFolderShare(actor, String(formData.get("folderId") ?? ""), {
+      expiryDays: Number(formData.get("expiryDays") ?? 14),
+      passcode: String(formData.get("passcode") ?? "") || undefined,
+      allowedEmails: parseAllowedEmails(String(formData.get("allowedEmails") ?? "")),
+      requireEmail: formData.get("requireEmail") === "on",
+      allowDownload: formData.get("allowDownload") === "on",
+      watermark: formData.get("watermark") === "on",
+      label: String(formData.get("label") ?? "") || undefined,
+    });
+    revalidatePath(`/events/${eventId}/dataroom`);
+    return { url: created.url, expiresAt: created.expiresAt.toISOString() };
+  } catch (error) {
+    return {
+      error: error instanceof Error ? error.message : "Could not create the link.",
+    };
+  }
+}
+
+export async function listFolderSharesAction(folderId: string) {
+  const actor = await sessionActor();
+  if (!actor) return [];
+  return listFolderShares(actor, folderId).catch(() => []);
+}
+
+export async function revokeFolderShareAction(formData: FormData): Promise<void> {
+  const actor = await sessionActor();
+  if (!actor) return;
+  const eventId = String(formData.get("eventId") ?? "");
+  await revokeFolderShare(
+    actor,
+    String(formData.get("folderId") ?? ""),
+    String(formData.get("linkId") ?? ""),
+  ).catch(() => {});
+  revalidatePath(`/events/${eventId}/dataroom`);
 }
 
 export async function revokeShareAction(formData: FormData): Promise<void> {

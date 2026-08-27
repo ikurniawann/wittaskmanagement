@@ -1053,6 +1053,51 @@ export async function deleteFolder(actor: Actor, folderId: string) {
 
 /** Creating a link requires the same rights as uploading: handing a document
  *  to an outsider is a bigger act than reading it. */
+/**
+ * Folder twin of createShare (Owner 2026-08-27).
+ *
+ * Requires "manage" on the folder, not merely "view": handing a folder to an
+ * outsider gives away everything nested inside it, present and future, so it
+ * is a stronger act than opening one file and asks for the stronger right.
+ */
+export async function listFolderShares(actor: Actor, folderId: string) {
+  await requireFolder(actor, folderId, "manage");
+  const { listFolderShareLinks } = await import("./share-service");
+  return listFolderShareLinks(folderId);
+}
+
+export async function revokeFolderShare(
+  actor: Actor,
+  folderId: string,
+  linkId: string,
+) {
+  await requireFolder(actor, folderId, "manage");
+  const { revokeShareLink } = await import("./share-service");
+  return revokeShareLink(actor, linkId);
+}
+
+export async function createFolderShare(
+  actor: Actor,
+  folderId: string,
+  input: {
+    expiryDays?: number;
+    passcode?: string;
+    requireEmail?: boolean;
+    allowedEmails?: string[] | null;
+    allowDownload?: boolean;
+    watermark?: boolean;
+    label?: string;
+  },
+) {
+  const { folder } = await requireFolder(actor, folderId, "manage");
+  const { createFolderShareLink } = await import("./share-service");
+  return createFolderShareLink(
+    actor,
+    { id: folder.id, eventId: folder.eventId, name: folder.name },
+    input,
+  );
+}
+
 export async function createShare(
   actor: Actor,
   fileId: string,

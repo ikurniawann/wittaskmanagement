@@ -5,12 +5,14 @@ import {
   dataroomAccessLog,
   dataroomFileVersions,
   dataroomFiles,
+  dataroomFolders,
   dataroomShareLinks,
 } from "@/db/schema";
 import { logActivity } from "@/lib/activity";
 import { hashPassword, verifyPassword } from "@/lib/auth/password";
 import { env } from "@/lib/env";
 import type { Actor } from "@/lib/permissions";
+import { breadcrumb, collectSubtreeIds, type FolderNode } from "./folder-tree";
 import { isId } from "./paths";
 import { watermarkDecision } from "./watermark";
 import {
@@ -139,6 +141,76 @@ export async function createShareLink(
   return { id: row.id, url: `${env.APP_URL}/share/${token}`, expiresAt };
 }
 
+/**
+ * The folder twin of createShareLink (Owner 2026-08-27). Same gates, same
+ * token handling, same audit trail — only the target differs, so a recipient
+ * gets one browsable folder instead of one file.
+ *
+ * No watermark decision here: watermarking is judged per file (mime + size)
+ * and a folder holds a mixture, so the flag is carried on the link and each
+ * file is judged as it is opened.
+ */
+export async function createFolderShareLink(
+  actor: Actor,
+  folder: { id: string; eventId: string; name: string },
+  input: Omit<CreateShareInput, "fileId">,
+): Promise<CreatedShare> {
+  const token = randomBytes(32).toString("hex");
+  const expiresAt = resolveExpiry(input.expiryDays ?? DEFAULT_EXPIRY_DAYS, new Date());
+
+  const [row] = await db
+    .insert(dataroomShareLinks)
+    .values({
+      fileId: null,
+      folderId: folder.id,
+      eventId: folder.eventId,
+      tokenHash: hashToken(token),
+      label: input.label?.trim() || null,
+      expiresAt,
+      passcodeHash: input.passcode?.trim()
+        ? hashPassword(input.passcode.trim())
+        : null,
+      requireEmail: input.requireEmail ?? true,
+      allowedEmails: (input.allowedEmails ?? null) as never,
+      allowDownload: input.allowDownload ?? true,
+      watermark: input.watermark ?? false,
+      createdBy: actor.id,
+    })
+    .returning({ id: dataroomShareLinks.id });
+
+  await logActivity({
+    actorId: actor.id,
+    action: "dataroom.share_created",
+    entity: `dataroom_folder:${folder.id}`,
+    detail: { folderName: folder.name, expiresAt: expiresAt.toISOString() },
+    eventId: folder.eventId,
+  });
+
+  const recipients =
+    input.allowedEmails && input.allowedEmails.length > 0
+      ? `to ${input.allowedEmails.join(", ")}`
+      : "to anyone holding the link";
+  const gates = [
+    input.passcode?.trim() ? "passcode" : null,
+    (input.requireEmail ?? true) ? "email required" : null,
+    input.watermark ? "watermarked" : null,
+  ]
+    .filter(Boolean)
+    .join(", ");
+  await db.insert(dataroomAccessLog).values({
+    actorId: actor.id,
+    fileId: null,
+    folderId: folder.id,
+    eventId: folder.eventId,
+    fileName: folder.name,
+    versionNo: null,
+    action: "share_created",
+    note: `folder ${input.label?.trim() ? `“${input.label.trim()}” ` : ""}${recipients}${gates ? ` (${gates})` : ""}, expires ${expiresAt.toISOString().slice(0, 10)}`,
+  });
+
+  return { id: row.id, url: `${env.APP_URL}/share/${token}`, expiresAt };
+}
+
 export async function revokeShareLink(actor: Actor, linkId: string) {
   if (!isId(linkId)) throw new Error("Unknown link.");
   const [link] = await db
@@ -155,21 +227,42 @@ export async function revokeShareLink(actor: Actor, linkId: string) {
   await logActivity({
     actorId: actor.id,
     action: "dataroom.share_revoked",
-    entity: `dataroom_file:${link.fileId}`,
+    entity: link.folderId
+      ? `dataroom_folder:${link.folderId}`
+      : `dataroom_file:${link.fileId}`,
     detail: {},
     eventId: link.eventId,
   });
-  const [file] = await db
-    .select({ name: dataroomFiles.name, folderId: dataroomFiles.folderId })
-    .from(dataroomFiles)
-    .where(eq(dataroomFiles.id, link.fileId))
-    .limit(1);
+
+  // The trail names whatever the link pointed at, so revoking a folder link
+  // reads as clearly as revoking a file one.
+  let fileId: string | null = null;
+  let folderId: string | null = null;
+  let name = "?";
+  if (link.folderId) {
+    const [folder] = await db
+      .select({ name: dataroomFolders.name })
+      .from(dataroomFolders)
+      .where(eq(dataroomFolders.id, link.folderId))
+      .limit(1);
+    folderId = link.folderId;
+    name = folder?.name ?? "?";
+  } else if (link.fileId) {
+    const [file] = await db
+      .select({ name: dataroomFiles.name, folderId: dataroomFiles.folderId })
+      .from(dataroomFiles)
+      .where(eq(dataroomFiles.id, link.fileId))
+      .limit(1);
+    fileId = link.fileId;
+    folderId = file?.folderId ?? null;
+    name = file?.name ?? "?";
+  }
   await db.insert(dataroomAccessLog).values({
     actorId: actor.id,
-    fileId: link.fileId,
-    folderId: file?.folderId ?? null,
+    fileId,
+    folderId,
     eventId: link.eventId,
-    fileName: file?.name ?? "?",
+    fileName: name,
     versionNo: null,
     action: "share_revoked",
     note: link.label ? `“${link.label}”` : null,
@@ -227,6 +320,42 @@ export async function listShareLinks(fileId: string): Promise<ShareLinkView[]> {
   }));
 }
 
+/** The folder twin of listShareLinks — same view, keyed by the folder. */
+export async function listFolderShareLinks(folderId: string): Promise<ShareLinkView[]> {
+  const rows = await db
+    .select()
+    .from(dataroomShareLinks)
+    .where(eq(dataroomShareLinks.folderId, folderId))
+    .orderBy(desc(dataroomShareLinks.createdAt));
+
+  // opens are counted per link, so the same join works for either target
+  const counts = await db
+    .select({
+      shareLinkId: dataroomAccessLog.shareLinkId,
+      total: sql<number>`count(*)::int`,
+    })
+    .from(dataroomAccessLog)
+    .where(eq(dataroomAccessLog.folderId, folderId))
+    .groupBy(dataroomAccessLog.shareLinkId);
+  const byLink = new Map(counts.map((c) => [c.shareLinkId, c.total]));
+
+  const now = Date.now();
+  return rows.map((r) => ({
+    id: r.id,
+    expired: r.expiresAt.getTime() <= now,
+    label: r.label,
+    expiresAt: r.expiresAt,
+    revokedAt: r.revokedAt,
+    hasPasscode: r.passcodeHash !== null,
+    allowDownload: r.allowDownload,
+    watermark: r.watermark,
+    requireEmail: r.requireEmail,
+    allowedEmails: (r.allowedEmails as string[] | null) ?? null,
+    opens: byLink.get(r.id) ?? 0,
+    createdAt: r.createdAt,
+  }));
+}
+
 export interface ResolvedShare {
   linkId: string;
   /** the sender's label for this link, for the audit note */
@@ -243,8 +372,23 @@ export interface ResolvedShare {
   passcodeOk: boolean;
 }
 
+/** A folder link, once the visitor is past the gate. */
+export interface ResolvedFolderShare {
+  linkId: string;
+  linkLabel: string | null;
+  /** the shared folder — the ceiling; nothing above it is ever reachable */
+  rootFolderId: string;
+  eventId: string;
+  rootFolderName: string;
+  allowDownload: boolean;
+  watermark: boolean;
+  viewerEmail: string | null;
+  passcodeOk: boolean;
+}
+
 export type ShareResolution =
-  | { ok: true; share: ResolvedShare }
+  | { ok: true; kind: "file"; share: ResolvedShare }
+  | { ok: true; kind: "folder"; share: ResolvedFolderShare }
   | { ok: false; message: string; needsPasscode: boolean; needsEmail: boolean };
 
 /**
@@ -312,10 +456,39 @@ export async function resolveShare(
     };
   }
 
+  // A folder link resolves to the folder itself; its contents are fetched
+  // per request by listSharedFolder, so a file added or trashed after the
+  // link was sent is reflected immediately.
+  if (link!.folderId) {
+    const [folder] = await db
+      .select()
+      .from(dataroomFolders)
+      .where(eq(dataroomFolders.id, link!.folderId))
+      .limit(1);
+    if (!folder) {
+      return { ok: false, message: refusalMessage("unknown"), needsPasscode: false, needsEmail: false };
+    }
+    return {
+      ok: true,
+      kind: "folder",
+      share: {
+        linkId: link!.id,
+        linkLabel: link!.label,
+        rootFolderId: folder.id,
+        eventId: folder.eventId,
+        rootFolderName: folder.name,
+        allowDownload: link!.allowDownload,
+        watermark: link!.watermark,
+        viewerEmail: verdict.viewerEmail,
+        passcodeOk,
+      },
+    };
+  }
+
   const [file] = await db
     .select()
     .from(dataroomFiles)
-    .where(eq(dataroomFiles.id, link!.fileId))
+    .where(eq(dataroomFiles.id, link!.fileId!))
     .limit(1);
   // a trashed file behaves as if the link were dead: the sender pulled it
   if (!file || file.trashedAt !== null) {
@@ -338,6 +511,7 @@ export async function resolveShare(
 
   return {
     ok: true,
+    kind: "file",
     share: {
       linkId: link!.id,
       linkLabel: link!.label,
@@ -351,6 +525,146 @@ export async function resolveShare(
       viewerEmail: verdict.viewerEmail,
       passcodeOk,
     },
+  };
+}
+
+export interface SharedFolderListing {
+  /** the folder being shown, which is the root or something under it */
+  folderId: string;
+  /** root → … → current, for navigation; never reaches above the root */
+  trail: Array<{ id: string; name: string }>;
+  folders: Array<{ id: string; name: string }>;
+  files: Array<{
+    id: string;
+    name: string;
+    versionNo: number;
+    mimeType: string;
+    sizeBytes: number;
+  }>;
+}
+
+/** Reads the event's folder rows as the plain tree folder-tree.ts works on. */
+async function folderNodes(eventId: string): Promise<FolderNode[]> {
+  const rows = await db
+    .select({
+      id: dataroomFolders.id,
+      parentId: dataroomFolders.parentId,
+      name: dataroomFolders.name,
+    })
+    .from(dataroomFolders)
+    .where(eq(dataroomFolders.eventId, eventId));
+  return rows;
+}
+
+/**
+ * One page of a folder share.
+ *
+ * `folderId` comes from the visitor's URL, so it is treated as hostile: it is
+ * accepted only after breadcrumb() proves it sits at or below the shared root.
+ * Anything else — a folder from another event, the shared folder's own parent,
+ * a guessed uuid — returns null, which the page renders as "not found". The
+ * refusal deliberately looks identical in every case, so probing ids tells an
+ * outsider nothing about what exists.
+ */
+export async function listSharedFolder(
+  share: ResolvedFolderShare,
+  folderId?: string | null,
+): Promise<SharedFolderListing | null> {
+  const target = folderId && isId(folderId) ? folderId : share.rootFolderId;
+  const nodes = await folderNodes(share.eventId);
+
+  const trail = breadcrumb(share.rootFolderId, target, nodes);
+  if (!trail) return null;
+
+  const children = nodes
+    .filter((n) => n.parentId === target)
+    .sort((a, b) => a.name.localeCompare(b.name))
+    .map((n) => ({ id: n.id, name: n.name }));
+
+  const fileRows = await db
+    .select({
+      id: dataroomFiles.id,
+      name: dataroomFiles.name,
+      versionNo: dataroomFileVersions.versionNo,
+      mimeType: dataroomFileVersions.mimeType,
+      sizeBytes: dataroomFileVersions.sizeBytes,
+    })
+    .from(dataroomFiles)
+    .innerJoin(
+      dataroomFileVersions,
+      and(
+        eq(dataroomFileVersions.fileId, dataroomFiles.id),
+        eq(dataroomFileVersions.versionNo, dataroomFiles.currentVersion),
+      ),
+    )
+    .where(
+      and(
+        eq(dataroomFiles.folderId, target),
+        // a trashed file disappears from the link the moment it is trashed
+        sql`${dataroomFiles.trashedAt} is null`,
+      ),
+    );
+
+  return {
+    folderId: target,
+    trail: trail.map((n) => ({ id: n.id, name: n.name })),
+    folders: children,
+    files: fileRows
+      .map((f) => ({ ...f, sizeBytes: Number(f.sizeBytes) }))
+      .sort((a, b) => a.name.localeCompare(b.name)),
+  };
+}
+
+/**
+ * Turns "this visitor holds a folder link and asked for file X" into the same
+ * shape a single-file link resolves to, or null when X is not inside the
+ * shared folder.
+ *
+ * This is the check that keeps a folder link from becoming a room link: the
+ * file's OWN folder must be in the shared subtree. Without it, a token plus a
+ * guessed file id would read anything in the event.
+ */
+export async function resolveFileWithinFolderShare(
+  share: ResolvedFolderShare,
+  fileId: string,
+): Promise<ResolvedShare | null> {
+  if (!isId(fileId)) return null;
+
+  const [file] = await db
+    .select()
+    .from(dataroomFiles)
+    .where(eq(dataroomFiles.id, fileId))
+    .limit(1);
+  if (!file || file.trashedAt !== null) return null;
+  if (file.eventId !== share.eventId) return null;
+
+  const allowed = collectSubtreeIds(share.rootFolderId, await folderNodes(share.eventId));
+  if (!allowed.has(file.folderId)) return null;
+
+  const [version] = await db
+    .select()
+    .from(dataroomFileVersions)
+    .where(
+      and(
+        eq(dataroomFileVersions.fileId, file.id),
+        eq(dataroomFileVersions.versionNo, file.currentVersion),
+      ),
+    )
+    .limit(1);
+  if (!version) return null;
+
+  return {
+    linkId: share.linkId,
+    linkLabel: share.linkLabel,
+    fileId: file.id,
+    eventId: file.eventId,
+    fileName: file.name,
+    versionNo: version.versionNo,
+    mimeType: version.mimeType,
+    allowDownload: share.allowDownload,
+    watermark: share.watermark,
+    viewerEmail: share.viewerEmail,
+    passcodeOk: share.passcodeOk,
   };
 }
 

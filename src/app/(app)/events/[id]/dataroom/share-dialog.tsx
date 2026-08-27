@@ -9,14 +9,21 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import {
+  createFolderShareAction,
   createShareAction,
+  listFolderSharesAction,
   listSharesAction,
+  revokeFolderShareAction,
   revokeShareAction,
   type ShareActionState,
 } from "./actions";
 
-// Share a document with someone outside the system (EPIC-018 T-182).
-// The plaintext link exists once, right here — it is stored only as a hash.
+// Share a document — or a whole folder (Owner 2026-08-27) — with someone
+// outside the system (EPIC-018 T-182). The plaintext link exists once, right
+// here; it is stored only as a hash.
+//
+// One dialog serves both because every gate is identical: the target only
+// decides which action pair it talks to.
 
 interface ShareRow {
   id: string;
@@ -32,27 +39,34 @@ interface ShareRow {
   requireEmail: boolean;
 }
 
+export type ShareTarget = { kind: "file" | "folder"; id: string; name: string };
+
 export function ShareDialog({
   eventId,
-  fileId,
-  fileName,
+  target,
   onClose,
 }: {
   eventId: string;
-  fileId: string;
-  fileName: string;
+  target: ShareTarget;
   onClose: () => void;
 }) {
+  const isFolder = target.kind === "folder";
+  const submitAction = isFolder ? createFolderShareAction : createShareAction;
+  const listAction = isFolder ? listFolderSharesAction : listSharesAction;
+  const revokeAction = isFolder ? revokeFolderShareAction : revokeShareAction;
+  const idField = isFolder ? "folderId" : "fileId";
+  const fileId = target.id;
+  const fileName = target.name;
   const [links, setLinks] = useState<ShareRow[] | null>(null);
   const [copied, setCopied] = useState(false);
   const [state, formAction, pending] = useActionState<ShareActionState, FormData>(
-    createShareAction,
+    submitAction,
     {},
   );
 
   useEffect(() => {
     let alive = true;
-    void listSharesAction(fileId).then((rows) => {
+    void listAction(fileId).then((rows) => {
       if (!alive) return;
       setLinks(
         rows.map((r) => ({
@@ -65,7 +79,9 @@ export function ShareDialog({
     return () => {
       alive = false;
     };
-  }, [fileId, state.url]);
+    // listAction is fixed for the life of the dialog (the target never
+    // changes shape underneath it), but it is listed so the rule stays honest
+  }, [fileId, state.url, listAction]);
 
   const copy = async () => {
     if (!state.url) return;
@@ -80,7 +96,7 @@ export function ShareDialog({
         <div className="flex flex-col gap-0.5">
           <h3 className="flex items-center gap-2 text-sm font-semibold">
             <Share2 className="size-3.5 text-muted-foreground" />
-            Share “{fileName}” outside the system
+            Share {isFolder ? "folder " : ""}“{fileName}” outside the system
           </h3>
           <p className="max-w-lg text-xs text-muted-foreground">
             The recipient needs no account. Every link expires, can be
@@ -109,7 +125,7 @@ export function ShareDialog({
       ) : (
         <form action={formAction} className="grid gap-3 sm:grid-cols-2">
           <input type="hidden" name="eventId" value={eventId} />
-          <input type="hidden" name="fileId" value={fileId} />
+          <input type="hidden" name={idField} value={fileId} />
 
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="sh-label" className="text-xs">
@@ -222,9 +238,9 @@ export function ShareDialog({
                     {link.opens} open{link.opens === 1 ? "" : "s"}
                   </span>
                   {dead ? null : (
-                    <form action={revokeShareAction}>
+                    <form action={revokeAction}>
                       <input type="hidden" name="eventId" value={eventId} />
-                      <input type="hidden" name="fileId" value={fileId} />
+                      <input type="hidden" name={idField} value={fileId} />
                       <input type="hidden" name="linkId" value={link.id} />
                       <button
                         type="submit"

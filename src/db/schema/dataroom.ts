@@ -1,6 +1,7 @@
 import {
   bigint,
   boolean,
+  check,
   index,
   integer,
   jsonb,
@@ -11,6 +12,7 @@ import {
   uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 import { events } from "./events";
 import { divisions, profiles } from "./org";
 
@@ -136,15 +138,26 @@ export const dataroomFileVersions = pgTable(
  *
  * Never a public link: an expiry is required, revocation is one column, and
  * the token is stored only as a hash so a database leak yields nothing that
- * opens. One link opens exactly one file.
+ * opens.
+ *
+ * One link opens exactly one TARGET — either a single file, or a folder the
+ * recipient may browse (Owner 2026-08-27). The two columns are mutually
+ * exclusive and the database enforces it: a row carrying both would be a
+ * link with an ambiguous scope, which is the kind of ambiguity that ends in
+ * handing out more than was meant.
  */
 export const dataroomShareLinks = pgTable(
   "dataroom_share_links",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    fileId: uuid("file_id")
-      .notNull()
-      .references(() => dataroomFiles.id, { onDelete: "cascade" }),
+    /** set for a single-file link; null when this shares a folder */
+    fileId: uuid("file_id").references(() => dataroomFiles.id, {
+      onDelete: "cascade",
+    }),
+    /** set for a folder link; the recipient may browse it and its subfolders */
+    folderId: uuid("folder_id").references(() => dataroomFolders.id, {
+      onDelete: "cascade",
+    }),
     eventId: uuid("event_id")
       .notNull()
       .references(() => events.id, { onDelete: "cascade" }),
@@ -176,7 +189,12 @@ export const dataroomShareLinks = pgTable(
   (t) => [
     uniqueIndex("dataroom_share_links_token_idx").on(t.tokenHash),
     index("dataroom_share_links_file_idx").on(t.fileId),
+    index("dataroom_share_links_folder_idx").on(t.folderId),
     index("dataroom_share_links_event_idx").on(t.eventId),
+    check(
+      "dataroom_share_links_one_target",
+      sql`(("file_id" IS NOT NULL)::int + ("folder_id" IS NOT NULL)::int) = 1`,
+    ),
   ],
 );
 
@@ -211,8 +229,13 @@ export const dataroomAccessLog = pgTable(
     viewerEmail: text("viewer_email"),
     /** which link let them in — kept after the link is revoked or deleted */
     shareLinkId: uuid("share_link_id"),
-    /** kept as a plain column, not a reference — see above */
-    fileId: uuid("file_id").notNull(),
+    /**
+     * Kept as a plain column, not a reference — see above. Null for an entry
+     * about a FOLDER share (Owner 2026-08-27): the trail still names the
+     * folder through folderId + fileName, and inventing a file id to satisfy
+     * a constraint would put a lie in the audit log.
+     */
+    fileId: uuid("file_id"),
     /**
      * Also denormalised, and for a different reason: the activity view has to
      * be filtered by the SAME access rules as the files themselves, or it

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { safeDownloadName } from "@/lib/dataroom/paths";
 import {
   logShareAccess,
+  resolveFileWithinFolderShare,
   resolveShare,
 } from "@/lib/dataroom/share-service";
 import { readSharePass, SHARE_COOKIE } from "@/lib/dataroom/share-session";
@@ -45,7 +46,24 @@ export async function GET(
     // one shape for every refusal: nothing here confirms a file exists
     return NextResponse.json({ error: resolution.message }, { status: 404 });
   }
-  const share = resolution.share;
+  // A folder link streams a file only after the file is proven to live inside
+  // the shared folder; ?file= is the visitor's input, so it is checked, never
+  // trusted. A missing or outside id is refused in the same shape as a dead
+  // link, so probing ids reveals nothing.
+  let share;
+  if (resolution.kind === "folder") {
+    const wanted = url.searchParams.get("file");
+    const inner = wanted
+      ? await resolveFileWithinFolderShare(resolution.share, wanted)
+      : null;
+    if (!inner) {
+      return NextResponse.json({ error: "This document is unavailable." }, { status: 404 });
+    }
+    share = inner;
+  } else {
+    share = resolution.share;
+  }
+
   if (wantsDownload && !share.allowDownload) {
     return NextResponse.json({ error: "Downloading is turned off." }, { status: 403 });
   }

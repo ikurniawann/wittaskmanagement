@@ -33,7 +33,7 @@ import type { Visibility } from "@/lib/dataroom/access";
 import { cn } from "@/lib/utils";
 import { fileMenuAction } from "./actions";
 import { NewFolderDialog } from "./new-folder-dialog";
-import { ShareDialog } from "./share-dialog";
+import { ShareDialog, type ShareTarget } from "./share-dialog";
 
 // A Drive-shaped file manager (Owner 2026-08-11, second pass): a collapsible
 // folder tree, folders dropped onto folders become sub-folders, the content
@@ -145,7 +145,7 @@ export function DataroomBrowser({
   const [progress, setProgress] = useState(0);
   const [dropTarget, setDropTarget] = useState<"pane" | "root" | string | null>(null);
   const [newFolderFor, setNewFolderFor] = useState<FolderView | null | undefined>(undefined);
-  const [sharing, setSharing] = useState<FileView | null>(null);
+  const [sharing, setSharing] = useState<ShareTarget | null>(null);
   const [renaming, setRenaming] = useState<{ kind: "file" | "folder"; id: string; name: string } | null>(null);
   const [, startTransition] = useTransition();
   const fileInput = useRef<HTMLInputElement>(null);
@@ -274,7 +274,7 @@ export function DataroomBrowser({
           {
             label: "Share outside…",
             icon: <Share2 className="size-3.5" />,
-            onSelect: () => setSharing(file),
+            onSelect: () => setSharing({ kind: "file", id: file.id, name: file.name }),
           },
           {
             label: "Rename…",
@@ -300,6 +300,14 @@ export function DataroomBrowser({
     },
     ...(folder.canManage
       ? [
+          {
+            // manage-level on purpose: handing over a folder gives away
+            // everything nested inside it, now and later
+            label: "Share folder outside…",
+            icon: <Share2 className="size-3.5" />,
+            onSelect: () =>
+              setSharing({ kind: "folder", id: folder.id, name: folder.name }),
+          },
           {
             label: "Rename…",
             icon: <Pencil className="size-3.5" />,
@@ -568,8 +576,7 @@ export function DataroomBrowser({
         {sharing ? (
           <ShareDialog
             eventId={eventId}
-            fileId={sharing.id}
-            fileName={sharing.name}
+            target={sharing}
             onClose={() => setSharing(null)}
           />
         ) : null}
