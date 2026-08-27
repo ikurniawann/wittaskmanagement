@@ -218,3 +218,13 @@ instead of a page navigation. Keep the RVC monochrome chrome; color becomes func
 ## Dependencies
 
 - EPIC-003 (the surfaces being reworked).
+- 2026-08-18 — Mobile navigation sheet could not be scrolled (Owner: "navbar
+  menu tidak bisa di scroll (freeze)"). The sheet panel is a fixed-height flex
+  column (`h-full`), and its content list owned no scroll area: a flex child
+  will not shrink below its content without `min-h-0`, so the overflow spilled
+  outside the panel while the page behind stayed scroll-locked — which reads
+  as a frozen menu. The list is now `min-h-0 flex-1 overflow-y-auto
+  overscroll-contain`, the header `shrink-0`, and the bottom padding respects
+  `env(safe-area-inset-bottom)`. Fixed in `mobile-nav.tsx`, NOT in the
+  protected `components/ui/sheet.tsx`; the task-peek sheet was already correct
+  because it sets `overflow-y-auto` on the panel itself.

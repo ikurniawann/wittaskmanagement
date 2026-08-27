@@ -32,6 +32,8 @@
 | [EPIC-018](EPIC-018-dataroom-share-links.md) | Phase 4 | Dataroom share links for people outside the system | P1 | ready-for-qa |
 | [EPIC-019](EPIC-019-dataroom-watermark.md) | Phase 4 | Per-recipient watermarking (PDF + images) | P2 | ready-for-qa |
 | [EPIC-021](EPIC-021-event-visibility.md) | Phase 4 | Event visibility follows involvement | P0 | ready-for-qa |
+| [EPIC-022](EPIC-022-ticketing-channels.md) | Phase 4 | Ticketing channels — Tessera + Megatix | P1 | ready-for-qa |
+| [EPIC-023](EPIC-023-agent-api.md) | Phase 4 | Agent API — external agents over WhatsApp | P1 | ready-for-qa |
 
 **Definition of MVP:** completion of **EPIC-000 → EPIC-003** (Phase 0 + Phase 1 — a division can run its event work end-to-end).
 

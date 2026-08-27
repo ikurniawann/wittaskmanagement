@@ -29,7 +29,8 @@ export async function register() {
       console.log(
         `[cron] due sweep + health recompute for ${n} events + ${b} bottleneck checks`,
       );
-      // Tessera sales (EPIC: ticketing) — fails soft; expiry notifies admins
+      // Ticketing channels — each fails soft and INDEPENDENTLY: one dead
+      // provider must not stop the other's sales from landing.
       try {
         const { syncTesseraSales } = await import("@/lib/tessera/client");
         const t = await syncTesseraSales();
@@ -38,6 +39,15 @@ export async function register() {
         }
       } catch (error) {
         console.error("[cron] tessera sync failed:", error);
+      }
+      try {
+        const { syncMegatixSales } = await import("@/lib/megatix/client");
+        const m = await syncMegatixSales();
+        if (m.synced || m.failed) {
+          console.log(`[cron] megatix: ${m.synced} synced, ${m.failed} failed${m.authFailed ? " (auth rejected)" : ""}`);
+        }
+      } catch (error) {
+        console.error("[cron] megatix sync failed:", error);
       }
     } catch (error) {
       console.error("[cron] sweep failed:", error);

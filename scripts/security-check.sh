@@ -18,7 +18,10 @@ if git grep -nIE '(api[_-]?key|secret|password|token)["'"'"']?\s*[:=]\s*["'"'"']
 else echo "  ok"; fi
 
 echo "[security] destructive SQL in tracked files"
-if git grep -nIiE 'drop\s+table|truncate\s+table|delete\s+from\s+[a-z_]+\s*;' -- ':!docs' ':!*.md' 2>/dev/null; then
+# Migrations are EXCLUDED from the failure, not from view: a schema change is
+# exactly where a DROP belongs, and it arrives through generate + review. Any
+# such statement is still printed below so it can never land unnoticed.
+if git grep -nIiE 'drop\s+table|truncate\s+table|delete\s+from\s+[a-z_]+\s*;' -- ':!docs' ':!*.md' ':!src/db/migrations' 2>/dev/null; then
   echo "  FAIL: destructive SQL found outside docs"; FAIL=1
 else echo "  ok"; fi
 

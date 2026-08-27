@@ -52,13 +52,19 @@ export function MobileNav({
         }
       />
       <SheetContent side="left" className="w-64 p-0">
-        <SheetHeader className="border-b px-4 py-3">
+        <SheetHeader className="shrink-0 border-b px-4 py-3">
           <SheetTitle className="text-left text-sm font-semibold uppercase tracking-[0.2em]">
             {orgShortName} <span className="text-muted-foreground">{productName}</span>
           </SheetTitle>
         </SheetHeader>
+        {/* The panel is a fixed-height flex column (h-full), so this list has
+            to own the scrolling: without min-h-0 a flex child refuses to
+            shrink below its content and the overflow simply spills out of the
+            panel — with the page behind it scroll-locked, the menu reads as
+            frozen (Owner 2026-08-18). overscroll-contain stops a flick at the
+            end of the list from scrolling the page underneath. */}
         <div
-          className="flex flex-col gap-4 p-3"
+          className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto overscroll-contain p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
           onClick={(e) => {
             if ((e.target as HTMLElement).closest("a")) setOpen(false);
           }}

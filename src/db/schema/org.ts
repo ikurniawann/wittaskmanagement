@@ -75,3 +75,25 @@ export const divisionMembers = pgTable(
   },
   (table) => [primaryKey({ columns: [table.divisionId, table.userId] })],
 );
+
+// API keys for external agents (EPIC-023, Owner 2026-08-18: OpenClaw/Hermes
+// over WhatsApp). Only a SHA-256 hash of the token is stored — the plaintext
+// is shown once at creation and never again. A key authenticates the AGENT;
+// the human it acts for arrives per request (X-On-Behalf-Of, a phone number
+// matched against profiles.phone), so every action runs under a real user's
+// permissions and there is deliberately no "god token" to leak.
+export const agentApiKeys = pgTable("agent_api_keys", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: text("name").notNull(),
+  tokenHash: text("token_hash").notNull().unique(),
+  /** last 4 chars of the plaintext, so the list can say which key is which */
+  tokenTail: text("token_tail").notNull().default(""),
+  createdBy: uuid("created_by").references(() => profiles.id, {
+    onDelete: "set null",
+  }),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  lastUsedAt: timestamp("last_used_at", { withTimezone: true }),
+  revokedAt: timestamp("revoked_at", { withTimezone: true }),
+});

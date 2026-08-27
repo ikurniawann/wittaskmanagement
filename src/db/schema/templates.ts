@@ -66,29 +66,42 @@ export const ticketSalesSnapshots = pgTable(
 );
 
 /**
- * Tessera transactions, stored AS IS (Owner 2026-08-13). The typed columns
- * cover what the UI shows; `raw` keeps the entire row exactly as Tessera
- * sent it, so nothing they add later is lost before we learn to read it.
- * Money is numeric-as-string: their fees carry decimals ("30071.43") and a
- * float would corrupt them.
+ * Ticket transactions from ANY provider, stored AS IS (Owner 2026-08-13;
+ * generalised for Megatix 2026-08-17). The typed columns cover what the UI
+ * shows; `raw` keeps the entire row exactly as the provider sent it, so a
+ * field we do not read today is not lost before we learn to read it.
+ *
+ * One table rather than one per provider: the Connect tab, the settlement
+ * PDF and the hourly sync would otherwise each grow a per-provider branch,
+ * and two tables of "the truth about ticket sales" is how people stop
+ * trusting either.
  */
-export const tesseraTransactions = pgTable(
-  "tessera_transactions",
+export const ticketTransactions = pgTable(
+  "ticket_transactions",
   {
     id: uuid("id").primaryKey().defaultRandom(),
     eventId: uuid("event_id")
       .notNull()
       .references(() => events.id, { onDelete: "cascade" }),
-    /** Tessera's own row id — the upsert key, so re-syncs never duplicate */
-    tesseraId: text("tessera_id").notNull(),
+    /** "tessera" | "megatix" */
+    provider: text("provider").notNull(),
+    /** the provider's own row id — the upsert key, so re-syncs never duplicate */
+    providerTxnId: text("provider_txn_id").notNull(),
     orderId: text("order_id"),
     buyerEmail: text("buyer_email"),
     buyerName: text("buyer_name"),
+    buyerPhone: text("buyer_phone"),
     category: text("category"),
     status: text("status"),
     promoCode: text("promo_code"),
     currency: text("currency"),
     purchasedAt: timestamp("purchased_at", { withTimezone: true }),
+    /**
+     * Tickets in this row. Tessera reports one row PER TICKET (always 1);
+     * Megatix reports one row per ORDER, which may carry several. Counting
+     * rows would therefore undercount Megatix — sum this instead.
+     */
+    quantity: integer("quantity").notNull().default(1),
     ticketPrice: numeric("ticket_price", { precision: 14, scale: 2 }),
     grossSales: numeric("gross_sales", { precision: 14, scale: 2 }),
     totalFees: numeric("total_fees", { precision: 14, scale: 2 }),
@@ -100,7 +113,11 @@ export const tesseraTransactions = pgTable(
     syncedAt: timestamp("synced_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
-    uniqueIndex("tessera_tx_event_tessera_idx").on(t.eventId, t.tesseraId),
-    index("tessera_tx_event_idx").on(t.eventId),
+    uniqueIndex("ticket_tx_provider_event_row_idx").on(
+      t.provider,
+      t.eventId,
+      t.providerTxnId,
+    ),
+    index("ticket_tx_event_idx").on(t.eventId),
   ],
 );

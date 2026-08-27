@@ -38,9 +38,6 @@ export const events = pgTable("events", {
   // identity swatch in the sidebar and the grid (Owner 2026-08-12); null
   // means "use the colour derived from the id", so no event is ever grey
   color: text("color"),
-  // Tessera event this one mirrors (Owner 2026-08-12); null = no ticketing
-  // sync. Kept as text — their ids may be numeric or uuid, both seen.
-  tesseraEventId: text("tessera_event_id"),
   // stored relative to UPLOADS_DIR, served auth-gated via /api/files
   coverImagePath: text("cover_image_path"),
   archivedAt: timestamp("archived_at", { withTimezone: true }),
@@ -106,4 +103,42 @@ export const eventPeople = pgTable(
     role: text("role").notNull().default("member"),
   },
   (table) => [primaryKey({ columns: [table.eventId, table.userId] })],
+);
+
+/**
+ * Ticketing channels an event sells through (Owner 2026-08-17: "ada 2
+ * channel — tessera dan megatix"). A row per channel, so one show can be
+ * live on BOTH platforms at once and each channel keeps its own event id.
+ *
+ * This replaced a single events.tessera_event_id column: that shape could
+ * only ever express one platform, and a promoter running the same show on
+ * two ticketing sites would have had to pick which half of their sales the
+ * system was allowed to see.
+ */
+export const eventTicketChannels = pgTable(
+  "event_ticket_channels",
+  {
+    eventId: uuid("event_id")
+      .notNull()
+      .references(() => events.id, { onDelete: "cascade" }),
+    /** "tessera" | "megatix" */
+    provider: text("provider").notNull(),
+    /** the provider's own event id — text; theirs are numeric or uuid */
+    providerEventId: text("provider_event_id").notNull(),
+    /** Megatix scopes events under a presenter; null for Tessera */
+    providerAccountId: text("provider_account_id"),
+    // Each channel's OWN latest daily numbers. Kept per channel because the
+    // shared ticket_sales_snapshots row is keyed (event, day): with two
+    // channels live on one show, each sync would otherwise overwrite the
+    // other's figures and the headline would show whichever ran last
+    // instead of the sum.
+    lastDay: text("last_day"),
+    lastTickets: integer("last_tickets"),
+    lastRevenue: bigint("last_revenue", { mode: "number" }),
+    lastSyncedAt: timestamp("last_synced_at", { withTimezone: true }),
+    connectedAt: timestamp("connected_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.eventId, t.provider] })],
 );
