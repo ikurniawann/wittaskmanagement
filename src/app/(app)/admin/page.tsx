@@ -9,7 +9,6 @@ import { BrandingForm } from "./branding-form";
 import { WhatsAppGateway } from "./whatsapp-gateway";
 import { AgentKeysCard } from "./agent-keys-card";
 import { MegatixPanel } from "./megatix-panel";
-import { TesseraPanel } from "./tessera-panel";
 import { DivisionsCard } from "./divisions-card";
 import { AdminTabs } from "./admin-tabs";
 
@@ -43,11 +42,14 @@ export default async function AdminPage() {
     };
   })();
 
-  const { getTesseraStatus } = await import("@/lib/tessera/client");
   const { getMegatixStatus } = await import("@/lib/megatix/client");
   const { listAgentKeys } = await import("@/lib/agent/auth");
-  const [tessera, megatix, agentKeys] = await Promise.all([
-    getTesseraStatus(actor),
+  // Tessera's admin panel was removed at the Owner's request (2026-08-27):
+  // no token was ever stored, the org sells through Megatix, and a box asking
+  // for a hand-copied token that expires in five days is worse than absent.
+  // The channel itself is untouched in src/lib/tessera — restoring the panel
+  // is re-adding this one component.
+  const [megatix, agentKeys] = await Promise.all([
     getMegatixStatus(actor),
     listAgentKeys(actor),
   ]);
@@ -86,14 +88,6 @@ export default async function AdminPage() {
 
       <WhatsAppGateway />
 
-      <TesseraPanel
-        configured={tessera.configured}
-        savedAt={tessera.savedAt}
-        lastOkAt={tessera.lastOkAt}
-        lastError={tessera.lastError}
-        unreadableSample={tessera.unreadableSample}
-        daysLeft={tessera.daysLeft}
-      />
 
       <MegatixPanel
         configured={megatix.configured}
