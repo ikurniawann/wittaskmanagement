@@ -624,7 +624,7 @@ export function DataroomBrowser({
                   {folder.visibility === "sealed" ? (
                     <Lock className="size-8" />
                   ) : (
-                    <Folder className="size-8" />
+                    <Folder className="size-8 text-folder" />
                   )}
                 </span>
                 <span className="w-full truncate text-center text-xs font-medium">
@@ -718,7 +718,7 @@ export function DataroomBrowser({
                           {folder.visibility === "sealed" ? (
                             <Lock className="size-4" />
                           ) : (
-                            <Folder className="size-4" />
+                            <Folder className="size-4 text-folder" />
                           )}
                         </span>
                         {folder.name}

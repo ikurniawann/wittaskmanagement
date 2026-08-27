@@ -18,6 +18,7 @@
   --color-foreground: var(--foreground);
   /* functional colors (EPIC-011): status + priority coding, Plane/Jira-style.
      Chrome stays monochrome — these appear only on dots, icons, and chips. */
+  --color-folder: var(--folder);
   --color-status-backlog: var(--status-backlog);
   --color-status-todo: var(--status-todo);
   --color-status-in-progress: var(--status-in-progress);
@@ -109,6 +110,11 @@
   --shadow-elev: 0 1px 2px oklch(0 0 0 / 7%), 0 4px 14px oklch(0 0 0 / 5%);
   --shadow-elev-hover: 0 2px 4px oklch(0 0 0 / 9%), 0 10px 24px oklch(0 0 0 / 8%);
   /* functional colors — light theme */
+  /* The one deliberate hue in an otherwise monochrome chrome (Owner
+     2026-08-27): a folder reads as a folder at a glance, the way it does in
+     Finder. Same 250 hue family as --status-todo so it belongs to the
+     palette rather than arriving from macOS wholesale. */
+  --folder: oklch(0.62 0.15 250);
   --status-backlog: oklch(0.55 0 0);
   --status-todo: oklch(0.55 0.13 250);
   --status-in-progress: oklch(0.68 0.14 80);
@@ -159,6 +165,7 @@
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
   /* functional colors — dark theme (slightly brighter for contrast) */
+  --folder: oklch(0.72 0.14 250);
   --status-backlog: oklch(0.65 0 0);
   --status-todo: oklch(0.68 0.13 250);
   --status-in-progress: oklch(0.78 0.14 85);

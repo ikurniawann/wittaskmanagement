@@ -98,7 +98,7 @@ async function FolderView({
               href={`/share/${token}?path=${folder.id}`}
               className="flex items-center gap-2.5 px-4 py-2.5 text-sm transition-colors hover:bg-accent/40"
             >
-              <Folder className="size-4 shrink-0 text-muted-foreground" />
+              <Folder className="size-4 shrink-0 text-folder" />
               <span className="min-w-0 flex-1 truncate font-medium">{folder.name}</span>
               <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
             </Link>
@@ -169,7 +169,7 @@ export default async function SharePage({
     <main className="flex min-h-svh flex-col items-center justify-center gap-6 bg-background p-6">
       <div className="flex flex-col items-center gap-1.5 text-center">
         {resolution.ok && resolution.kind === "folder" ? (
-          <Folder className="size-6 text-muted-foreground" />
+          <Folder className="size-6 text-folder" />
         ) : (
           <FileText className="size-6 text-muted-foreground" />
         )}
