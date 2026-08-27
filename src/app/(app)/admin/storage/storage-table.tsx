@@ -21,7 +21,7 @@ export function DefaultQuotaForm({ defaultGb }: { defaultGb: number }) {
   return (
     <form action={formAction} className="flex flex-col gap-1.5">
       <Label htmlFor="default-gb" className="text-xs">
-        Default for every event without its own limit
+        Default for every project without its own limit
       </Label>
       <span className="flex items-center gap-1.5">
         <Input
@@ -101,7 +101,7 @@ export function StorageTable({ rows }: { rows: StorageRow[] }) {
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b text-left text-xs uppercase tracking-wider text-muted-foreground">
-            <th className="px-4 py-3 font-medium">Event</th>
+            <th className="px-4 py-3 font-medium">Project</th>
             <th className="px-4 py-3 font-medium">Used</th>
             <th className="px-4 py-3 font-medium">Limit</th>
           </tr>

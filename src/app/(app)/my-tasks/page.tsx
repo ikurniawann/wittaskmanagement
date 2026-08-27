@@ -464,7 +464,7 @@ export default async function MyTasksPage({
             </h3>
             {work.events.length === 0 ? (
               <p className="text-xs text-muted-foreground">
-                No open tasks on any event.
+                No open tasks on any project.
               </p>
             ) : (
               work.events.map((event) => (

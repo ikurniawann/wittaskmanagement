@@ -106,7 +106,7 @@ export function decideUpload(input: UploadCheck): UploadVerdict {
     return {
       ok: false,
       reason: "quota",
-      message: `This event has used ${formatBytes(state.usedBytes)} of ${formatBytes(
+      message: `This project has used ${formatBytes(state.usedBytes)} of ${formatBytes(
         state.limitBytes,
       )}. That file needs ${formatBytes(incoming)}, and only ${formatBytes(
         state.remainingBytes,

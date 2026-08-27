@@ -35,6 +35,7 @@ export default async function CalendarPage({
     divisionId: t.divisionId,
     title: t.title,
     status: t.status,
+    startDate: t.startDate,
     dueDate: t.dueDate,
   }));
 
@@ -61,7 +62,7 @@ export default async function CalendarPage({
 
       {events.length === 0 ? (
         <p className="rounded-md border border-dashed px-4 py-6 text-sm text-muted-foreground">
-          No events visible to you yet.
+          No projects visible to you yet.
         </p>
       ) : (
         <CalendarGrid
@@ -72,12 +73,23 @@ export default async function CalendarPage({
         />
       )}
 
-      <div className="flex items-center gap-4 text-xs text-muted-foreground">
+      <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
         <span className="flex items-center gap-1.5">
-          <span aria-hidden className="text-[9px]">●</span> Show date
+          <span aria-hidden className="text-[9px]">●</span> Launch date
         </span>
         <span className="flex items-center gap-1.5">
           <span aria-hidden className="text-[9px]">○</span> Task deadline
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span aria-hidden className="inline-block h-2.5 w-6 rounded-sm border bg-card" />
+          Start → due
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span
+            aria-hidden
+            className="inline-block h-2.5 w-6 rounded-sm border border-destructive bg-destructive/15"
+          />
+          Overdue
         </span>
       </div>
     </section>

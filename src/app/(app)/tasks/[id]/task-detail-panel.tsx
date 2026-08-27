@@ -80,7 +80,7 @@ export async function TaskDetailPanel({
             href={`/events/${task.eventId}/board?division=${task.divisionId}`}
             className="text-xs uppercase tracking-wider text-muted-foreground hover:text-foreground"
           >
-            ← {task.event?.name ?? "Event"} · board
+            ← {task.event?.name ?? "Project"} · board
           </Link>
         ) : (
           <span className="text-xs uppercase tracking-wider text-muted-foreground">
@@ -105,6 +105,7 @@ export async function TaskDetailPanel({
                   title: task.title,
                   description: task.description,
                   priority: task.priority,
+                  startDate: task.startDate?.toISOString() ?? null,
                   dueDate: task.dueDate?.toISOString() ?? null,
                   recurrence: task.recurrence,
                 }}

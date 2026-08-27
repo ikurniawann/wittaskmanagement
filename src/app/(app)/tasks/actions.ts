@@ -54,6 +54,7 @@ export async function createTaskAction(
   let taskId: string;
   try {
     const actor = await requireActor();
+    const startRaw = String(formData.get("startDate") ?? "");
     const dueRaw = String(formData.get("dueDate") ?? "");
     const task = await createTask(actor, {
       eventId: String(formData.get("eventId")),
@@ -65,6 +66,7 @@ export async function createTaskAction(
         | "medium"
         | "high"
         | "urgent",
+      startDate: startRaw ? new Date(startRaw) : undefined,
       dueDate: dueRaw ? new Date(dueRaw) : undefined,
       recurrence: (String(formData.get("recurrence")) || "none") as
         | "none"
@@ -213,6 +215,7 @@ export async function updateFieldsAction(
   try {
     const actor = await requireActor();
     const taskId = String(formData.get("taskId"));
+    const startRaw = String(formData.get("startDate") ?? "");
     const dueRaw = String(formData.get("dueDate") ?? "");
     await updateTaskFields(actor, taskId, {
       title: String(formData.get("title") ?? "").trim(),
@@ -222,6 +225,7 @@ export async function updateFieldsAction(
         | "medium"
         | "high"
         | "urgent",
+      startDate: startRaw ? new Date(startRaw) : null,
       dueDate: dueRaw ? new Date(dueRaw) : null,
       recurrence: String(formData.get("recurrence")) as
         | "none"

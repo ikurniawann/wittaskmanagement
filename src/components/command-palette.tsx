@@ -42,7 +42,7 @@ const GROUPS: Array<{
   label: string;
   icon: ReactNode;
 }> = [
-  { key: "events", label: "Events", icon: <CalendarRange className="size-3.5" /> },
+  { key: "events", label: "Projects", icon: <CalendarRange className="size-3.5" /> },
   { key: "tasks", label: "Tasks", icon: <ListChecks className="size-3.5" /> },
   { key: "documents", label: "Documents", icon: <FileText className="size-3.5" /> },
   { key: "people", label: "People", icon: <UserRound className="size-3.5" /> },
@@ -164,7 +164,7 @@ export function CommandPalette() {
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               onKeyDown={onInputKey}
-              placeholder="Search tasks, events, documents, people…"
+              placeholder="Search tasks, projects, documents, people…"
               className="h-12 w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
             />
             {loading ? (

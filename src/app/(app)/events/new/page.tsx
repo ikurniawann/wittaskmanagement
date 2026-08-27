@@ -6,7 +6,7 @@ import { listAssignablePeople } from "@/lib/events/service";
 import { listTemplates } from "@/lib/templates/service";
 import { NewEventForm } from "./new-event-form";
 
-export const metadata: Metadata = { title: "New event" };
+export const metadata: Metadata = { title: "New project" };
 
 export default async function NewEventPage() {
   const actor = await sessionActor();
@@ -17,7 +17,7 @@ export default async function NewEventPage() {
   return (
     <section className="mx-auto flex w-full max-w-xl flex-col gap-8">
       <h1 className="text-3xl font-semibold tracking-tight">
-        New event
+        New Project
       </h1>
       <NewEventForm
         templates={templates.map(({ template, itemCount }) => ({

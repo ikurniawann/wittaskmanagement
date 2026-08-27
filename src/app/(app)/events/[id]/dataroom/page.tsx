@@ -56,7 +56,7 @@ export default async function DataroomPage({
         <div className="flex flex-col gap-1">
           <h1 className="text-2xl font-semibold tracking-tight">Dataroom</h1>
           <p className="text-sm text-muted-foreground">
-            Documents for this event. Every open and download is recorded.
+            Documents for this project. Every open and download is recorded.
           </p>
         </div>
         <div className="flex items-center gap-4">

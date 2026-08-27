@@ -26,7 +26,6 @@ export function EditEventForm({
     venue: string;
     /** WIB value for the datetime-local input, prepared server-side */
     showDateInput: string;
-    capacity: number | null;
     color: string | null;
     hasPoster: boolean;
   };
@@ -40,7 +39,7 @@ export function EditEventForm({
     <form action={formAction} className="flex flex-col gap-5">
       <input type="hidden" name="eventId" value={event.id} />
       <div className="flex flex-col gap-2">
-        <Label htmlFor="ev-name">Event name</Label>
+        <Label htmlFor="ev-name">Nama Project</Label>
         <Input id="ev-name" name="name" required defaultValue={event.name} />
       </div>
       <div className="flex flex-col gap-2">
@@ -48,34 +47,22 @@ export function EditEventForm({
         <EventColorPicker defaultValue={event.color} />
       </div>
       <div className="flex flex-col gap-2">
-        <Label htmlFor="ev-artists">Artists</Label>
+        <Label htmlFor="ev-artists">Client</Label>
         <Input id="ev-artists" name="artists" defaultValue={event.artists} />
       </div>
       <div className="flex flex-col gap-2">
-        <Label htmlFor="ev-venue">Venue</Label>
+        <Label htmlFor="ev-venue">Kota</Label>
         <Input id="ev-venue" name="venue" defaultValue={event.venue} />
       </div>
-      <div className="grid grid-cols-2 gap-4">
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="ev-date">Show date (WIB)</Label>
-          <Input
-            id="ev-date"
-            name="showDate"
-            type="datetime-local"
-            required
-            defaultValue={event.showDateInput}
-          />
-        </div>
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="ev-capacity">Capacity</Label>
-          <Input
-            id="ev-capacity"
-            name="capacity"
-            type="number"
-            min={1}
-            defaultValue={event.capacity ?? ""}
-          />
-        </div>
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="ev-date">Deadline Project (WIB)</Label>
+        <Input
+          id="ev-date"
+          name="showDate"
+          type="datetime-local"
+          required
+          defaultValue={event.showDateInput}
+        />
       </div>
       <div className="flex flex-col gap-2">
         <Label htmlFor="ev-poster">

@@ -24,7 +24,7 @@ import { ApplyPlaybook } from "./apply-playbook";
 import { DivisionsManager } from "./divisions-manager";
 import { WorkflowManager } from "./workflow-manager";
 
-export const metadata: Metadata = { title: "Event" };
+export const metadata: Metadata = { title: "Project" };
 
 const dateFormat = new Intl.DateTimeFormat("en-GB", {
   dateStyle: "full",
@@ -188,7 +188,7 @@ export default async function EventPage({ params }: PageProps<"/events/[id]">) {
                 href={`/events/${event.id}/edit`}
                 className={buttonVariants({ variant: "outline" })}
               >
-                Edit event
+                Edit project
               </Link>
               <form action={archiveEventAction}>
                 <input type="hidden" name="eventId" value={event.id} />
@@ -205,7 +205,7 @@ export default async function EventPage({ params }: PageProps<"/events/[id]">) {
                 href={`/events/${event.id}/edit`}
                 className={buttonVariants({ variant: "outline", size: "sm" })}
               >
-                Edit event
+                Edit project
               </Link>
             </div>
           ) : null}

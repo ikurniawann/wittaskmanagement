@@ -35,7 +35,7 @@ export function Countdown({
           className,
         )}
       >
-        Show day
+        Launch day
       </span>
     );
   }
@@ -50,7 +50,7 @@ export function Countdown({
   return (
     <span
       className={cn("font-mono text-sm tabular-nums tracking-wider", className)}
-      aria-label="Countdown to show day"
+      aria-label="Countdown to launch day"
     >
       {segments.map(([value, unit]) => (
         <span key={unit}>

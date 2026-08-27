@@ -119,6 +119,22 @@ export function NewTaskDialog({
                 </Label>
                 <PriorityPicker />
               </div>
+              {/* start + due: the pair is what gives the task a bar on the
+                  gantt and a span on the calendar rather than a single dot */}
+              <div className="flex flex-col gap-1.5">
+                <Label
+                  htmlFor="ntd-start"
+                  className="flex items-center gap-1 text-[10px] uppercase tracking-[0.2em] text-muted-foreground"
+                >
+                  <CalendarClock className="size-3" /> Start
+                </Label>
+                <Input
+                  id="ntd-start"
+                  name="startDate"
+                  type="datetime-local"
+                  className="h-9 w-52 text-xs"
+                />
+              </div>
               <div className="flex flex-col gap-1.5">
                 <Label
                   htmlFor="ntd-due"
@@ -179,7 +195,7 @@ export function NewTaskDialog({
               <span className="flex flex-col gap-0.5">
                 <span className="font-medium">Keep inside {division.name}</span>
                 <span className="text-muted-foreground">
-                  Tasks are visible to every division on this event by default.
+                  Tasks are visible to every division on this project by default.
                   Lock this one and only {division.name}, the people working on
                   it, and Owner/Admin will see it.
                 </span>

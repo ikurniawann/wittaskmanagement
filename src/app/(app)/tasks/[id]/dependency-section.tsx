@@ -110,7 +110,7 @@ function InternalDepPicker({ taskId }: { taskId: string }) {
             setQuery(e.target.value);
             setPicked(null);
           }}
-          placeholder="Search a task — any division, any event…"
+          placeholder="Search a task — any division, any project…"
           className="h-8 w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
         />
         <button

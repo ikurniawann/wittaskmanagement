@@ -49,7 +49,7 @@ export default async function AssistantPage({
           {branding.assistantName}
         </h1>
         <p className="text-sm text-muted-foreground">
-          Ask about any event or the whole portfolio — predictions come with
+          Ask about any project or the whole portfolio — predictions come with
           reasons, grounded in your live data. Chats are saved to your history.
         </p>
       </div>

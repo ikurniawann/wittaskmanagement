@@ -130,7 +130,7 @@ async function eventSnapshot(
     .sort((a, b) => b[1] - a[1])
     .slice(0, 6)
     .map(([id, count]) => ({
-      task: titleById.get(id) ?? "(task in another division/event)",
+      task: titleById.get(id) ?? "(task in another division/project)",
       openTasksWaitingOnIt: count,
     }));
 

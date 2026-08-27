@@ -37,6 +37,7 @@ export default async function EventCalendarPage({
     divisionId: t.divisionId,
     title: t.title,
     status: t.status,
+    startDate: t.startDate,
     dueDate: t.dueDate,
   }));
 

@@ -66,7 +66,7 @@ export async function createInvite(
     .from(events)
     .where(eq(events.id, input.eventId))
     .limit(1);
-  if (!event) throw new Error("Event not found.");
+  if (!event) throw new Error("Project not found.");
 
   const now = Date.now();
   const expiresAt = new Date(

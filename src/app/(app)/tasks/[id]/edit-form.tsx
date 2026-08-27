@@ -24,6 +24,7 @@ export function EditTaskForm({
     title: string;
     description: string;
     priority: string;
+    startDate: string | null;
     dueDate: string | null;
     recurrence: string;
   };
@@ -42,11 +43,12 @@ export function EditTaskForm({
   }
 
   // datetime-local expects local (WIB) time without zone
-  const dueLocal = task.dueDate
-    ? new Date(new Date(task.dueDate).getTime() + 7 * 3600_000)
-        .toISOString()
-        .slice(0, 16)
-    : "";
+  const toLocal = (iso: string | null) =>
+    iso
+      ? new Date(new Date(iso).getTime() + 7 * 3600_000).toISOString().slice(0, 16)
+      : "";
+  const startLocal = toLocal(task.startDate);
+  const dueLocal = toLocal(task.dueDate);
 
   const submit = (formData: FormData) => {
     startTransition(async () => {
@@ -85,11 +87,22 @@ export function EditTaskForm({
               defaultValue={task.priority as "low" | "medium" | "high" | "urgent"}
             />
           </div>
+          {/* start + due together: the pair is what draws the bar on the
+              gantt and the span on the calendar */}
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="et-start">Start (WIB)</Label>
+            <Input
+              id="et-start"
+              name="startDate"
+              type="datetime-local"
+              defaultValue={startLocal}
+            />
+          </div>
           <div className="flex flex-col gap-2">
             <Label htmlFor="et-due">Due (WIB)</Label>
             <Input id="et-due" name="dueDate" type="datetime-local" defaultValue={dueLocal} />
           </div>
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2 sm:col-span-2">
             <Label>Repeats</Label>
             <Segmented
               name="recurrence"

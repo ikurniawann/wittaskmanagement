@@ -75,7 +75,7 @@ const LEVEL_ICON: Record<Visibility, React.ReactNode> = {
 const LEVEL_LABEL: Record<Visibility, string> = {
   sealed: "Sealed — named people only",
   division: "One division",
-  event: "Anyone on this event",
+  event: "Anyone on this project",
   organisation: "Everyone internal",
 };
 

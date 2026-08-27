@@ -21,7 +21,7 @@ import { createFolderAction } from "./actions";
 const LEVEL_META: Record<Visibility, { label: string; icon: React.ReactNode; hint: string }> = {
   sealed: { label: "Sealed", icon: <Lock className="size-3.5" />, hint: "Only people you name — not even the Owner" },
   division: { label: "Division", icon: <Users className="size-3.5" />, hint: "One division's members" },
-  event: { label: "Event", icon: <Folder className="size-3.5" />, hint: "Anyone who can see this event" },
+  event: { label: "Project", icon: <Folder className="size-3.5" />, hint: "Anyone who can see this project" },
   organisation: { label: "Everyone", icon: <Globe className="size-3.5" />, hint: "Every internal user" },
 };
 
@@ -81,7 +81,7 @@ export function NewFolderDialog({
           <p className="text-xs text-muted-foreground">
             {parent
               ? `Inside “${parent.name}”. It cannot be more open than its parent.`
-              : "At the top level of this event's dataroom."}
+              : "At the top level of this project's dataroom."}
           </p>
         </div>
 

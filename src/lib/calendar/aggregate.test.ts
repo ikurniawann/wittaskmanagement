@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   buildCalendarEntries,
+  buildWeekSegments,
   cellKey,
   dayKey,
   groupEntriesByDay,
@@ -18,10 +19,14 @@ function makeTask(overrides: Partial<CalendarTask> = {}): CalendarTask {
     divisionId: "production",
     title: "Confirm rider",
     status: "todo",
+    startDate: null,
     dueDate: new Date("2026-08-10T03:00:00Z"),
     ...overrides,
   };
 }
+
+// Fixed "today" so overdue assertions never depend on the wall clock.
+const NOW = new Date("2026-08-15T03:00:00Z");
 
 function makeEvent(overrides: Partial<CalendarEvent> = {}): CalendarEvent {
   return {
@@ -246,5 +251,142 @@ describe("monthMatrix", () => {
     const weeks = monthMatrix(2026, 1); // February 2026 (28 days, starts Sunday)
     const allDays = weeks.flat();
     expect(allDays.length % 7).toBe(0);
+  });
+});
+
+// --- start → due spans and overdue (Owner 2026-08-14) --------------------
+
+describe("buildCalendarEntries spans", () => {
+  it("spans a task from its startDate to its dueDate", () => {
+    const [entry] = buildCalendarEntries({
+      tasks: [
+        makeTask({
+          startDate: new Date("2026-08-05T03:00:00Z"),
+          dueDate: new Date("2026-08-10T03:00:00Z"),
+        }),
+      ],
+      events: [],
+      now: NOW,
+    });
+    expect(entry.start.toISOString()).toBe("2026-08-05T03:00:00.000Z");
+    expect(entry.end.toISOString()).toBe("2026-08-10T03:00:00.000Z");
+  });
+
+  it("collapses to a single day when the task has no startDate", () => {
+    const [entry] = buildCalendarEntries({ tasks: [makeTask()], events: [], now: NOW });
+    expect(entry.start.getTime()).toBe(entry.end.getTime());
+  });
+
+  it("never draws backwards: a startDate after the dueDate collapses to one day", () => {
+    const [entry] = buildCalendarEntries({
+      tasks: [
+        makeTask({
+          startDate: new Date("2026-08-20T03:00:00Z"),
+          dueDate: new Date("2026-08-10T03:00:00Z"),
+        }),
+      ],
+      events: [],
+      now: NOW,
+    });
+    expect(entry.start.getTime()).toBe(entry.end.getTime());
+  });
+
+  it("a show entry spans exactly its own day", () => {
+    const [entry] = buildCalendarEntries({ tasks: [], events: [makeEvent()], now: NOW });
+    expect(entry.start.getTime()).toBe(entry.end.getTime());
+    expect(entry.overdue).toBeUndefined();
+  });
+});
+
+describe("overdue", () => {
+  it("flags a not-done task whose due day has passed", () => {
+    const [entry] = buildCalendarEntries({
+      tasks: [makeTask({ dueDate: new Date("2026-08-14T03:00:00Z") })],
+      events: [],
+      now: NOW,
+    });
+    expect(entry.overdue).toBe(true);
+  });
+
+  it("does NOT flag a task due today — a deadline is whole-day", () => {
+    const [entry] = buildCalendarEntries({
+      tasks: [makeTask({ dueDate: new Date("2026-08-15T23:00:00Z") })],
+      events: [],
+      now: NOW,
+    });
+    expect(entry.overdue).toBe(false);
+  });
+
+  it("does NOT flag a done task, even one finished late", () => {
+    const [entry] = buildCalendarEntries({
+      tasks: [makeTask({ status: "done", dueDate: new Date("2026-08-01T03:00:00Z") })],
+      events: [],
+      now: NOW,
+    });
+    expect(entry.overdue).toBe(false);
+  });
+});
+
+describe("buildWeekSegments", () => {
+  // Mon 2026-08-10 .. Sun 2026-08-16
+  const week = Array.from({ length: 7 }, (_, i) => new Date(2026, 7, 10 + i));
+
+  function spanEntry(id: string, startDay: number, endDay: number) {
+    return buildCalendarEntries({
+      tasks: [
+        makeTask({
+          id,
+          startDate: new Date(Date.UTC(2026, 7, startDay, 3)),
+          dueDate: new Date(Date.UTC(2026, 7, endDay, 3)),
+        }),
+      ],
+      events: [],
+      now: NOW,
+    })[0];
+  }
+
+  it("maps a Wed→Fri span onto columns 2..4", () => {
+    const [segment] = buildWeekSegments(week, [spanEntry("t", 12, 14)]);
+    expect(segment.colStart).toBe(2);
+    expect(segment.colEnd).toBe(4);
+    expect(segment.clippedLeft).toBe(false);
+    expect(segment.clippedRight).toBe(false);
+  });
+
+  it("clips a span that starts before the week and ends after it", () => {
+    const [segment] = buildWeekSegments(week, [spanEntry("t", 3, 20)]);
+    expect(segment.colStart).toBe(0);
+    expect(segment.colEnd).toBe(6);
+    expect(segment.clippedLeft).toBe(true);
+    expect(segment.clippedRight).toBe(true);
+  });
+
+  it("puts overlapping spans in different lanes", () => {
+    const segments = buildWeekSegments(week, [
+      spanEntry("a", 10, 13),
+      spanEntry("b", 12, 15),
+    ]);
+    const lanes = segments.map((s) => s.lane).sort();
+    expect(lanes).toEqual([0, 1]);
+  });
+
+  it("reuses a lane once it is free, so non-overlapping spans stay compact", () => {
+    const segments = buildWeekSegments(week, [
+      spanEntry("a", 10, 11),
+      spanEntry("b", 13, 14),
+    ]);
+    expect(segments.every((s) => s.lane === 0)).toBe(true);
+  });
+
+  it("omits entries that fall entirely outside the week", () => {
+    expect(buildWeekSegments(week, [spanEntry("t", 1, 3)])).toHaveLength(0);
+  });
+
+  it("is stable regardless of input order", () => {
+    const a = spanEntry("aaa", 10, 12);
+    const b = spanEntry("bbb", 10, 12);
+    const forward = buildWeekSegments(week, [a, b]).map((s) => s.entry.taskId);
+    const reversed = buildWeekSegments(week, [b, a]).map((s) => s.entry.taskId);
+    expect(forward).toEqual(reversed);
   });
 });

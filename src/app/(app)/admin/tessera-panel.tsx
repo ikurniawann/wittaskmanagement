@@ -57,8 +57,8 @@ export function TesseraPanel({
             <Ticket className="size-4 text-muted-foreground" /> Tessera ticketing
           </h2>
           <p className="max-w-xl text-xs text-muted-foreground">
-            Pulls ticket sales for mapped events into the same daily snapshots
-            the manual form writes — event health, the dashboard and the AI
+            Pulls ticket sales for mapped projects into the same daily snapshots
+            the manual form writes — project health, the dashboard and the AI
             read on unchanged. Uses Tessera&apos;s dashboard endpoints (no
             public API yet), so it may break without notice.
           </p>
@@ -179,7 +179,7 @@ export function TesseraPanel({
 
       <p className="text-[11px] text-muted-foreground">
         The token expires after about five days; the sync then stops and every
-        admin gets a notification. Sales land hourly against each mapped event
+        admin gets a notification. Sales land hourly against each mapped project
         — map an event from its Tickets page.
       </p>
     </div>

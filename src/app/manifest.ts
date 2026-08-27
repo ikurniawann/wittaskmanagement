@@ -10,7 +10,7 @@ export default async function manifest(): Promise<MetadataRoute.Manifest> {
     name: fullName(branding),
     short_name: branding.productName,
     description:
-      `Everything behind the show — event and task management for ${branding.orgName}.`,
+      `Everything behind the scenes — project and task management for ${branding.orgName}.`,
     start_url: "/",
     scope: "/",
     display: "standalone",

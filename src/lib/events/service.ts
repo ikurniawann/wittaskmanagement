@@ -24,8 +24,8 @@ export const DEFAULT_PHASES = [
   "Planning",
   "Pre-production",
   "Promotion",
-  "Show week",
-  "Show day",
+  "Go-live week",
+  "Launch day",
   "Settlement",
 ] as const;
 

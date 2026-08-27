@@ -47,6 +47,8 @@ interface GanttRow {
   status: StatusKey;
   bar: GanttBar;
   isCritical: boolean;
+  /** past its due day and not done — drawn red (Owner 2026-08-14) */
+  isOverdue: boolean;
   blockedByTitles: string[];
 }
 
@@ -94,6 +96,9 @@ export default async function EventGanttPage({
   }
 
   const showIdx = wibDayIndex(event.showDate);
+  // whole-day comparison, same rule as the calendar: a task due today is not
+  // overdue until today is over
+  const todayIdx = wibDayIndex(new Date());
   const rangeStart =
     model.bars.length > 0
       ? Math.min(...model.bars.map((b) => wibDayIndex(b.start)))
@@ -118,6 +123,10 @@ export default async function EventGanttPage({
             status: t.status,
             bar: barByTaskId.get(t.id)!,
             isCritical: criticalSet.has(t.id),
+            isOverdue:
+              t.status !== "done" &&
+              t.dueDate !== null &&
+              wibDayIndex(t.dueDate) < todayIdx,
             blockedByTitles: blockersOf.get(t.id) ?? [],
           }),
         )
@@ -159,8 +168,15 @@ export default async function EventGanttPage({
           Scheduled
         </span>
         <span className="flex items-center gap-1.5">
+          <span
+            aria-hidden
+            className="inline-block size-2.5 border border-destructive bg-destructive/25"
+          />
+          Overdue
+        </span>
+        <span className="flex items-center gap-1.5">
           <span aria-hidden className="inline-block h-2.5 w-px bg-foreground" />
-          Show day — {dayFullFmt.format(event.showDate)}
+          Launch day — {dayFullFmt.format(event.showDate)}
         </span>
       </div>
 
@@ -348,7 +364,15 @@ function GanttGridRow({
         title={row.title}
         className={cn(
           "z-10 my-1.5 h-4 rounded-sm border",
-          row.isCritical ? "border-foreground bg-foreground" : "border-foreground/50 bg-muted",
+          // overdue outranks critical: red means "needs action now", and a
+          // late task on the critical path is the one that needs it most
+          row.isOverdue
+            ? row.isCritical
+              ? "border-destructive bg-destructive"
+              : "border-destructive bg-destructive/25"
+            : row.isCritical
+              ? "border-foreground bg-foreground"
+              : "border-foreground/50 bg-muted",
         )}
         style={{ gridColumn: `${colStart + 2} / ${colEnd + 3}`, gridRow }}
       />

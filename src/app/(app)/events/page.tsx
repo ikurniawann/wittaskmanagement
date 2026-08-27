@@ -13,7 +13,7 @@ import { eventColorClass } from "@/lib/events/colors";
 import { cn } from "@/lib/utils";
 import { archiveEventAction } from "./actions";
 
-export const metadata: Metadata = { title: "Events" };
+export const metadata: Metadata = { title: "Projects" };
 
 // T-024: gallery grid of active events, gallery style — poster carries the color.
 //
@@ -42,17 +42,17 @@ export default async function EventsPage({
       <div className="flex items-center justify-between">
         <div className="flex flex-col gap-1">
           <h1 className="text-3xl font-semibold tracking-tight">
-            Events
+            Projects
           </h1>
           <p className="text-sm text-muted-foreground">
             {showArchived
               ? "Put away, and hidden from every other list until brought back."
-              : "Every active show — open one to reach its board, budget, and crew."}
+              : "Every active project — open one to reach its board, budget, and team."}
           </p>
         </div>
         <div className="flex items-center gap-3">
-          {/* a filter rather than a sidebar entry: an archived event is still
-              an event, and this is opened a few times a year */}
+          {/* a filter rather than a sidebar entry: an archived project is still
+              a project, and this is opened a few times a year */}
           <div className="flex rounded-md border p-0.5 text-xs">
             <Link
               href="/events"
@@ -84,7 +84,7 @@ export default async function EventsPage({
           </div>
           {canCreate && !showArchived ? (
             <Link href="/events/new" className={buttonVariants()}>
-              New event ↗
+              New project ↗
             </Link>
           ) : null}
         </div>
@@ -93,12 +93,12 @@ export default async function EventsPage({
       {events.length === 0 ? (
         <EmptyState
           icon={CalendarRange}
-          title={showArchived ? "Nothing archived" : "No active events"}
-          hint="Create the first show — its board, budget, and crew spaces come with it."
+          title={showArchived ? "Nothing archived" : "No active projects"}
+          hint="Create the first project — its board, budget, and team spaces come with it."
           action={
             canCreate ? (
               <Link href="/events/new" className={buttonVariants()}>
-                New event ↗
+                New project ↗
               </Link>
             ) : undefined
           }

@@ -27,7 +27,7 @@ export interface PlaceholderSpec {
 const COMMON: PlaceholderSpec[] = [
   { name: "name", description: "Recipient's first name" },
   { name: "task", description: "Task title" },
-  { name: "event", description: "Event name" },
+  { name: "event", description: "Project name" },
   { name: "url", description: "Link to the task" },
 ];
 

@@ -313,7 +313,7 @@ export function buildEventReportPdf(report: EventReport): Promise<Buffer> {
           : "none",
       ],
       [
-        "Run of show",
+        "Run sheet",
         report.runOfShow.items > 0
           ? `${report.runOfShow.items} items (${report.runOfShow.first} – ${report.runOfShow.last})`
           : "not drafted yet",

@@ -37,7 +37,7 @@ export function EventPeoplePicker({
           <input key={id} type="hidden" name="memberIds" value={id} />
         ))}
       <div className="flex flex-col gap-2">
-        <Label>PIC event</Label>
+        <Label>PIC project</Label>
         <div className="flex flex-wrap gap-1.5">
           {people.map((person) => (
             <button
@@ -53,7 +53,7 @@ export function EventPeoplePicker({
         </div>
       </div>
       <div className="flex flex-col gap-2">
-        <Label>Event members</Label>
+        <Label>Project members</Label>
         <div className="flex flex-wrap gap-1.5">
           {people
             .filter((person) => person.id !== picId)

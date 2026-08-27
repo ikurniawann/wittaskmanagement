@@ -36,8 +36,8 @@ export default async function StoragePage() {
         </Link>
         <h1 className="text-3xl font-semibold tracking-tight">Storage</h1>
         <p className="max-w-2xl text-sm text-muted-foreground">
-          How much dataroom space each event uses. Lowering a limit never
-          deletes anything — the event simply cannot upload again until it is
+          How much dataroom space each project uses. Lowering a limit never
+          deletes anything — the project simply cannot upload again until it is
           back under.
         </p>
       </div>
@@ -51,7 +51,7 @@ export default async function StoragePage() {
           </span>
           <span className="text-[11px] text-muted-foreground">
             Uploads stop everywhere below {formatBytes(DISK_FLOOR_BYTES)}, whatever
-            an event&apos;s own limit says.
+            a project&apos;s own limit says.
           </span>
         </div>
       </div>

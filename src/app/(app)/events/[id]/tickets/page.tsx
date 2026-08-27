@@ -201,7 +201,7 @@ export default async function TicketsPage({
                   No Tessera token is connected yet. Paste one in{" "}
                   <a href="/admin" className="underline underline-offset-4">Admin → Tessera ticketing</a>{" "}
                   — one token serves the whole organisation, so it lives there
-                  rather than on each event.
+                  rather than on each project.
                 </p>
               ) : null}
               {connect.error ? (

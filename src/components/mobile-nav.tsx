@@ -71,7 +71,7 @@ export function MobileNav({
           {events.length > 0 ? (
             <div className="flex flex-col gap-1">
               <span className="px-2.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                Events
+                Projects
               </span>
               {events.map((event) => (
                 <EventNavLink

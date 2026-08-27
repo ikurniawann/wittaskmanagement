@@ -54,7 +54,7 @@ export function DivisionsManager({
         <input key={id} type="hidden" name="divisionIds" value={id} />
       ))}
       <span className="text-xs font-semibold">
-        Divisions on this event
+        Divisions on this project
       </span>
       <div className="flex flex-wrap gap-1.5">
         {allDivisions.map((division) => {

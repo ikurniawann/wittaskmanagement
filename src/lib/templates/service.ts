@@ -113,7 +113,7 @@ export async function applyTemplate(
     .from(events)
     .where(eq(events.id, eventId))
     .limit(1);
-  if (!event) throw new Error("Event not found.");
+  if (!event) throw new Error("Project not found.");
   const template = await getTemplate(templateId);
   if (!template) throw new Error("Template not found.");
 

@@ -243,7 +243,7 @@ export async function createFolder(
       );
     }
     if (parent.eventId !== input.eventId) {
-      throw new Error("That parent belongs to another event.");
+      throw new Error("That parent belongs to another project.");
     }
   }
 
@@ -952,7 +952,7 @@ export async function moveFolder(
   if (newParentId) {
     const { folder: parent } = await requireFolder(actor, newParentId, "upload");
     if (parent.eventId !== folder.eventId) {
-      throw new Error("A folder cannot move to another event's dataroom.");
+      throw new Error("A folder cannot move to another project's dataroom.");
     }
     // cycle guard: walk up from the target — if we meet the folder being
     // moved, the drop would place it inside its own subtree
@@ -1002,7 +1002,7 @@ export async function moveFile(
     .limit(1);
   const { folder: target } = await requireFolder(actor, targetFolderId, "upload");
   if (target.eventId !== file.eventId) {
-    throw new Error("A file cannot move to another event's dataroom.");
+    throw new Error("A file cannot move to another project's dataroom.");
   }
 
   await db

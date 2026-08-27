@@ -39,7 +39,7 @@ export function NewEventForm({
                   : "text-muted-foreground hover:border-foreground/40 hover:text-foreground")
               }
             >
-              Blank event
+              Blank project
             </button>
             {templates.map((t) => (
               <button
@@ -61,30 +61,24 @@ export function NewEventForm({
         </div>
       ) : null}
       <div className="flex flex-col gap-2">
-        <Label htmlFor="ev-name">Event name</Label>
-        <Input id="ev-name" name="name" required placeholder="YE Live in Jakarta" />
+        <Label htmlFor="ev-name">Nama Project</Label>
+        <Input id="ev-name" name="name" required placeholder="Rebranding Nusantara 2026" />
       </div>
       <div className="flex flex-col gap-2">
         <Label>Colour</Label>
         <EventColorPicker />
       </div>
       <div className="flex flex-col gap-2">
-        <Label htmlFor="ev-artists">Artists</Label>
-        <Input id="ev-artists" name="artists" placeholder="YE · Special Guests" />
+        <Label htmlFor="ev-artists">Client</Label>
+        <Input id="ev-artists" name="artists" placeholder="PT Nusantara Jaya" />
       </div>
       <div className="flex flex-col gap-2">
-        <Label htmlFor="ev-venue">Venue</Label>
-        <Input id="ev-venue" name="venue" placeholder="Jakarta International Stadium" />
+        <Label htmlFor="ev-venue">Kota</Label>
+        <Input id="ev-venue" name="venue" placeholder="Jakarta" />
       </div>
-      <div className="grid grid-cols-2 gap-4">
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="ev-date">Show date</Label>
-          <Input id="ev-date" name="showDate" type="datetime-local" required />
-        </div>
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="ev-capacity">Capacity</Label>
-          <Input id="ev-capacity" name="capacity" type="number" min={1} />
-        </div>
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="ev-date">Deadline Project</Label>
+        <Input id="ev-date" name="showDate" type="datetime-local" required />
       </div>
       <div className="flex flex-col gap-2">
         <Label htmlFor="ev-poster">Poster (jpg/png/webp, max 5 MB)</Label>
@@ -97,7 +91,7 @@ export function NewEventForm({
         </p>
       ) : null}
       <Button type="submit" disabled={pending} className="mt-2">
-        {pending ? "Creating…" : "Create event"}
+        {pending ? "Creating…" : "Create project"}
       </Button>
     </form>
   );

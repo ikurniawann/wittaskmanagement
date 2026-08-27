@@ -35,11 +35,11 @@ export default async function TemplatesPage({
           ← Admin
         </Link>
         <h1 className="text-2xl font-semibold tracking-tight">
-          Event playbooks
+          Project playbooks
         </h1>
         <p className="text-sm text-muted-foreground">
           Reusable checklists per division — due dates count back from show
-          day when a playbook is applied to an event.
+          day when a playbook is applied to a project.
         </p>
       </div>
 

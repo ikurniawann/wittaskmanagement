@@ -6,7 +6,7 @@ import { can } from "@/lib/permissions";
 import { listRunOfShow } from "@/lib/run-of-show/service";
 import { RosEditor, PrintButton } from "./ros-ui";
 
-export const metadata: Metadata = { title: "Run of show" };
+export const metadata: Metadata = { title: "Run sheet" };
 
 const showDateFormat = new Intl.DateTimeFormat("en-GB", {
   dateStyle: "full",
@@ -46,7 +46,7 @@ export default async function RunOfShowPage({
 
       {/* print header */}
       <div className="hidden print:block">
-        <h1 className="text-2xl font-bold">{event.name} — Run of show</h1>
+        <h1 className="text-2xl font-bold">{event.name} — Run sheet</h1>
         <p className="text-sm">
           {showDateFormat.format(event.showDate)} · {event.venue}
         </p>

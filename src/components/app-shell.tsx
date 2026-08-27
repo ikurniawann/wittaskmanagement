@@ -48,7 +48,7 @@ export async function AppShell({ children }: { children: ReactNode }) {
 
   const items: NavItem[] = [
     { href: "/my-tasks", label: "My Tasks", icon: "my-tasks" },
-    { href: "/events", label: "Events", icon: "events" },
+    { href: "/events", label: "Projects", icon: "events" },
     { href: "/calendar", label: "Calendar", icon: "calendar" },
     {
       href: "/timeline",
@@ -100,7 +100,7 @@ export async function AppShell({ children }: { children: ReactNode }) {
           {events.length > 0 ? (
             <div className="flex flex-col gap-1">
               <span className="px-2.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                Events
+                Projects
               </span>
               {events.map((event) => (
                 <EventNavLink

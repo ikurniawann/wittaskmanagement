@@ -117,7 +117,7 @@ export function NewApprovalForm({
           </div>
         ) : null}
         <div className="flex flex-col gap-2 sm:col-span-2">
-          <Label>Event (optional)</Label>
+          <Label>Project (optional)</Label>
           <div className="flex flex-wrap gap-1.5">
             <button
               type="button"

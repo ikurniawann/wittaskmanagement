@@ -10,7 +10,7 @@ import { wibInputValue } from "@/lib/tasks/dates";
 import { can } from "@/lib/permissions";
 import { EditEventForm } from "./edit-event-form";
 
-export const metadata: Metadata = { title: "Edit event" };
+export const metadata: Metadata = { title: "Edit project" };
 
 export default async function EditEventPage({
   params,
@@ -29,7 +29,7 @@ export default async function EditEventPage({
 
   return (
     <section className="mx-auto flex w-full max-w-xl flex-col gap-8">
-      <h1 className="text-3xl font-semibold tracking-tight">Edit event</h1>
+      <h1 className="text-3xl font-semibold tracking-tight">Edit project</h1>
       <EditEventForm
         event={{
           id: event.id,
@@ -37,7 +37,6 @@ export default async function EditEventPage({
           artists: event.artists,
           venue: event.venue,
           showDateInput: wibInputValue(event.showDate),
-          capacity: event.capacity,
           color: event.color,
           hasPoster: Boolean(event.coverImagePath),
         }}

@@ -1,0 +1,40 @@
+# wit_tms local overrides — remap every host port off the defaults, which the
+# existing kinsugi_task stack on this server already owns (3000, 5438, 1025, 8025).
+# Everything is bound to loopback; cloudflared fronts ingat.reddie.id -> 127.0.0.1:3400.
+#
+# `!override` replaces the base list instead of appending to it — without it
+# compose publishes BOTH port sets and the bind collides with kinsugi_task.
+
+services:
+  db:
+    ports: !override
+      - "127.0.0.1:5439:5432"
+
+  mailpit:
+    ports: !override
+      - "127.0.0.1:8026:8025"
+      - "127.0.0.1:1026:1025"
+
+  nginx:
+    ports: !override
+      - "127.0.0.1:3400:80"
+
+  # The dataroom volume is a HOST BIND (/mnt/hdd2/wit-tms-dataroom), and a bind
+  # keeps whatever ownership the host directory already has — Docker never
+  # adjusts it, unlike a fresh named volume. The app runs as uid 100, so a
+  # directory owned by anyone else fails the first upload with
+  # "EACCES: permission denied, mkdir /data/dataroom/<projectId>".
+  # This ran as root before the app starts and makes the ownership match, so
+  # recreating the directory can never bring the fault back.
+  dataroom-init:
+    image: alpine:3.22
+    user: "0:0"
+    command: sh -c "mkdir -p /data/dataroom && chown 100:101 /data/dataroom && chmod 750 /data/dataroom"
+    restart: "no"
+    volumes:
+      - dataroom:/data/dataroom
+
+  app:
+    depends_on:
+      dataroom-init:
+        condition: service_completed_successfully

@@ -68,7 +68,7 @@ export default async function GuestHome() {
         </p>
         <div className="flex flex-col gap-1 pt-2">
           <span className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">
-            To show day
+            To launch day
           </span>
           <Countdown target={context.showDate.toISOString()} className="text-2xl" />
         </div>

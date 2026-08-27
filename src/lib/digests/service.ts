@@ -175,7 +175,7 @@ export async function buildWeeklyExecutiveDigest(
   lines.push(`— ${brand}`);
 
   return {
-    subject: `[${brand}] Weekly executive digest — ${portfolio.length} active event${portfolio.length === 1 ? "" : "s"}`,
+    subject: `[${brand}] Weekly executive digest — ${portfolio.length} active project${portfolio.length === 1 ? "" : "s"}`,
     text: lines.join("\n"),
   };
 }

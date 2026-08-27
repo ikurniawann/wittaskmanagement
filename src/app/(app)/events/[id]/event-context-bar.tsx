@@ -46,7 +46,7 @@ export function EventContextBar({
     return diffDays > 0
       ? `${diffDays}d to show`
       : diffDays === 0
-        ? "Show day"
+        ? "Launch day"
         : `${Math.abs(diffDays)}d since show`;
   });
 

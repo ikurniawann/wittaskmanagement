@@ -25,7 +25,7 @@ const ACCEPTED =
 const MAX_ATTACHMENTS = 5;
 
 const SUGGESTIONS = [
-  "Prediksi apakah event ini akan berjalan lancar, dan apa alasannya?",
+  "Prediksi apakah project ini akan berjalan lancar, dan apa alasannya?",
   "Siapa yang paling overload minggu ini, dan task apa saja?",
   "Bottleneck paling berbahaya sekarang apa, dan apa dampaknya?",
   "Bandingkan kesiapan kita dengan praktik industri untuk konser sekelas ini.",
@@ -285,7 +285,7 @@ export function AssistantChat({
               : "text-muted-foreground hover:border-foreground/40 hover:text-foreground",
           )}
         >
-          All events
+          All projects
         </button>
         {events.map((event) => (
           <button
@@ -314,7 +314,7 @@ export function AssistantChat({
             </span>
             <div className="flex flex-col gap-1">
               <p className="text-lg font-semibold">
-                Ask anything about your events
+                Ask anything about your projects
               </p>
               <p className="max-w-md text-sm text-muted-foreground">
                 Predictions, risks, workload, bottlenecks, budget burn, ticket
@@ -428,7 +428,7 @@ export function AssistantChat({
             }
           }}
           rows={2}
-          placeholder="Tanya soal event, risiko, workload… (Enter untuk kirim)"
+          placeholder="Tanya soal project, risiko, workload… (Enter untuk kirim)"
           className="max-h-40 w-full resize-none bg-transparent px-2 py-1.5 text-sm outline-none placeholder:text-muted-foreground/60"
         />
         <div className="flex items-center justify-between px-1 pb-0.5">
@@ -463,7 +463,7 @@ export function AssistantChat({
           <span className="text-[10px] text-muted-foreground">
             {eventId
               ? `Fokus: ${events.find((e) => e.id === eventId)?.name ?? ""}`
-              : "Semua event dalam scope Anda"}
+              : "Semua project dalam scope Anda"}
           </span>
           </span>
           {streaming ? (

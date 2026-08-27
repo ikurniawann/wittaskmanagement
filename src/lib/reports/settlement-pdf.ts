@@ -203,7 +203,7 @@ export function buildSettlementPdf(report: SettlementReport): Promise<Buffer> {
         .font("Helvetica")
         .fontSize(8.5)
         .fillColor("#333333")
-        .text("No approvals were raised for this event.", MARGIN, doc.y);
+        .text("No approvals were raised for this project.", MARGIN, doc.y);
     } else {
       table(
         [

@@ -32,7 +32,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: { default: name, template: `%s · ${name}` },
     description:
-      "Everything behind the show — event and task management for production teams.",
+      "Everything behind the scenes — project and task management for production teams.",
     applicationName: name,
     appleWebApp: { capable: true, title: branding.productName },
   };
