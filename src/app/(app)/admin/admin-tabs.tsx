@@ -1,6 +1,6 @@
 "use client";
 
-import { Crown, Mail, ShieldCheck, Star, User } from "lucide-react";
+import { Crown, KeyRound, Mail, ShieldCheck, Star, User } from "lucide-react";
 import { useActionState, useRef, useState } from "react";
 import { ChipMultiSelect, UserSingleSelect } from "@/components/choice-chips";
 import { Segmented } from "@/components/segmented";
@@ -14,6 +14,7 @@ import {
   assignMembershipAction,
   createUserAction,
   removeMembershipAction,
+  resetUserPasswordAction,
   setUserContactAction,
   toggleActiveAction,
   type ActionState,
@@ -179,6 +180,89 @@ function ContactCell({ user }: { user: AdminUser }) {
   );
 }
 
+/**
+ * Admin password reset. Collapsed until asked for, because it is a takeover
+ * button sitting in a table of everyday switches — it should take a deliberate
+ * click to open, not sit there invitingly next to the WhatsApp toggle.
+ *
+ * External guests have no password at all (magic link), so they get a note
+ * instead of a form rather than an error after the fact.
+ */
+function PasswordCell({ user }: { user: AdminUser }) {
+  const [open, setOpen] = useState(false);
+  const [state, formAction, pending] = useActionState<ActionState, FormData>(
+    resetUserPasswordAction,
+    {},
+  );
+
+  if (user.role === "external") {
+    return (
+      <span className="text-[10px] text-muted-foreground">Magic link — no password</span>
+    );
+  }
+
+  if (!open) {
+    return (
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="inline-flex items-center gap-1 text-[10px] font-medium uppercase tracking-widest text-muted-foreground underline-offset-4 transition-colors hover:text-foreground hover:underline"
+      >
+        <KeyRound className="size-3" /> Reset
+      </button>
+    );
+  }
+
+  return (
+    <form action={formAction} className="flex flex-col gap-1.5">
+      <input type="hidden" name="userId" value={user.id} />
+      <Input
+        name="password"
+        type="password"
+        minLength={8}
+        required
+        autoFocus
+        placeholder="New password"
+        aria-label={`New password for ${user.name}`}
+        className="h-8 w-40 text-xs"
+      />
+      <Input
+        name="confirm"
+        type="password"
+        minLength={8}
+        required
+        placeholder="Repeat it"
+        aria-label={`Repeat the new password for ${user.name}`}
+        className="h-8 w-40 text-xs"
+      />
+      <div className="flex items-center gap-1.5">
+        <Button type="submit" size="sm" disabled={pending} className="h-7 text-xs">
+          {pending ? "Saving…" : "Set"}
+        </Button>
+        <Button
+          type="button"
+          size="sm"
+          variant="ghost"
+          className="h-7 text-xs"
+          onClick={() => setOpen(false)}
+        >
+          Cancel
+        </Button>
+      </div>
+      {state.error ? (
+        <span role="alert" className="text-[10px] text-destructive">
+          {state.error}
+        </span>
+      ) : null}
+      {state.ok ? (
+        <span className="text-[10px] text-status-done">
+          Password changed — tell {user.name} directly, it is not emailed.
+        </span>
+      ) : null}
+    </form>
+  );
+}
+
 function UsersTable({
   users,
   divisions,
@@ -197,6 +281,7 @@ function UsersTable({
             <th className="px-4 py-3 font-medium">Role</th>
             <th className="px-4 py-3 font-medium">Divisions</th>
             <th className="px-4 py-3 font-medium">WhatsApp</th>
+            <th className="px-4 py-3 font-medium">Password</th>
             <th className="px-4 py-3 font-medium">Status</th>
           </tr>
         </thead>
@@ -267,6 +352,9 @@ function UsersTable({
               </td>
               <td className="px-4 py-3 align-top">
                 <ContactCell user={user} />
+              </td>
+              <td className="px-4 py-3 align-top">
+                <PasswordCell user={user} />
               </td>
               <td className="px-4 py-3">
                 <ActiveSwitch user={user} />

@@ -165,6 +165,58 @@ export async function createUser(
 }
 
 /**
+ * Admin password reset (Owner 2026-08-27). Until this existed a password could
+ * only be set when the account was created, so a person who forgot theirs had
+ * no way back in — there is no reset-by-email flow in this app.
+ *
+ * Unlike the self-service change in settings/actions.ts this does NOT ask for
+ * the current password: the whole point is that nobody knows it. That makes it
+ * a takeover primitive, so it is fenced twice — `org.manage`, and an admin may
+ * not reset an OWNER's password. Without that second rule any admin could
+ * seize the owner account, which is a privilege escalation wearing a support
+ * task's clothes. Only an owner may reset another owner.
+ *
+ * The new password is never logged: the audit entry records who reset whose
+ * account, never the secret.
+ */
+export async function resetUserPassword(
+  actor: Actor,
+  userId: string,
+  password: string,
+) {
+  assertCan(actor, "org.manage");
+  if (password.length < 8) {
+    throw new Error("The new password needs at least 8 characters.");
+  }
+
+  const [target] = await db
+    .select({ id: profiles.id, email: profiles.email, role: profiles.role })
+    .from(profiles)
+    .where(eq(profiles.id, userId))
+    .limit(1);
+  if (!target) throw new Error("That user no longer exists.");
+
+  if (target.role === "external") {
+    throw new Error("External guests sign in by magic link — they have no password.");
+  }
+  if (target.role === "owner" && actor.role !== "owner") {
+    throw new Error("Only an owner can reset an owner's password.");
+  }
+
+  await db
+    .update(profiles)
+    .set({ passwordHash: hashPassword(password), updatedAt: new Date() })
+    .where(eq(profiles.id, userId));
+
+  await logActivity({
+    actorId: actor.id,
+    action: "user.password_reset",
+    entity: `profile:${userId}`,
+    detail: { email: target.email },
+  });
+}
+
+/**
  * Admin-side contact details (EPIC-016 follow-up). Until this existed a
  * number could only be set by each person in their own Settings, so the
  * WhatsApp gateway had no recipients at all.

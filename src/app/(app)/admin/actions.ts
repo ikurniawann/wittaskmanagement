@@ -8,6 +8,7 @@ import {
   removeMembership,
   setUserActive,
   setUserContact,
+  resetUserPassword,
   createDivision,
   renameDivision,
   deleteDivision,
@@ -83,6 +84,25 @@ export async function setUserContactAction(
       phone: String(formData.get("phone") ?? ""),
       whatsappNotifications: formData.get("whatsapp") === "on",
     });
+    revalidatePath("/admin");
+    return { ok: true };
+  } catch (error) {
+    return asError(error);
+  }
+}
+
+export async function resetUserPasswordAction(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  try {
+    const actor = await requireActor();
+    const next = String(formData.get("password") ?? "");
+    const confirm = String(formData.get("confirm") ?? "");
+    // checked here as well as in the service so the admin gets the mismatch
+    // back as a field error rather than a thrown one
+    if (next !== confirm) return { error: "The two passwords do not match." };
+    await resetUserPassword(actor, String(formData.get("userId")), next);
     revalidatePath("/admin");
     return { ok: true };
   } catch (error) {
