@@ -717,6 +717,8 @@ export async function uploadFromShare(
     fileName: name,
     uploadedBy: resolution.viewerEmail ?? "a guest via a progress link",
     skipProfileId: null,
+    // the sub-task's own task decides who hears about it
+    taskId: link.taskId,
   });
 
   return {

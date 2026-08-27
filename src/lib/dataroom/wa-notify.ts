@@ -1,18 +1,24 @@
-import { and, eq, inArray } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { db } from "@/db";
-import { dataroomFolders, eventPeople, events, profiles } from "@/db/schema";
+import { dataroomFolders, eventPeople, events, profiles, tasks } from "@/db/schema";
 import { env } from "@/lib/env";
 import { sendWhatsApp } from "@/lib/whatsapp";
 import { getWaTemplate } from "@/lib/whatsapp/template-store";
 import { firstName, renderTemplate } from "@/lib/whatsapp/templates";
 
-// Tells a project's people that something landed in their document room
+// Tells ONE person that something landed in a project's document room
 // (Owner 2026-08-28).
 //
-// Recipients are the project's OWN roster (event_people), not everyone in the
-// divisions attached to it: every division is attached to every project here,
-// so the division route would text the whole company on every upload. The
-// roster is the list somebody deliberately put on this project.
+// One, not the whole roster. The gateway is a linked personal device, not a
+// business API: fanning a message out to eight people on every upload is
+// exactly the pattern that gets a number restricted, and this install has
+// already seen "error 463: account restricted" once.
+//
+// Who that one person is depends on what the file was filed against:
+//   • uploaded against a sub-task  -> that task's Lead/PIC
+//   • uploaded straight into a folder -> the project's PIC
+// with the project PIC as the fallback either way, and nobody at all if the
+// only candidate is the person who just uploaded — they already know.
 //
 // Fails soft, like every other notification path: a file that reached the disk
 // must not be rolled back because a message could not be delivered.
@@ -50,6 +56,8 @@ export async function notifyDataroomUpload(input: {
   uploadedBy: string;
   /** never text the person who just did it */
   skipProfileId?: string | null;
+  /** when the file was filed against a sub-task — routes to that task's lead */
+  taskId?: string | null;
 }): Promise<void> {
   try {
     const [event] = await db
@@ -59,14 +67,27 @@ export async function notifyDataroomUpload(input: {
       .limit(1);
     if (!event) return;
 
-    const roster = await db
-      .select({ userId: eventPeople.userId })
-      .from(eventPeople)
-      .where(eq(eventPeople.eventId, input.eventId));
-    const ids = roster
-      .map((r) => r.userId)
-      .filter((id) => id !== input.skipProfileId);
-    if (ids.length === 0) return;
+    // the task's lead first, when the upload had a task behind it
+    let recipientId: string | null = null;
+    if (input.taskId) {
+      const [task] = await db
+        .select({ leadId: tasks.leadId })
+        .from(tasks)
+        .where(eq(tasks.id, input.taskId))
+        .limit(1);
+      recipientId = task?.leadId ?? null;
+    }
+    if (!recipientId) {
+      const [pic] = await db
+        .select({ userId: eventPeople.userId })
+        .from(eventPeople)
+        .where(
+          and(eq(eventPeople.eventId, input.eventId), eq(eventPeople.role, "pic")),
+        )
+        .limit(1);
+      recipientId = pic?.userId ?? null;
+    }
+    if (!recipientId || recipientId === input.skipProfileId) return;
 
     const people = await db
       .select({
@@ -77,7 +98,7 @@ export async function notifyDataroomUpload(input: {
       .from(profiles)
       .where(
         and(
-          inArray(profiles.id, ids),
+          eq(profiles.id, recipientId),
           eq(profiles.whatsappNotifications, true),
           eq(profiles.isActive, true),
         ),
