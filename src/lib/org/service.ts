@@ -254,6 +254,88 @@ export async function setUserContact(
   });
 }
 
+/**
+ * Edit a user's name, email and role (Owner 2026-08-27). Until this existed a
+ * role was fixed at creation, so promoting someone meant deleting and
+ * recreating their account — losing their history with it.
+ *
+ * Two guards beyond org.manage, both about the same danger — an admin quietly
+ * becoming, or unmaking, an owner:
+ *
+ *   1. Only an owner may grant or remove the `owner` role. An admin promoting
+ *      themselves would be a one-click takeover.
+ *   2. The last owner cannot be demoted. An organisation with no owner has
+ *      nobody who can appoint one, which is a locked door with the key inside.
+ */
+export async function updateUser(
+  actor: Actor,
+  userId: string,
+  input: { name: string; email: string; role: "owner" | "admin" | "member" | "external" },
+) {
+  assertCan(actor, "org.manage");
+
+  const [target] = await db
+    .select()
+    .from(profiles)
+    .where(eq(profiles.id, userId))
+    .limit(1);
+  if (!target) throw new Error("That user no longer exists.");
+
+  const name = input.name.trim();
+  const email = input.email.trim().toLowerCase();
+  if (name.length < 2) throw new Error("A name is required.");
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+    throw new Error("That email address does not look valid.");
+  }
+
+  if (email !== target.email) {
+    const [clash] = await db
+      .select({ id: profiles.id })
+      .from(profiles)
+      .where(eq(profiles.email, email))
+      .limit(1);
+    if (clash && clash.id !== userId) {
+      throw new Error("Another account already uses that email.");
+    }
+  }
+
+  const roleChanged = input.role !== target.role;
+  if (roleChanged) {
+    if ((input.role === "owner" || target.role === "owner") && actor.role !== "owner") {
+      throw new Error("Only an owner can grant or remove the owner role.");
+    }
+    if (target.role === "owner" && input.role !== "owner") {
+      const [{ count }] = await db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(profiles)
+        .where(and(eq(profiles.role, "owner"), eq(profiles.isActive, true)));
+      if (count <= 1) {
+        throw new Error("This is the last owner — appoint another one first.");
+      }
+    }
+    if (input.role === "external" && target.passwordHash) {
+      // an external signs in by magic link; leaving a usable password behind
+      // would be a second, unadvertised way in
+      await db.update(profiles).set({ passwordHash: null }).where(eq(profiles.id, userId));
+    }
+  }
+
+  await db
+    .update(profiles)
+    .set({ name, email, role: input.role, updatedAt: new Date() })
+    .where(eq(profiles.id, userId));
+
+  await logActivity({
+    actorId: actor.id,
+    action: "user.update",
+    entity: `profile:${userId}`,
+    detail: {
+      email,
+      ...(roleChanged ? { roleFrom: target.role, roleTo: input.role } : {}),
+    },
+  });
+}
+
 export async function setUserActive(
   actor: Actor,
   userId: string,

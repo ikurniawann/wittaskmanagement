@@ -128,6 +128,7 @@ export default async function AdminPage() {
       />
 
       <AdminTabs
+        actorRole={actor.role}
         users={users.map((u) => ({
           id: u.id,
           name: u.name,

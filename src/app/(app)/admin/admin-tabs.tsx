@@ -1,7 +1,8 @@
 "use client";
 
-import { Crown, KeyRound, Mail, ShieldCheck, Star, User } from "lucide-react";
+import { Crown, KeyRound, Mail, Pencil, ShieldCheck, Star, User } from "lucide-react";
 import { useActionState, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { ChipMultiSelect, UserSingleSelect } from "@/components/choice-chips";
 import { Segmented } from "@/components/segmented";
 import { UserAvatar } from "@/components/task-meta";
@@ -15,6 +16,7 @@ import {
   createUserAction,
   removeMembershipAction,
   resetUserPasswordAction,
+  updateUserAction,
   setUserContactAction,
   toggleActiveAction,
   type ActionState,
@@ -64,7 +66,9 @@ const DIVISION_ROLE_OPTIONS = [
 export function AdminTabs({
   users,
   divisions,
+  actorRole,
 }: {
+  actorRole: string;
   users: AdminUser[];
   divisions: AdminDivision[];
 }) {
@@ -91,7 +95,7 @@ export function AdminTabs({
       </div>
 
       {tab === "users" ? (
-        <UsersTable users={users} divisions={divisions} />
+        <UsersTable users={users} divisions={divisions} actorRole={actorRole} />
       ) : null}
       {tab === "create" ? <CreateUserForm divisions={divisions} /> : null}
       {tab === "assign" ? (
@@ -177,6 +181,127 @@ function ContactCell({ user }: { user: AdminUser }) {
         </span>
       )}
     </form>
+  );
+}
+
+function EditUserTrigger({ user, actorRole }: { user: AdminUser; actorRole: string }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <button
+        type="button"
+        aria-label={`Edit ${user.name}`}
+        onClick={() => setOpen(true)}
+        className="ml-auto flex size-7 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+      >
+        <Pencil className="size-3.5" />
+      </button>
+      {open ? (
+        <EditUserDialog user={user} actorRole={actorRole} onClose={() => setOpen(false)} />
+      ) : null}
+    </>
+  );
+}
+
+const ROLES = ["owner", "admin", "member", "external"] as const;
+
+/**
+ * Edit a user's name, email and role.
+ *
+ * The owner option is disabled unless the person doing the editing IS an
+ * owner — the server refuses it either way, but a control that looks
+ * available and then errors is a worse explanation than one that shows the
+ * rule up front. Portalled, so the dialog centres on the page rather than on
+ * whatever ancestor happens to be positioned.
+ */
+function EditUserDialog({
+  user,
+  actorRole,
+  onClose,
+}: {
+  user: AdminUser;
+  actorRole: string;
+  onClose: () => void;
+}) {
+  const [state, formAction, pending] = useActionState<ActionState, FormData>(
+    updateUserAction,
+    {},
+  );
+  const [role, setRole] = useState(user.role);
+
+  if (state.ok) {
+    // the row behind has already been revalidated
+    onClose();
+  }
+
+  return createPortal(
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+      <form
+        action={formAction}
+        className="flex w-full max-w-sm flex-col gap-4 rounded-lg border bg-card p-5 shadow-lg"
+      >
+        <input type="hidden" name="userId" value={user.id} />
+        <h2 className="text-sm font-semibold">Edit {user.name}</h2>
+
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="eu-name">Name</Label>
+          <Input id="eu-name" name="name" defaultValue={user.name} required autoFocus />
+        </div>
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="eu-email">Email</Label>
+          <Input id="eu-email" name="email" type="email" defaultValue={user.email} required />
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <Label>Role</Label>
+          <input type="hidden" name="role" value={role} />
+          <div className="flex flex-wrap gap-1.5">
+            {ROLES.map((r) => {
+              const locked = (r === "owner" || user.role === "owner") && actorRole !== "owner";
+              return (
+                <button
+                  key={r}
+                  type="button"
+                  disabled={locked}
+                  onClick={() => setRole(r)}
+                  title={locked ? "Only an owner can grant or remove the owner role" : undefined}
+                  className={cn(
+                    "rounded-full border px-3 py-1 text-xs capitalize transition-all",
+                    role === r
+                      ? "border-foreground bg-foreground font-medium text-background"
+                      : "text-muted-foreground hover:border-foreground/40 hover:text-foreground",
+                    locked && "cursor-not-allowed opacity-40 hover:border-border hover:text-muted-foreground",
+                  )}
+                >
+                  {r}
+                </button>
+              );
+            })}
+          </div>
+          {role === "external" && user.role !== "external" ? (
+            <p className="text-[11px] text-muted-foreground">
+              An external guest signs in by magic link — their password will be removed.
+            </p>
+          ) : null}
+        </div>
+
+        {state.error ? (
+          <p role="alert" className="text-sm text-destructive">
+            {state.error}
+          </p>
+        ) : null}
+
+        <div className="flex justify-end gap-2">
+          <Button type="button" size="sm" variant="ghost" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button type="submit" size="sm" disabled={pending}>
+            {pending ? "Saving…" : "Save"}
+          </Button>
+        </div>
+      </form>
+    </div>,
+    document.body,
   );
 }
 
@@ -266,9 +391,11 @@ function PasswordCell({ user }: { user: AdminUser }) {
 function UsersTable({
   users,
   divisions,
+  actorRole,
 }: {
   users: AdminUser[];
   divisions: AdminDivision[];
+  actorRole: string;
 }) {
   const divisionName = new Map(divisions.map((d) => [d.id, d.name]));
 
@@ -303,6 +430,7 @@ function UsersTable({
                       {user.email}
                     </span>
                   </span>
+                  <EditUserTrigger user={user} actorRole={actorRole} />
                 </span>
               </td>
               <td className="px-4 py-3">

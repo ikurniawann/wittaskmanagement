@@ -9,6 +9,7 @@ import {
   setUserActive,
   setUserContact,
   resetUserPassword,
+  updateUser,
   createDivision,
   renameDivision,
   deleteDivision,
@@ -103,6 +104,28 @@ export async function resetUserPasswordAction(
     // back as a field error rather than a thrown one
     if (next !== confirm) return { error: "The two passwords do not match." };
     await resetUserPassword(actor, String(formData.get("userId")), next);
+    revalidatePath("/admin");
+    return { ok: true };
+  } catch (error) {
+    return asError(error);
+  }
+}
+
+export async function updateUserAction(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  try {
+    const actor = await requireActor();
+    await updateUser(actor, String(formData.get("userId")), {
+      name: String(formData.get("name") ?? ""),
+      email: String(formData.get("email") ?? ""),
+      role: String(formData.get("role") ?? "member") as
+        | "owner"
+        | "admin"
+        | "member"
+        | "external",
+    });
     revalidatePath("/admin");
     return { ok: true };
   } catch (error) {
