@@ -26,6 +26,7 @@ function gates(formData: FormData) {
     passcode: String(formData.get("passcode") ?? "") || undefined,
     allowedEmails: parseAllowedEmails(String(formData.get("allowedEmails") ?? "")),
     requireEmail: formData.get("requireEmail") === "on",
+    allowUpload: formData.get("allowUpload") === "on",
     label: String(formData.get("label") ?? "") || undefined,
   };
 }

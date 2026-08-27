@@ -1,0 +1,1 @@
+ALTER TABLE "summary_share_links" ADD COLUMN "allow_upload" boolean DEFAULT false NOT NULL;

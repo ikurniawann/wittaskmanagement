@@ -11,6 +11,7 @@ import {
 } from "@/lib/summary-share/service";
 import { cn } from "@/lib/utils";
 import { GateForm } from "./gate-form";
+import { UploadPanel } from "./upload-panel";
 
 // Read-only progress page for someone with no account (Owner 2026-08-27).
 // Outside the (app) group: no sidebar, no session, nothing of the workspace.
@@ -179,7 +180,7 @@ function ProjectView({ view }: { view: ProjectSummaryView }) {
   );
 }
 
-function TaskView({ view }: { view: TaskSummaryView }) {
+function TaskView({ view, token }: { view: TaskSummaryView; token: string }) {
   const { checklist } = view;
   return (
     <div className="flex w-full max-w-2xl flex-col gap-5">
@@ -238,6 +239,10 @@ function TaskView({ view }: { view: TaskSummaryView }) {
           </ul>
         </div>
       ) : null}
+
+      {view.allowUpload ? (
+        <UploadPanel token={token} targets={view.uploadTargets} />
+      ) : null}
     </div>
   );
 }
@@ -293,7 +298,7 @@ export default async function ProgressPage({
       ) : resolution.view.kind === "project" ? (
         <ProjectView view={resolution.view} />
       ) : (
-        <TaskView view={resolution.view} />
+        <TaskView view={resolution.view} token={token} />
       )}
 
       {resolution.ok ? (

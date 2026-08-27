@@ -165,6 +165,21 @@ export function SummaryShareDialog({
               Ask who they are before the page opens
             </label>
 
+            {kind === "task" ? (
+              // default OFF: this is the one switch here that lets an
+              // outsider WRITE into the document room, so it is opted into
+              <label className="flex items-start gap-2 text-xs">
+                <Switch name="allowUpload" />
+                <span className="flex flex-col gap-0.5">
+                  Let them upload files against each sub-task
+                  <span className="text-[11px] text-muted-foreground">
+                    Filed into the document room under “{targetName} / sub-task”.
+                    Anyone holding this link can add files.
+                  </span>
+                </span>
+              </label>
+            ) : null}
+
             {state.error ? (
               <p role="alert" className="text-xs text-destructive">
                 {state.error}

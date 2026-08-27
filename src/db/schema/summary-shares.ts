@@ -52,6 +52,14 @@ export const summaryShareLinks = pgTable(
     requireEmail: boolean("require_email").notNull().default(true),
     /** when set, only these addresses may proceed */
     allowedEmails: jsonb("allowed_emails"),
+    /**
+     * Lets the recipient upload into the task's dataroom folders (Owner
+     * 2026-08-27). Default FALSE and deliberately so: every link handed out
+     * before this existed stays read-only, and turning a link into one that
+     * can WRITE into the room should be a decision someone made on purpose,
+     * not a capability that arrived with an upgrade.
+     */
+    allowUpload: boolean("allow_upload").notNull().default(false),
     /** counted in place of a second log table; the audit trail gets an
      *  activity_log row per open as well */
     opens: integer("opens").notNull().default(0),

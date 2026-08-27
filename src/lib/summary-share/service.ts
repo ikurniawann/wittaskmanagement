@@ -2,6 +2,10 @@ import { createHash, randomBytes } from "node:crypto";
 import { and, asc, eq, isNull, sql } from "drizzle-orm";
 import { db } from "@/db";
 import {
+  dataroomAccessLog,
+  dataroomFileVersions,
+  dataroomFiles,
+  dataroomFolders,
   divisions,
   eventPhases,
   events,
@@ -20,6 +24,9 @@ import {
   type ShareVerdict,
 } from "@/lib/dataroom/share-rules";
 import { env } from "@/lib/env";
+import { decideUpload } from "@/lib/dataroom/quota";
+import { quotaFor, usedBytes } from "@/lib/dataroom/service";
+import { freeDiskBytes, writeVersion } from "@/lib/dataroom/storage";
 import { assertCan, type Actor } from "@/lib/permissions";
 import { summarizeStatuses } from "@/lib/tasks/progress";
 import type { TaskStatus } from "@/lib/tasks/service";
@@ -38,6 +45,8 @@ function hashToken(token: string): string {
 
 export interface CreateSummaryShareInput {
   expiryDays?: number;
+  /** task links only — lets the recipient upload into the task's folders */
+  allowUpload?: boolean;
   passcode?: string;
   requireEmail?: boolean;
   allowedEmails?: string[] | null;
@@ -72,6 +81,9 @@ async function insertLink(
       passcodeHash: input.passcode?.trim() ? hashPassword(input.passcode.trim()) : null,
       requireEmail: input.requireEmail ?? true,
       allowedEmails: (input.allowedEmails ?? null) as never,
+      // a project link never accepts uploads: there is no sub-task to file
+      // them under, and "somewhere in this project" is not a destination
+      allowUpload: row.kind === "task" ? (input.allowUpload ?? false) : false,
       createdBy: actor.id,
     })
     .returning({ id: summaryShareLinks.id });
@@ -276,6 +288,10 @@ export interface TaskSummaryView {
   dueDate: string | null;
   overdue: boolean;
   checklist: ReturnType<typeof publicChecklist>;
+  /** the recipient may file documents against each sub-task */
+  allowUpload: boolean;
+  /** sub-tasks they may upload against — id is needed to name the folder */
+  uploadTargets: Array<{ id: string; title: string }>;
 }
 
 export type SummaryView = ProjectSummaryView | TaskSummaryView;
@@ -371,7 +387,11 @@ async function buildProjectView(eventId: string, now: Date): Promise<ProjectSumm
   };
 }
 
-async function buildTaskView(taskId: string, now: Date): Promise<TaskSummaryView | null> {
+async function buildTaskView(
+  taskId: string,
+  now: Date,
+  allowUpload: boolean,
+): Promise<TaskSummaryView | null> {
   const [task] = await db.select().from(tasks).where(eq(tasks.id, taskId)).limit(1);
   // restricted is re-checked at READ time, not only at creation: a task can be
   // marked restricted after a link was handed out, and that must close it
@@ -402,6 +422,8 @@ async function buildTaskView(taskId: string, now: Date): Promise<TaskSummaryView
       task.dueDate !== null &&
       dayNumber(task.dueDate) < dayNumber(now),
     checklist: publicChecklist(items),
+    allowUpload,
+    uploadTargets: allowUpload ? items.map((i) => ({ id: i.id, title: i.title })) : [],
   };
 }
 
@@ -462,7 +484,7 @@ export async function resolveSummaryShare(
 
   const now = new Date();
   const view = link!.taskId
-    ? await buildTaskView(link!.taskId, now)
+    ? await buildTaskView(link!.taskId, now, link!.allowUpload)
     : await buildProjectView(link!.eventId, now);
   // an archived project or a newly-restricted task behaves as a dead link
   if (!view) {
@@ -498,4 +520,194 @@ export async function recordSummaryOpen(
     detail: { viewer: viewer ?? "anonymous" },
     eventId: link.eventId,
   });
+}
+
+// ---- guest uploads (Owner 2026-08-27) ------------------------------------
+
+/**
+ * Finds — or creates once — the pair of folders a sub-task files into:
+ * `<task name>/<sub-task name>`, inside the task's own project dataroom.
+ *
+ * Matched by NAME rather than kept in a column, so a folder someone renamed
+ * or moved by hand is not silently duplicated on the next upload... and, the
+ * other way round, renaming the task later starts a fresh folder rather than
+ * retitling one that other people may already be using. That is the honest
+ * trade: no hidden coupling between a task's title and a folder's identity.
+ *
+ * Visibility is "event" — anyone on the project. A guest-facing drop box that
+ * landed in a sealed folder would be invisible to the very team meant to
+ * collect it.
+ */
+async function ensureUploadFolder(
+  eventId: string,
+  taskTitle: string,
+  subTaskTitle: string,
+  createdBy: string | null,
+): Promise<string> {
+  const findOrCreate = async (name: string, parentId: string | null) => {
+    const clean = name.trim().slice(0, 120) || "Untitled";
+    const existing = await db
+      .select({ id: dataroomFolders.id })
+      .from(dataroomFolders)
+      .where(
+        and(
+          eq(dataroomFolders.eventId, eventId),
+          eq(dataroomFolders.name, clean),
+          parentId === null
+            ? isNull(dataroomFolders.parentId)
+            : eq(dataroomFolders.parentId, parentId),
+        ),
+      )
+      .limit(1);
+    if (existing[0]) return existing[0].id;
+    const [created] = await db
+      .insert(dataroomFolders)
+      .values({
+        eventId,
+        parentId,
+        name: clean,
+        visibility: "event",
+        createdBy,
+      })
+      .returning({ id: dataroomFolders.id });
+    return created.id;
+  };
+
+  const taskFolderId = await findOrCreate(taskTitle, null);
+  return findOrCreate(subTaskTitle, taskFolderId);
+}
+
+export interface ShareUploadResult {
+  fileName: string;
+  sizeBytes: number;
+  folderPath: string;
+}
+
+/**
+ * A file arriving through a share link.
+ *
+ * The link is the authorisation, so it is re-verified here rather than
+ * trusted from the page that rendered the form: the token must still open,
+ * the link must carry allowUpload, and the sub-task must belong to THIS
+ * link's task. Without that last check a valid token plus a guessed checklist
+ * id would file documents into someone else's project.
+ *
+ * The project's dataroom quota and the disk floor are enforced with the same
+ * decideUpload the internal path uses — a guest must not be able to fill the
+ * disk any more than a colleague can.
+ */
+export async function uploadFromShare(
+  token: string,
+  attempt: { passcode?: string; email?: string; passcodeVerified?: boolean },
+  input: {
+    checklistItemId: string;
+    name: string;
+    declaredSize: number;
+    mimeType?: string;
+    body: ReadableStream<Uint8Array> | Buffer;
+  },
+): Promise<ShareUploadResult> {
+  const resolution = await resolveSummaryShare(token, attempt);
+  if (!resolution.ok) throw new Error(resolution.message);
+  if (resolution.view.kind !== "task" || !resolution.view.allowUpload) {
+    throw new Error("This link does not accept uploads.");
+  }
+
+  const [link] = await db
+    .select()
+    .from(summaryShareLinks)
+    .where(eq(summaryShareLinks.id, resolution.linkId))
+    .limit(1);
+  if (!link?.taskId) throw new Error("This link does not accept uploads.");
+
+  const [item] = await db
+    .select()
+    .from(taskChecklistItems)
+    .where(
+      and(
+        eq(taskChecklistItems.id, input.checklistItemId),
+        // the binding that keeps one link from writing into another's task
+        eq(taskChecklistItems.taskId, link.taskId),
+      ),
+    )
+    .limit(1);
+  if (!item) throw new Error("That sub-task is not part of this link.");
+
+  const [task] = await db.select().from(tasks).where(eq(tasks.id, link.taskId)).limit(1);
+  if (!task || task.restricted) throw new Error("This link is no longer valid.");
+
+  const folderId = await ensureUploadFolder(
+    task.eventId,
+    task.title,
+    item.title,
+    link.createdBy,
+  );
+
+  const [used, limit, free] = await Promise.all([
+    usedBytes(task.eventId),
+    quotaFor(task.eventId),
+    freeDiskBytes(),
+  ]);
+  const verdict = decideUpload({
+    usedBytes: used,
+    limitBytes: limit,
+    incomingBytes: input.declaredSize,
+    freeDiskBytes: free,
+  });
+  if (!verdict.ok) throw new Error(verdict.message);
+
+  const name = input.name.trim().slice(0, 200) || "Untitled";
+  const [file] = await db
+    .insert(dataroomFiles)
+    .values({
+      eventId: task.eventId,
+      folderId,
+      name,
+      currentVersion: 1,
+      // a guest has no profile; the access log names them by email instead
+      createdBy: null,
+    })
+    .returning({ id: dataroomFiles.id });
+
+  let written: number;
+  try {
+    written = await writeVersion(
+      task.eventId,
+      file.id,
+      1,
+      input.body,
+      verdict.remainingAfter + input.declaredSize,
+    );
+  } catch (error) {
+    // a first version that never landed leaves a row pointing at nothing
+    await db.delete(dataroomFiles).where(eq(dataroomFiles.id, file.id));
+    throw error;
+  }
+
+  await db.insert(dataroomFileVersions).values({
+    fileId: file.id,
+    versionNo: 1,
+    sizeBytes: written,
+    mimeType: input.mimeType || "application/octet-stream",
+    uploadedBy: null,
+  });
+
+  await db.insert(dataroomAccessLog).values({
+    actorId: null,
+    viewerEmail: resolution.viewerEmail,
+    shareLinkId: link.id,
+    fileId: file.id,
+    folderId,
+    eventId: task.eventId,
+    fileName: name,
+    versionNo: 1,
+    action: "upload",
+    note: `via progress link${link.label ? ` “${link.label}”` : ""} — ${task.title} / ${item.title}`,
+  });
+
+  return {
+    fileName: name,
+    sizeBytes: written,
+    folderPath: `${task.title} / ${item.title}`,
+  };
 }
