@@ -1,3 +1,5 @@
+import { ShareOpensBadge } from "@/components/share-opens-badge";
+import { shareOpensByTask } from "@/lib/summary-share/service";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
@@ -70,7 +72,8 @@ export default async function TaskListPage({
     status: str("status") as TaskStatus | undefined,
   };
 
-  const [tasks, divisions, saved, eventDivisionList, labels] = await Promise.all([
+  const [tasks, divisions, saved, eventDivisionList, labels, shareOpens] =
+    await Promise.all([
     listEventTasks(actor, id, {
       priority: filters.priority,
       divisionId: filters.divisionId,
@@ -79,6 +82,7 @@ export default async function TaskListPage({
     listSavedFilters(actor),
     listEventDivisions(actor, id),
     listLabels(),
+      shareOpensByTask(actor, id),
   ]);
   const divisionName = new Map(divisions.map((d) => [d.id, d.name]));
 
@@ -211,6 +215,7 @@ export default async function TaskListPage({
             leadId: task.leadId,
             assignees: task.assignees,
             canEdit: can(actor, "task.edit", { divisionId: task.divisionId }),
+            shareOpens: shareOpens.get(task.id) ?? null,
           }))}
           divisionName={Object.fromEntries(divisionName)}
           people={Object.fromEntries(
@@ -263,6 +268,9 @@ export default async function TaskListPage({
                       ))}
                       {depBadges.has(task.id) ? (
                         <DependencyBadge {...depBadges.get(task.id)!} />
+                      ) : null}
+                      {shareOpens.has(task.id) ? (
+                        <ShareOpensBadge {...shareOpens.get(task.id)!} />
                       ) : null}
                       <span className="hidden text-xs text-muted-foreground md:block">
                         {divisionName.get(task.divisionId)}

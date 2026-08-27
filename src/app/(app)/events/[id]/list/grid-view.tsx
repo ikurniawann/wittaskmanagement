@@ -1,5 +1,6 @@
 "use client";
 
+import { ShareOpensBadge } from "@/components/share-opens-badge";
 import { Check, ChevronDown, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -36,6 +37,8 @@ export interface GridTask {
   leadId: string | null;
   assignees: Array<{ id: string; name: string; avatarPath?: string | null }>;
   canEdit: boolean;
+  /** null when this task has never been shared outside */
+  shareOpens: { opens: number; live: boolean } | null;
 }
 
 const PRIORITIES = ["urgent", "high", "medium", "low"] as const;
@@ -148,6 +151,7 @@ export function GridView({
                   ) : (
                     <span className="px-1.5 py-1">{task.title}</span>
                   )}
+                  {task.shareOpens ? <ShareOpensBadge {...task.shareOpens} /> : null}
                   <Link
                     href={`/tasks/${task.id}`}
                     title="Open task"

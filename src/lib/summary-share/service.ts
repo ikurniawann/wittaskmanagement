@@ -176,6 +176,51 @@ export async function listTaskShares(actor: Actor, taskId: string) {
   return rows.map((r) => toRow(r, now)).sort((a, b) => +b.createdAt - +a.createdAt);
 }
 
+export interface TaskShareOpens {
+  /** every open this task's links have ever had, live or withdrawn */
+  opens: number;
+  /** at least one link is still usable right now */
+  live: boolean;
+}
+
+/**
+ * Open counts per task for one project, for the task list (Owner 2026-08-27).
+ *
+ * Withdrawn and expired links still contribute: the question the column
+ * answers is "how often has this been looked at from outside", and revoking a
+ * link does not un-view it. `live` says whether anything is still open, which
+ * is the separate question.
+ *
+ * Gated at event.view — the same right the list itself needs. It exposes no
+ * token and no viewer, only counts.
+ */
+export async function shareOpensByTask(
+  actor: Actor,
+  eventId: string,
+): Promise<Map<string, TaskShareOpens>> {
+  assertCan(actor, "event.view");
+  const rows = await db
+    .select({
+      taskId: summaryShareLinks.taskId,
+      opens: summaryShareLinks.opens,
+      expiresAt: summaryShareLinks.expiresAt,
+      revokedAt: summaryShareLinks.revokedAt,
+    })
+    .from(summaryShareLinks)
+    .where(eq(summaryShareLinks.eventId, eventId));
+
+  const now = Date.now();
+  const out = new Map<string, TaskShareOpens>();
+  for (const r of rows) {
+    if (!r.taskId) continue; // project-level links are not a task's business
+    const cell = out.get(r.taskId) ?? { opens: 0, live: false };
+    cell.opens += r.opens;
+    if (r.revokedAt === null && r.expiresAt.getTime() > now) cell.live = true;
+    out.set(r.taskId, cell);
+  }
+  return out;
+}
+
 export async function revokeSummaryShare(actor: Actor, linkId: string) {
   const [link] = await db
     .select()
