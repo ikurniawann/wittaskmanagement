@@ -278,6 +278,8 @@ export interface ProjectSummaryView {
 
 export interface TaskSummaryView {
   kind: "task";
+  /** needed by the page to look up the sub-task conversations */
+  taskId: string;
   projectName: string;
   title: string;
   description: string;
@@ -408,6 +410,7 @@ async function buildTaskView(
 
   return {
     kind: "task",
+    taskId: task.id,
     projectName: event?.name ?? "",
     title: task.title,
     description: task.description,

@@ -77,6 +77,7 @@ function dayNumber(date: Date): number {
 }
 
 export interface InternalChecklistItem {
+  id: string;
   title: string;
   done: boolean;
   startDate: Date | null;
@@ -84,6 +85,14 @@ export interface InternalChecklistItem {
 }
 
 export interface PublicChecklistItem {
+  /**
+   * Carried since the sub-task conversation (Owner 2026-08-27): the comment
+   * button needs something to address. It is an opaque uuid and the comment
+   * API still proves the link owns this sub-task, so it grants nothing on its
+   * own — but it IS one more identifier than the page used to hand out, which
+   * is why it is spelled out here rather than left to be noticed in a diff.
+   */
+  id: string;
   title: string;
   done: boolean;
   dueDate: string | null;
@@ -95,6 +104,7 @@ export function publicChecklist(
   items: InternalChecklistItem[],
 ): { items: PublicChecklistItem[]; done: number; total: number; pct: number | null } {
   const mapped = items.map((i) => ({
+    id: i.id,
     title: i.title,
     done: i.done,
     dueDate: i.dueDate ? i.dueDate.toISOString() : null,

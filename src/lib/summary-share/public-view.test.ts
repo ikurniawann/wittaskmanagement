@@ -67,11 +67,12 @@ describe("publicTaskRows", () => {
 describe("publicChecklist", () => {
   it("counts progress and drops everything but title/done/due", () => {
     const out = publicChecklist([
-      { title: "Draf", done: true, startDate: null, dueDate: null },
-      { title: "Kirim", done: false, startDate: null, dueDate: new Date("2026-08-25T00:00:00Z") },
+      { id: "i1", title: "Draf", done: true, startDate: null, dueDate: null },
+      { id: "i2", title: "Kirim", done: false, startDate: null, dueDate: new Date("2026-08-25T00:00:00Z") },
     ]);
     expect(out).toMatchObject({ done: 1, total: 2, pct: 50 });
-    expect(Object.keys(out.items[0]).sort()).toEqual(["done", "dueDate", "title"]);
+    // id joined the shape for the comment button; note nor startDate did not
+    expect(Object.keys(out.items[0]).sort()).toEqual(["done", "dueDate", "id", "title"]);
   });
 
   it("reports no percentage for an empty checklist", () => {

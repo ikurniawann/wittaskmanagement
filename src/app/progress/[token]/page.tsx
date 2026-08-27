@@ -10,6 +10,11 @@ import {
   type TaskSummaryView,
 } from "@/lib/summary-share/service";
 import { cn } from "@/lib/utils";
+import { SubtaskCommentButton } from "@/components/subtask-comment-button";
+import {
+  commentCountByItem,
+  unreadByItem,
+} from "@/lib/subtask-comments/service";
 import { GateForm } from "./gate-form";
 import { UploadPanel } from "./upload-panel";
 
@@ -180,7 +185,17 @@ function ProjectView({ view }: { view: ProjectSummaryView }) {
   );
 }
 
-function TaskView({ view, token }: { view: TaskSummaryView; token: string }) {
+function TaskView({
+  view,
+  token,
+  unread,
+  totals,
+}: {
+  view: TaskSummaryView;
+  token: string;
+  unread: Map<string, number>;
+  totals: Map<string, number>;
+}) {
   const { checklist } = view;
   return (
     <div className="flex w-full max-w-2xl flex-col gap-5">
@@ -234,6 +249,13 @@ function TaskView({ view, token }: { view: TaskSummaryView; token: string }) {
                 <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
                   {item.dueDate ? dt.format(new Date(item.dueDate)) : ""}
                 </span>
+                <SubtaskCommentButton
+                  itemId={item.id}
+                  itemTitle={item.title}
+                  token={token}
+                  unread={unread.get(item.id) ?? 0}
+                  total={totals.get(item.id) ?? 0}
+                />
               </li>
             ))}
           </ul>
@@ -262,10 +284,24 @@ export default async function ProgressPage({
     passcodeVerified: pass?.passcodeOk,
   });
 
+  let unread = new Map<string, number>();
+  let totals = new Map<string, number>();
   if (resolution.ok) {
     // counted here rather than in the gate: this is the request that actually
     // renders the numbers to a human
     await recordSummaryOpen(resolution.linkId, resolution.viewerEmail);
+    if (resolution.view.kind === "task") {
+      const reader = {
+        kind: "guest" as const,
+        shareLinkId: resolution.linkId,
+        email: resolution.viewerEmail,
+        name: resolution.viewerEmail?.split("@")[0] || "Guest",
+      };
+      [unread, totals] = await Promise.all([
+        unreadByItem(resolution.view.taskId, reader),
+        commentCountByItem(resolution.view.taskId),
+      ]);
+    }
   }
 
   const heading = !resolution.ok
@@ -298,7 +334,12 @@ export default async function ProgressPage({
       ) : resolution.view.kind === "project" ? (
         <ProjectView view={resolution.view} />
       ) : (
-        <TaskView view={resolution.view} token={token} />
+        <TaskView
+          view={resolution.view}
+          token={token}
+          unread={unread}
+          totals={totals}
+        />
       )}
 
       {resolution.ok ? (

@@ -1,4 +1,9 @@
 import { SummaryShareButton } from "@/app/(app)/summary-share/summary-share-button";
+import { SubtaskCommentButton } from "@/components/subtask-comment-button";
+import {
+  commentCountByItem,
+  unreadByItem,
+} from "@/lib/subtask-comments/service";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { AttachmentView } from "@/components/attachment-view";
@@ -15,6 +20,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { LABEL_COLORS } from "@/lib/label-colors";
 import { Input } from "@/components/ui/input";
+import { eq } from "drizzle-orm";
+import { db } from "@/db";
+import { profiles } from "@/db/schema";
 import { sessionActor } from "@/lib/auth/session-actor";
 import { can } from "@/lib/permissions";
 import {
@@ -71,6 +79,18 @@ export async function TaskDetailPanel({
     canEdit || can(actor, "task.updateAssigned", { isAssigned: task.isAssigned });
 
   const members = await listDivisionMemberOptions(task.divisionId);
+  // the team's own side of every sub-task conversation
+  // the Actor carries rights, not a display name — read it from the profile
+  const [me] = await db
+    .select({ name: profiles.name })
+    .from(profiles)
+    .where(eq(profiles.id, actor.id))
+    .limit(1);
+  const reader = { kind: "member" as const, profileId: actor.id, name: me?.name ?? "Team" };
+  const [commentUnread, commentTotals] = await Promise.all([
+    unreadByItem(task.id, reader),
+    commentCountByItem(task.id),
+  ]);
   const watching = task.watcherIds.includes(actor.id);
 
   return (
@@ -273,6 +293,12 @@ export async function TaskDetailPanel({
                       }}
                     />
                   ) : null}
+                  <SubtaskCommentButton
+                    itemId={item.id}
+                    itemTitle={item.title}
+                    unread={commentUnread.get(item.id) ?? 0}
+                    total={commentTotals.get(item.id) ?? 0}
+                  />
                   {item.priority ? <PriorityIcon priority={item.priority} /> : null}
                   {item.startDate || item.dueDate ? (
                     <span
