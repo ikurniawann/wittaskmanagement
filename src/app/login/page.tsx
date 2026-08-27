@@ -19,6 +19,12 @@ export default async function LoginPage() {
     return (
       <div className="flex min-h-svh flex-col items-center justify-center px-4">
         <div className="flex w-full max-w-sm flex-col gap-8">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/reddie-logo.png"
+            alt="Reddie"
+            className="mx-auto h-10 w-auto"
+          />
           <Logo short={branding.orgShortName} product={branding.productName} className="text-sm" />
           <div className="flex flex-col gap-4 rounded-lg border bg-card p-5">
             <div className="flex items-center gap-3">
@@ -63,6 +69,12 @@ export default async function LoginPage() {
     <div className="flex min-h-svh flex-col items-center justify-center px-4">
       <div className="flex w-full max-w-sm flex-col gap-10">
         <div className="flex flex-col gap-3">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/reddie-logo.png"
+            alt="Reddie"
+            className="mx-auto h-10 w-auto"
+          />
           <Logo short={branding.orgShortName} product={branding.productName} className="text-sm" />
           <h1 className="text-2xl font-semibold tracking-tight">
             Sign in

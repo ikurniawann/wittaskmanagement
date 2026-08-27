@@ -25,8 +25,18 @@ const dtShort = new Intl.DateTimeFormat("en-GB", {
   timeZone: "Asia/Jakarta",
 });
 
-function idr(amount: number): string {
-  return `Rp ${amount.toLocaleString("id-ID")}`;
+/** Money left this report with the budget section (Owner 2026-08-27); the
+ *  only figures here now are file sizes. */
+function bytes(n: number): string {
+  if (n < 1024) return `${n} B`;
+  const units = ["KB", "MB", "GB", "TB"];
+  let value = n / 1024;
+  let unit = 0;
+  while (value >= 1024 && unit < units.length - 1) {
+    value /= 1024;
+    unit += 1;
+  }
+  return `${value.toFixed(value >= 10 || unit === 0 ? 0 : 1)} ${units[unit]}`;
 }
 
 const HEALTH_LABEL: Record<string, string> = {
@@ -186,10 +196,16 @@ export function buildEventReportPdf(report: EventReport): Promise<Buffer> {
             })`,
       ],
       [
-        "Budget burn",
-        report.budget.burnPct !== null
-          ? `${report.budget.burnPct}% of ${idr(report.budget.planned)}`
-          : "no budget lines yet",
+        "Sub-task progress",
+        report.subtasks.pct === null
+          ? "no sub-tasks yet"
+          : `${report.subtasks.pct}%  (${report.subtasks.done}/${report.subtasks.total} done)`,
+      ],
+      [
+        "Documents filed",
+        report.dataroom.files === 0
+          ? "nothing in the document room yet"
+          : `${report.dataroom.files} file${report.dataroom.files === 1 ? "" : "s"} across ${report.dataroom.byFolder.length} folder${report.dataroom.byFolder.length === 1 ? "" : "s"} (${bytes(report.dataroom.totalBytes)})`,
       ],
     ]);
 
@@ -246,28 +262,50 @@ export function buildEventReportPdf(report: EventReport): Promise<Buffer> {
       );
     }
 
-    // ---- budget ------------------------------------------------------------
-    section("Budget");
-    keyValue([
-      ["Planned", idr(report.budget.planned)],
-      ["Committed", idr(report.budget.committed)],
-      ["Actual (paid)", idr(report.budget.actual)],
-      ["Remaining", idr(report.budget.remaining)],
-    ]);
-    if (report.budget.lines.length > 0) {
-      doc.moveDown(0.3);
+    // ---- sub-tasks ---------------------------------------------------------
+    section(`Sub-tasks (${report.subtasks.done}/${report.subtasks.total} done)`);
+    if (report.subtasks.byTask.length === 0) {
+      doc.fontSize(9).fillColor("#666").text("No sub-tasks on this project yet.");
+      doc.fillColor("#000");
+    } else {
       table(
         [
-          { header: "Division · line", width: 220 },
-          { header: "Planned", width: 90, align: "right" },
-          { header: "Committed", width: 90, align: "right" },
-          { header: "Paid", width: 90, align: "right" },
+          { header: "Task", width: 200 },
+          { header: "Division", width: 110 },
+          { header: "Done", width: 55, align: "right" },
+          { header: "Still open", width: 205 },
         ],
-        report.budget.lines.map((line) => [
-          `${line.division} · ${line.name}`,
-          idr(line.planned),
-          idr(line.committed),
-          idr(line.actual),
+        report.subtasks.byTask.map((t) => [
+          t.task,
+          t.division,
+          `${t.done}/${t.total}`,
+          // the open items ARE the report; a finished list says only "done"
+          t.open.length === 0 ? "—" : t.open.join(", "),
+        ]),
+      );
+    }
+
+    // ---- dataroom ----------------------------------------------------------
+    section(`Document room (${report.dataroom.files} file${report.dataroom.files === 1 ? "" : "s"})`);
+    if (report.dataroom.byFolder.length === 0) {
+      doc
+        .fontSize(9)
+        .fillColor("#666")
+        .text("Nothing has been filed in the document room yet.");
+      doc.fillColor("#000");
+    } else {
+      table(
+        [
+          { header: "Folder", width: 190 },
+          { header: "Files", width: 50, align: "right" },
+          { header: "Size", width: 70, align: "right" },
+          { header: "Contents", width: 260 },
+        ],
+        report.dataroom.byFolder.map((f) => [
+          f.path,
+          String(f.files),
+          bytes(f.bytes),
+          f.names.join(", "),
         ]),
       );
     }
@@ -284,14 +322,12 @@ export function buildEventReportPdf(report: EventReport): Promise<Buffer> {
       doc.moveDown(0.3);
       table(
         [
-          { header: "Awaiting decision", width: 280 },
-          { header: "Type", width: 100 },
-          { header: "Amount", width: 110, align: "right" },
+          { header: "Awaiting decision", width: 380 },
+          { header: "Type", width: 110 },
         ],
         report.approvals.pendingItems.map((a) => [
           a.title,
           a.type.replaceAll("_", " "),
-          a.amount !== null ? idr(a.amount) : "—",
         ]),
       );
     }

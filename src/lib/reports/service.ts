@@ -1,7 +1,10 @@
-import { and, asc, eq, inArray } from "drizzle-orm";
+import { and, asc, eq, inArray, isNull } from "drizzle-orm";
 import { db } from "@/db";
 import {
   approvals,
+  dataroomFileVersions,
+  dataroomFiles,
+  dataroomFolders,
   divisions,
   externalInvites,
   formSubmissions,
@@ -12,7 +15,6 @@ import {
   taskChecklistItems,
   tasks,
 } from "@/db/schema";
-import { eventBudgetRollup } from "@/lib/budgets/service";
 import { getEvent, listPhases } from "@/lib/events/service";
 import { assertCan, type Actor } from "@/lib/permissions";
 import { summarizeStatuses } from "@/lib/tasks/progress";
@@ -60,26 +62,37 @@ export interface EventReport {
     }>;
     checklist: { total: number; done: number };
   };
-  budget: {
-    planned: number;
-    committed: number;
-    actual: number;
-    remaining: number;
-    burnPct: number | null;
-    lines: Array<{
+  /**
+   * Sub-tasks, broken out per task (Owner 2026-08-27). The report used to
+   * carry a single done/total pair, which said a checklist existed but never
+   * what was left in it.
+   */
+  subtasks: {
+    total: number;
+    done: number;
+    pct: number | null;
+    byTask: Array<{
+      task: string;
       division: string;
-      name: string;
-      planned: number;
-      committed: number;
-      actual: number;
+      done: number;
+      total: number;
+      /** only what is still open — a finished list needs no listing */
+      open: string[];
     }>;
+  };
+  /** what is actually IN the document room, folder by folder */
+  dataroom: {
+    folders: number;
+    files: number;
+    totalBytes: number;
+    byFolder: Array<{ path: string; files: number; bytes: number; names: string[] }>;
   };
   approvals: {
     pending: number;
     approved: number;
     rejected: number;
     changesRequested: number;
-    pendingItems: Array<{ title: string; type: string; amount: number | null }>;
+    pendingItems: Array<{ title: string; type: string }>;
   };
   handoffs: { pending: number; accepted: number; declined: number };
   guests: {
@@ -175,7 +188,12 @@ export async function gatherEventReport(
     allTaskIds.length === 0
       ? []
       : await db
-          .select({ done: taskChecklistItems.done })
+          .select({
+            taskId: taskChecklistItems.taskId,
+            title: taskChecklistItems.title,
+            done: taskChecklistItems.done,
+            sortOrder: taskChecklistItems.sortOrder,
+          })
           .from(taskChecklistItems)
           .where(inArray(taskChecklistItems.taskId, allTaskIds));
 
@@ -183,11 +201,82 @@ export async function gatherEventReport(
   // so an event can never report two different completion figures.
   const progress = summarizeStatuses(taskRows.map((r) => r.task.status));
 
-  // ---- budget -------------------------------------------------------------
-  const rollup = await eventBudgetRollup(actor, eventId);
-  const remaining =
-    rollup.totals.planned - rollup.totals.committed - rollup.totals.actual;
-  const burn = rollup.totals.committed + rollup.totals.actual;
+  // ---- sub-tasks, per task ------------------------------------------------
+  const taskById = new Map(taskRows.map((r) => [r.task.id, r]));
+  const subtasksByTask = new Map<string, typeof checklistRows>();
+  for (const row of checklistRows) {
+    subtasksByTask.set(row.taskId, [...(subtasksByTask.get(row.taskId) ?? []), row]);
+  }
+  const subtaskByTask = [...subtasksByTask.entries()]
+    .map(([taskId, items]) => {
+      const row = taskById.get(taskId);
+      const sorted = [...items].sort((a, b) => a.sortOrder - b.sortOrder);
+      return {
+        task: row?.task.title ?? "—",
+        division: row?.divisionName ?? "—",
+        done: sorted.filter((i) => i.done).length,
+        total: sorted.length,
+        open: sorted.filter((i) => !i.done).map((i) => i.title),
+      };
+    })
+    // the ones with work left lead: a finished list is the least interesting
+    // thing on the page
+    .sort((a, b) => b.open.length - a.open.length || a.task.localeCompare(b.task));
+
+  // ---- dataroom -----------------------------------------------------------
+  const roomFolders = await db
+    .select({
+      id: dataroomFolders.id,
+      parentId: dataroomFolders.parentId,
+      name: dataroomFolders.name,
+    })
+    .from(dataroomFolders)
+    .where(eq(dataroomFolders.eventId, eventId));
+
+  const roomFiles = await db
+    .select({
+      id: dataroomFiles.id,
+      folderId: dataroomFiles.folderId,
+      name: dataroomFiles.name,
+      sizeBytes: dataroomFileVersions.sizeBytes,
+    })
+    .from(dataroomFiles)
+    .innerJoin(
+      dataroomFileVersions,
+      and(
+        eq(dataroomFileVersions.fileId, dataroomFiles.id),
+        eq(dataroomFileVersions.versionNo, dataroomFiles.currentVersion),
+      ),
+    )
+    .where(and(eq(dataroomFiles.eventId, eventId), isNull(dataroomFiles.trashedAt)));
+
+  const folderName = new Map(roomFolders.map((f) => [f.id, f]));
+  const pathOf = (folderId: string): string => {
+    const parts: string[] = [];
+    const guard = new Set<string>();
+    let cursor: string | null = folderId;
+    while (cursor && !guard.has(cursor)) {
+      guard.add(cursor);
+      const node = folderName.get(cursor);
+      if (!node) break;
+      parts.unshift(node.name);
+      cursor = node.parentId;
+    }
+    return parts.join(" / ") || "—";
+  };
+
+  const byFolderMap = new Map<string, { files: number; bytes: number; names: string[] }>();
+  for (const f of roomFiles) {
+    const path = pathOf(f.folderId);
+    const cell = byFolderMap.get(path) ?? { files: 0, bytes: 0, names: [] };
+    cell.files += 1;
+    cell.bytes += Number(f.sizeBytes);
+    cell.names.push(f.name);
+    byFolderMap.set(path, cell);
+  }
+  const byFolder = [...byFolderMap.entries()]
+    .map(([path, cell]) => ({ path, ...cell, names: cell.names.sort() }))
+    .sort((a, b) => a.path.localeCompare(b.path));
 
   // ---- approvals ----------------------------------------------------------
   const approvalRows = await db
@@ -281,22 +370,22 @@ export async function gatherEventReport(
         done: checklistRows.filter((c) => c.done).length,
       },
     },
-    budget: {
-      planned: rollup.totals.planned,
-      committed: rollup.totals.committed,
-      actual: rollup.totals.actual,
-      remaining,
-      burnPct:
-        rollup.totals.planned > 0
-          ? Math.round((burn / rollup.totals.planned) * 100)
-          : null,
-      lines: rollup.lines.map((line) => ({
-        division: line.divisionName,
-        name: line.name,
-        planned: line.planned,
-        committed: line.committed,
-        actual: line.actual,
-      })),
+    subtasks: {
+      total: checklistRows.length,
+      done: checklistRows.filter((c) => c.done).length,
+      pct:
+        checklistRows.length === 0
+          ? null
+          : Math.round(
+              (checklistRows.filter((c) => c.done).length / checklistRows.length) * 100,
+            ),
+      byTask: subtaskByTask,
+    },
+    dataroom: {
+      folders: roomFolders.length,
+      files: roomFiles.length,
+      totalBytes: roomFiles.reduce((sum, f) => sum + Number(f.sizeBytes), 0),
+      byFolder,
     },
     approvals: {
       pending: approvalCount("pending"),
@@ -305,7 +394,7 @@ export async function gatherEventReport(
       changesRequested: approvalCount("changes_requested"),
       pendingItems: approvalRows
         .filter((a) => a.status === "pending")
-        .map((a) => ({ title: a.title, type: a.type, amount: a.amount })),
+        .map((a) => ({ title: a.title, type: a.type })),
     },
     handoffs: {
       pending: handoffCount("pending"),
