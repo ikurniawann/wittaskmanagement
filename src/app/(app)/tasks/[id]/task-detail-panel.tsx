@@ -1,3 +1,4 @@
+import { SummaryShareButton } from "@/app/(app)/summary-share/summary-share-button";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { AttachmentView } from "@/components/attachment-view";
@@ -98,6 +99,15 @@ export async function TaskDetailPanel({
             {task.title}
           </h1>
           <div className="flex items-center gap-2">
+            {canEdit && !task.restricted ? (
+              <SummaryShareButton
+                kind="task"
+                targetId={task.id}
+                targetName={task.title}
+                label="Share"
+                className="mr-1"
+              />
+            ) : null}
             {canEdit ? (
               <EditTaskForm
                 task={{

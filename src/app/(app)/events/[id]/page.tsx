@@ -4,6 +4,7 @@ import { notFound, redirect } from "next/navigation";
 import { Countdown } from "@/components/countdown";
 import { HealthBadge } from "@/components/health-badge";
 import { PhaseSteps } from "@/components/phase-steps";
+import { SummaryShareButton } from "@/app/(app)/summary-share/summary-share-button";
 import { StatusDot, UserAvatar } from "@/components/task-meta";
 import { FileDown } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -325,6 +326,14 @@ export default async function EventPage({ params }: PageProps<"/events/[id]">) {
               <FileDown className="size-3.5" /> Settlement (PDF)
             </a>
           </>
+        ) : null}
+        {canEdit ? (
+          <SummaryShareButton
+            kind="project"
+            targetId={event.id}
+            targetName={event.name}
+            className="ml-1"
+          />
         ) : null}
         {can(actor, "event.create") ? (
           <ApplyPlaybook
