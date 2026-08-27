@@ -708,6 +708,17 @@ export async function uploadFromShare(
     note: `via progress link${link.label ? ` “${link.label}”` : ""} — ${task.title} / ${item.title}`,
   });
 
+  // the team hears about a guest's upload the same way they hear about their
+  // own — this is the case where it matters most
+  const { notifyDataroomUpload } = await import("@/lib/dataroom/wa-notify");
+  void notifyDataroomUpload({
+    eventId: task.eventId,
+    folderId,
+    fileName: name,
+    uploadedBy: resolution.viewerEmail ?? "a guest via a progress link",
+    skipProfileId: null,
+  });
+
   return {
     fileName: name,
     sizeBytes: written,

@@ -640,6 +640,21 @@ export async function uploadFile(
     action: "upload",
   });
 
+  // tell the project's people, without making the upload depend on it
+  const { notifyDataroomUpload } = await import("./wa-notify");
+  const [uploader] = await db
+    .select({ name: profiles.name })
+    .from(profiles)
+    .where(eq(profiles.id, actor.id))
+    .limit(1);
+  void notifyDataroomUpload({
+    eventId,
+    folderId: input.folderId,
+    fileName: input.name,
+    uploadedBy: uploader?.name ?? "a colleague",
+    skipProfileId: actor.id,
+  });
+
   return {
     fileId,
     versionNo,

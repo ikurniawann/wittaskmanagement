@@ -14,9 +14,18 @@
 export type WaTemplateKey =
   | "task_assigned_lead"
   | "task_assigned_member"
-  | "task_urgent";
+  | "task_urgent"
+  | "dataroom_uploaded";
 
-export type PlaceholderName = "name" | "task" | "event" | "url" | "reason";
+export type PlaceholderName =
+  | "name"
+  | "task"
+  | "event"
+  | "url"
+  | "reason"
+  | "file"
+  | "folder"
+  | "by";
 
 export interface PlaceholderSpec {
   name: PlaceholderName;
@@ -29,6 +38,16 @@ const COMMON: PlaceholderSpec[] = [
   { name: "task", description: "Task title" },
   { name: "event", description: "Project name" },
   { name: "url", description: "Link to the task" },
+];
+
+/** Only the dataroom message uses these — a task has no file or folder. */
+const DATAROOM: PlaceholderSpec[] = [
+  { name: "name", description: "Recipient's first name" },
+  { name: "event", description: "Project name" },
+  { name: "file", description: "Name of the uploaded file" },
+  { name: "folder", description: "Folder it was filed in" },
+  { name: "by", description: "Who uploaded it" },
+  { name: "url", description: "Link to the document room" },
 ];
 
 const REASON: PlaceholderSpec = {
@@ -65,6 +84,13 @@ export const TEMPLATE_SPECS: readonly TemplateSpec[] = [
       "Sent to the lead (PIC) when a task reaches priority Urgent — raised by a person, or auto-escalated by dependencies.",
     placeholders: [...COMMON, REASON],
   },
+  {
+    key: "dataroom_uploaded",
+    label: "File added to the document room",
+    trigger:
+      "Sent to everyone on a project when a file is filed in its document room — by a colleague or through a progress link.",
+    placeholders: DATAROOM,
+  },
 ];
 
 export const DEFAULT_TEMPLATES: Record<WaTemplateKey, string> = {
@@ -87,6 +113,13 @@ Event: {event}
 Why: {reason}.
 
 Open it: {url}`,
+  dataroom_uploaded: `Hi {name}, a new file was added to *{event}*.
+
+📎 *{file}*
+Folder: {folder}
+Uploaded by: {by}
+
+Open the document room: {url}`,
 };
 
 /** Longest body we accept. WhatsApp itself allows far more; this keeps a
@@ -201,4 +234,7 @@ export const PREVIEW_VARS: Required<TemplateVars> = {
   event: "YE Live in Jakarta",
   url: "https://example.com/tasks/8f2e-4c1a",
   reason: "3 other tasks are waiting on it, and it is past its due date",
+  file: "Rundown Natcon 2026.pdf",
+  folder: "Dokumen Persiapan Natcon",
+  by: "Agus Sugiman",
 };
