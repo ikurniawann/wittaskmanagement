@@ -269,7 +269,7 @@ export default async function TicketsPage({
           if (live.length === 0) {
             return (
               <p className="rounded-md border border-dashed px-4 py-6 text-center text-sm text-muted-foreground">
-                No ticketing channel has reported sales for this event yet.
+                No ticketing channel has reported sales for this project yet.
               </p>
             );
           }
@@ -499,7 +499,7 @@ export default async function TicketsPage({
                 if (!channel) {
                   return (
                     <p className="rounded-md border border-dashed px-4 py-6 text-center text-sm text-muted-foreground">
-                      This event is not linked to {tab === "tessera" ? "Tessera" : "Megatix"} yet.
+                      This project is not linked to {tab === "tessera" ? "Tessera" : "Megatix"} yet.
                       {canManageChannels
                         ? " Link it above — credentials live in Admin, one set for the whole organisation."
                         : " An org admin can link it from this page."}
