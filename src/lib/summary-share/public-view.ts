@@ -19,7 +19,16 @@ export interface InternalTaskRow {
   restricted: boolean;
 }
 
+export interface PublicSubtaskRow {
+  title: string;
+  done: boolean;
+  dueDate: string | null;
+  overdue: boolean;
+}
+
 export interface PublicTaskRow {
+  /** so the row can be expanded and its sub-tasks addressed */
+  id: string;
   title: string;
   status: TaskStatus;
   priority: string;
@@ -27,6 +36,8 @@ export interface PublicTaskRow {
   startDate: string | null;
   dueDate: string | null;
   overdue: boolean;
+  /** the task's own checklist, shown when the row is opened */
+  subtasks: PublicSubtaskRow[];
 }
 
 /**
@@ -40,11 +51,14 @@ export interface PublicTaskRow {
 export function publicTaskRows(
   rows: InternalTaskRow[],
   now: Date,
+  /** checklist items keyed by task id; a task with none simply has none */
+  subtasksByTask: Map<string, InternalChecklistItem[]> = new Map(),
 ): PublicTaskRow[] {
   const today = dayNumber(now);
   return rows
     .filter((t) => !t.restricted)
     .map((t) => ({
+      id: t.id,
       title: t.title,
       status: t.status,
       priority: t.priority,
@@ -56,6 +70,13 @@ export function publicTaskRows(
         t.status !== "cancelled" &&
         t.dueDate !== null &&
         dayNumber(t.dueDate) < today,
+      subtasks: (subtasksByTask.get(t.id) ?? []).map((i) => ({
+        title: i.title,
+        done: i.done,
+        dueDate: i.dueDate ? i.dueDate.toISOString() : null,
+        // a finished sub-task is never late, however long it took
+        overdue: !i.done && i.dueDate !== null && dayNumber(i.dueDate) < today,
+      })),
     }))
     .sort((a, b) => {
       // soonest deadline first; undated work sinks to the bottom rather than

@@ -1,6 +1,13 @@
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
-import { AlertTriangle, CalendarClock, CheckCircle2, Circle, ListChecks } from "lucide-react";
+import {
+  AlertTriangle,
+  CalendarClock,
+  CheckCircle2,
+  ChevronRight,
+  Circle,
+  ListChecks,
+} from "lucide-react";
 import { getBranding } from "@/lib/org/branding";
 import { readSharePass, SHARE_COOKIE } from "@/lib/dataroom/share-session";
 import {
@@ -149,34 +156,90 @@ function ProjectView({ view }: { view: ProjectSummaryView }) {
               No tasks yet.
             </li>
           ) : null}
-          {view.tasks.map((t, i) => (
-            <li key={`${t.title}-${i}`} className="flex items-center gap-3 px-4 py-2.5 text-sm">
-              {t.status === "done" ? (
-                <CheckCircle2 className="size-4 shrink-0 text-status-done" />
-              ) : t.overdue ? (
-                <AlertTriangle className="size-4 shrink-0 text-destructive" />
-              ) : (
-                <Circle className="size-4 shrink-0 text-muted-foreground" />
-              )}
-              <span
-                className={cn(
-                  "min-w-0 flex-1 truncate",
-                  t.status === "done" && "text-muted-foreground line-through",
-                )}
-              >
-                {t.title}
-              </span>
-              <span className="shrink-0 text-[10px] uppercase tracking-wider text-muted-foreground">
-                {STATUS_LABEL[t.status] ?? t.status}
-              </span>
-              <span
-                className={cn(
-                  "w-24 shrink-0 text-right text-xs tabular-nums",
-                  t.overdue ? "text-destructive" : "text-muted-foreground",
-                )}
-              >
-                {t.dueDate ? dt.format(new Date(t.dueDate)) : "—"}
-              </span>
+          {view.tasks.map((t) => (
+            <li key={t.id}>
+              {/* <details> rather than a click handler: the row expands with no
+                  JavaScript at all, and the page stays a server component */}
+              <details className="group">
+                <summary
+                  className={cn(
+                    "flex cursor-pointer list-none items-center gap-3 px-4 py-2.5 text-sm transition-colors hover:bg-accent/40",
+                    t.subtasks.length === 0 && "cursor-default",
+                  )}
+                >
+                  {t.status === "done" ? (
+                    <CheckCircle2 className="size-4 shrink-0 text-status-done" />
+                  ) : t.overdue ? (
+                    <AlertTriangle className="size-4 shrink-0 text-destructive" />
+                  ) : (
+                    <Circle className="size-4 shrink-0 text-muted-foreground" />
+                  )}
+                  <span
+                    className={cn(
+                      "min-w-0 flex-1 truncate",
+                      t.status === "done" && "text-muted-foreground line-through",
+                    )}
+                  >
+                    {t.title}
+                  </span>
+
+                  {t.subtasks.length > 0 ? (
+                    <span className="shrink-0 text-[10px] tabular-nums text-muted-foreground">
+                      {t.subtasks.filter((s) => s.done).length}/{t.subtasks.length}
+                    </span>
+                  ) : null}
+
+                  <span className="hidden shrink-0 text-[10px] uppercase tracking-wider text-muted-foreground sm:inline">
+                    {STATUS_LABEL[t.status] ?? t.status}
+                  </span>
+                  <span
+                    className={cn(
+                      "w-24 shrink-0 text-right text-xs tabular-nums",
+                      t.overdue ? "text-destructive" : "text-muted-foreground",
+                    )}
+                  >
+                    {t.dueDate ? dt.format(new Date(t.dueDate)) : "—"}
+                  </span>
+                  {t.subtasks.length > 0 ? (
+                    <ChevronRight className="size-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-90" />
+                  ) : (
+                    <span aria-hidden className="size-4 shrink-0" />
+                  )}
+                </summary>
+
+                {t.subtasks.length > 0 ? (
+                  <ul className="flex flex-col gap-0.5 border-t bg-muted/30 px-4 py-2">
+                    {t.subtasks.map((sub, i) => (
+                      <li
+                        key={`${t.id}-${i}`}
+                        className="flex items-center gap-2.5 py-1 pl-6 text-xs"
+                      >
+                        {sub.done ? (
+                          <CheckCircle2 className="size-3.5 shrink-0 text-status-done" />
+                        ) : (
+                          <Circle className="size-3.5 shrink-0 text-muted-foreground" />
+                        )}
+                        <span
+                          className={cn(
+                            "min-w-0 flex-1 truncate",
+                            sub.done && "text-muted-foreground line-through",
+                          )}
+                        >
+                          {sub.title}
+                        </span>
+                        <span
+                          className={cn(
+                            "w-24 shrink-0 text-right tabular-nums",
+                            sub.overdue ? "text-destructive" : "text-muted-foreground",
+                          )}
+                        >
+                          {sub.dueDate ? dt.format(new Date(sub.dueDate)) : "—"}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
+              </details>
             </li>
           ))}
         </ul>

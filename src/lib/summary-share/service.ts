@@ -1,5 +1,5 @@
 import { createHash, randomBytes } from "node:crypto";
-import { and, asc, eq, isNull, sql } from "drizzle-orm";
+import { and, asc, eq, inArray, isNull, sql } from "drizzle-orm";
 import { db } from "@/db";
 import {
   dataroomAccessLog,
@@ -342,7 +342,22 @@ async function buildProjectView(eventId: string, now: Date): Promise<ProjectSumm
     .from(tasks)
     .where(eq(tasks.eventId, eventId));
 
-  const visible = publicTaskRows(rows, now);
+  // the checklists behind those tasks, so a row can be opened to reveal them
+  const visibleIds = rows.filter((r) => !r.restricted).map((r) => r.id);
+  const checklistRows =
+    visibleIds.length === 0
+      ? []
+      : await db
+          .select()
+          .from(taskChecklistItems)
+          .where(inArray(taskChecklistItems.taskId, visibleIds))
+          .orderBy(asc(taskChecklistItems.sortOrder));
+  const subtasksByTask = new Map<string, typeof checklistRows>();
+  for (const item of checklistRows) {
+    subtasksByTask.set(item.taskId, [...(subtasksByTask.get(item.taskId) ?? []), item]);
+  }
+
+  const visible = publicTaskRows(rows, now, subtasksByTask);
   // progress is computed from the SAME visible set the reader is shown, so the
   // percentage always adds up against the list underneath it
   const progress = summarizeStatuses(

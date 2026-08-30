@@ -27,12 +27,12 @@ describe("publicTaskRows", () => {
     expect(rows.map((r) => r.title)).not.toContain("Rahasia");
   });
 
-  it("carries no internal identifiers or people", () => {
+  it("carries no people and no restricted flag", () => {
     const [row] = publicTaskRows([task()], NOW);
-    expect(row).not.toHaveProperty("id");
+    // id joined the shape so a row can be expanded; `restricted` must never
     expect(row).not.toHaveProperty("restricted");
     expect(Object.keys(row).sort()).toEqual(
-      ["divisionId", "dueDate", "overdue", "priority", "startDate", "status", "title"].sort(),
+      ["divisionId", "dueDate", "id", "overdue", "priority", "startDate", "status", "subtasks", "title"].sort(),
     );
   });
 
@@ -77,5 +77,37 @@ describe("publicChecklist", () => {
 
   it("reports no percentage for an empty checklist", () => {
     expect(publicChecklist([]).pct).toBeNull();
+  });
+});
+
+describe("sub-tasks on a project row", () => {
+  it("attaches a task's checklist and flags a late one", () => {
+    const items = new Map([
+      [
+        "t1",
+        [
+          { id: "a", title: "Draf", done: true, startDate: null, dueDate: new Date("2026-08-01T00:00:00Z") },
+          { id: "b", title: "Cetak", done: false, startDate: null, dueDate: new Date("2026-08-10T00:00:00Z") },
+          { id: "c", title: "Kirim", done: false, startDate: null, dueDate: null },
+        ],
+      ],
+    ]);
+    const [row] = publicTaskRows([task({ id: "t1" })], NOW, items);
+    expect(row.subtasks.map((s) => s.title)).toEqual(["Draf", "Cetak", "Kirim"]);
+    expect(row.subtasks[0].overdue).toBe(false); // done, so never late
+    expect(row.subtasks[1].overdue).toBe(true);
+    expect(row.subtasks[2].overdue).toBe(false); // no due date
+  });
+
+  it("is an empty list when the task has no checklist", () => {
+    const [row] = publicTaskRows([task({ id: "t1" })], NOW);
+    expect(row.subtasks).toEqual([]);
+  });
+
+  it("never attaches sub-tasks to a restricted task — it is not there at all", () => {
+    const items = new Map([["secret", [{ id: "x", title: "Rahasia", done: false, startDate: null, dueDate: null }]]]);
+    const rows = publicTaskRows([task({ id: "secret", restricted: true })], NOW, items);
+    expect(rows).toHaveLength(0);
+    expect(JSON.stringify(rows)).not.toContain("Rahasia");
   });
 });
