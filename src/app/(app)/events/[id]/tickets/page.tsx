@@ -48,8 +48,13 @@ export default async function TicketsPage({
   // it is selling in total, and only then which platform did what. It is a
   // summary ONLY — no transaction table — so the per-channel tabs stay the
   // single place detail lives.
+  const { isIntegrationEnabled } = await import("@/lib/integrations/service");
+  const megatixEnabled = await isIntegrationEnabled("megatix");
+
   const tab =
-    sp.tab === "manual" || sp.tab === "megatix" || sp.tab === "tessera"
+    sp.tab === "manual" ||
+    (sp.tab === "megatix" && megatixEnabled) ||
+    sp.tab === "tessera"
       ? sp.tab
       : "overall";
   const isChannelTab = tab === "tessera" || tab === "megatix";
@@ -238,10 +243,12 @@ export default async function TicketsPage({
           {(
             [
               ["overall", "Overall"],
-              ["megatix", "Megatix"],
+              // Megatix appears only while the integration is on
+              // (Settings → Integrations); off is the default
+              ...(megatixEnabled ? ([["megatix", "Megatix"]] as const) : []),
               ["tessera", "Tessera (legacy)"],
               ["manual", "Manual"],
-            ] as const
+            ] as Array<readonly [string, string]>
           ).map(([key, label]) => (
             <a
               key={key}

@@ -49,6 +49,8 @@ export default async function AdminPage() {
   // for a hand-copied token that expires in five days is worse than absent.
   // The channel itself is untouched in src/lib/tessera — restoring the panel
   // is re-adding this one component.
+  const { isIntegrationEnabled } = await import("@/lib/integrations/service");
+  const megatixEnabled = await isIntegrationEnabled("megatix");
   const [megatix, agentKeys] = await Promise.all([
     getMegatixStatus(actor),
     listAgentKeys(actor),
@@ -89,6 +91,9 @@ export default async function AdminPage() {
       <WhatsAppGateway />
 
 
+      {/* only when the organisation has switched Megatix on in
+          Settings → Integrations; off is the default */}
+      {megatixEnabled ? (
       <MegatixPanel
         configured={megatix.configured}
         email={megatix.email}
@@ -100,6 +105,7 @@ export default async function AdminPage() {
         lastError={megatix.lastError}
         unreadableSample={megatix.unreadableSample}
       />
+      ) : null}
 
       <AgentKeysCard
         keys={agentKeys.map((k) => ({

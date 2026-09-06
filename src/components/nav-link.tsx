@@ -80,14 +80,15 @@ export const EVENT_SUBPAGES = [
   // /gantt lives under the Calendar entry as a view toggle (Owner 2026-08-07)
   { path: "calendar", label: "Calendar", also: ["gantt"] },
   { path: "handoffs", label: "Handoffs" },
-  { path: "budget", label: "Budget" },
   { path: "guests", label: "Guests" },
   // Replaces the old Documents module (EPIC-017): access levels, versioning
   // and an access log, on the 3.6 TB disk. The `documents` table is left in
   // place — it holds no rows, and dropping it is not this task's risk to take.
   { path: "dataroom", label: "Dataroom" },
-  { path: "run-of-show", label: "Run of show" },
-  { path: "tickets", label: "Tickets" },
+  // Budget, Run of show and Tickets were dropped from this menu at the
+  // Owner's request (2026-08-31). Their pages are still routed and still
+  // work — this hides the doors, it does not brick the rooms — so putting
+  // an entry back is one line each.
 ] as const;
 
 export function EventNavLink({

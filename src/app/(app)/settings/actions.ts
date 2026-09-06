@@ -165,3 +165,27 @@ export async function removeMyAvatarAction(): Promise<ProfileActionState> {
   revalidatePath("/profile");
   return { ok: true };
 }
+
+/**
+ * Turns one integration on or off for the whole organisation.
+ *
+ * Gated in the service by org.manage — the tab is only rendered for an admin,
+ * but a server action is a public endpoint and the hidden tab proves nothing.
+ */
+export async function setIntegrationAction(
+  key: string,
+  enabled: boolean,
+): Promise<{ error?: string } | void> {
+  const actor = await sessionActor();
+  if (!actor) return { error: "Not signed in." };
+  try {
+    const { setIntegrationEnabled } = await import("@/lib/integrations/service");
+    await setIntegrationEnabled(actor, key as "megatix", enabled);
+    revalidatePath("/settings");
+    revalidatePath("/admin");
+  } catch (error) {
+    return {
+      error: error instanceof Error ? error.message : "Could not change that.",
+    };
+  }
+}
