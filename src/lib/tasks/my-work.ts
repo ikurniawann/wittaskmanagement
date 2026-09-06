@@ -1,4 +1,4 @@
-import { and, desc, eq, ne, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, ne, sql } from "drizzle-orm";
 import { db } from "@/db";
 import {
   activityLog,
@@ -231,4 +231,92 @@ export function relativeTime(date: Date): string {
   if (days < 30) return `${days} day${days === 1 ? "" : "s"} ago`;
   const months = Math.floor(days / 30);
   return `${months} month${months === 1 ? "" : "s"} ago`;
+}
+
+// ---- drill-down behind the Summary numbers (Owner 2026-08-31) ------------
+
+export type MyWorkSource = "created" | "assigned" | "watched";
+
+export interface MyWorkFilter {
+  status?: TaskStatus;
+  priority?: "urgent" | "high" | "medium" | "low";
+}
+
+export interface MyWorkRow {
+  id: string;
+  title: string;
+  status: TaskStatus;
+  priority: "urgent" | "high" | "medium" | "low";
+  /** ISO, because this crosses into a client component */
+  dueDate: string | null;
+  eventName: string;
+}
+
+/**
+ * The tasks behind one number on the Summary tab.
+ *
+ * Each branch repeats the predicate of the counter it belongs to, on purpose,
+ * rather than reusing listMyCreatedTasks / listMyWatchedTasks: those drop
+ * cancelled work and stop at 50, so a card saying 24 would open a list of 19.
+ * A number you can click has to open exactly what it counted, or the click
+ * teaches people not to trust the number.
+ *
+ * `priority` is only meaningful for open work — that is what the priority
+ * chart shows — so it carries the same OPEN restriction the chart uses.
+ */
+export async function listMyWorkDrilldown(
+  actor: Actor,
+  source: MyWorkSource,
+  filter: MyWorkFilter = {},
+): Promise<MyWorkRow[]> {
+  const shape = {
+    id: tasks.id,
+    title: tasks.title,
+    status: tasks.status,
+    priority: tasks.priority,
+    dueDate: tasks.dueDate,
+    eventName: events.name,
+  };
+
+  const conditions = [];
+  if (filter.status) conditions.push(eq(tasks.status, filter.status));
+  if (filter.priority) {
+    conditions.push(eq(tasks.priority, filter.priority));
+    conditions.push(inArray(tasks.status, [...OPEN]));
+  }
+
+  let rows;
+  if (source === "created") {
+    rows = await db
+      .select(shape)
+      .from(tasks)
+      .innerJoin(events, eq(tasks.eventId, events.id))
+      .where(and(eq(tasks.createdBy, actor.id), ...conditions))
+      .orderBy(asc(tasks.dueDate), desc(tasks.createdAt));
+  } else if (source === "watched") {
+    rows = await db
+      .select(shape)
+      .from(taskWatchers)
+      .innerJoin(tasks, eq(taskWatchers.taskId, tasks.id))
+      .innerJoin(events, eq(tasks.eventId, events.id))
+      .where(and(eq(taskWatchers.userId, actor.id), ...conditions))
+      .orderBy(asc(tasks.dueDate), desc(tasks.updatedAt));
+  } else {
+    rows = await db
+      .select(shape)
+      .from(taskAssignees)
+      .innerJoin(tasks, eq(taskAssignees.taskId, tasks.id))
+      .innerJoin(events, eq(tasks.eventId, events.id))
+      .where(and(eq(taskAssignees.userId, actor.id), ...conditions))
+      .orderBy(asc(tasks.dueDate), desc(tasks.updatedAt));
+  }
+
+  return rows.map((r) => ({
+    id: r.id,
+    title: r.title,
+    status: r.status as TaskStatus,
+    priority: r.priority as MyWorkRow["priority"],
+    dueDate: r.dueDate ? r.dueDate.toISOString() : null,
+    eventName: r.eventName,
+  }));
 }

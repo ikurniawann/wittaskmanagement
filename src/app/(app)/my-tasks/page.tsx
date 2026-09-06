@@ -22,6 +22,7 @@ import {
   relativeTime,
 } from "@/lib/tasks/my-work";
 import { listMyTasks } from "@/lib/tasks/service";
+import { WorkDrilldown } from "./work-drilldown";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "My Tasks" };
@@ -238,13 +239,18 @@ export default async function MyTasksPage({
                   Overview
                 </h2>
                 <div className="grid gap-4 sm:grid-cols-3">
-                  {[
-                    { label: "Tasks created", value: work.counts.created, icon: CirclePlus },
-                    { label: "Tasks assigned", value: work.counts.assigned, icon: UserRoundCheck },
-                    { label: "Tasks watched", value: work.counts.watched, icon: Eye },
-                  ].map((card) => (
-                    <div
+                  {(
+                    [
+                      { source: "created", label: "Tasks created", value: work.counts.created, icon: CirclePlus },
+                      { source: "assigned", label: "Tasks assigned", value: work.counts.assigned, icon: UserRoundCheck },
+                      { source: "watched", label: "Tasks watched", value: work.counts.watched, icon: Eye },
+                    ] as const
+                  ).map((card) => (
+                    <WorkDrilldown
                       key={card.label}
+                      source={card.source}
+                      title={card.label}
+                      expected={card.value}
                       className="flex items-center gap-3 rounded-md border bg-card px-4 py-4"
                     >
                       <span className="flex size-9 items-center justify-center rounded-md border text-muted-foreground">
@@ -258,7 +264,7 @@ export default async function MyTasksPage({
                           {card.value}
                         </span>
                       </span>
-                    </div>
+                    </WorkDrilldown>
                   ))}
                 </div>
               </div>
@@ -270,8 +276,12 @@ export default async function MyTasksPage({
                 </h2>
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 xl:grid-cols-7">
                   {work.workload.map((w) => (
-                    <div
+                    <WorkDrilldown
                       key={w.status}
+                      source="assigned"
+                      filter={{ status: w.status }}
+                      title={`Assigned · ${w.label}`}
+                      expected={w.count}
                       className="flex flex-col gap-1 rounded-md border bg-card px-3 py-2.5"
                     >
                       <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
@@ -281,7 +291,7 @@ export default async function MyTasksPage({
                       <span className="text-lg font-semibold tabular-nums">
                         {w.count}
                       </span>
-                    </div>
+                    </WorkDrilldown>
                   ))}
                 </div>
               </div>
@@ -295,7 +305,14 @@ export default async function MyTasksPage({
                   <div className="flex flex-col gap-2.5 rounded-md border bg-card p-4">
                     {hasOpen ? (
                       work.byPriority.map((p) => (
-                        <div key={p.priority} className="flex items-center gap-3">
+                        <WorkDrilldown
+                          key={p.priority}
+                          source="assigned"
+                          filter={{ priority: p.priority }}
+                          title={`Open · ${p.priority} priority`}
+                          expected={p.count}
+                          className="flex w-full items-center gap-3 rounded-md px-1 py-0.5 hover:bg-accent/40"
+                        >
                           <span className="w-16 text-xs capitalize text-muted-foreground">
                             {p.priority}
                           </span>
@@ -308,7 +325,7 @@ export default async function MyTasksPage({
                           <span className="w-6 text-right text-xs tabular-nums">
                             {p.count}
                           </span>
-                        </div>
+                        </WorkDrilldown>
                       ))
                     ) : (
                       <p className="py-6 text-center text-xs text-muted-foreground">
@@ -324,7 +341,14 @@ export default async function MyTasksPage({
                   <div className="flex flex-col gap-2.5 rounded-md border bg-card p-4">
                     {hasOpen ? (
                       openWorkload.map((w) => (
-                        <div key={w.status} className="flex items-center gap-3">
+                        <WorkDrilldown
+                          key={w.status}
+                          source="assigned"
+                          filter={{ status: w.status }}
+                          title={`Open · ${w.label}`}
+                          expected={w.count}
+                          className="flex w-full items-center gap-3 rounded-md px-1 py-0.5 hover:bg-accent/40"
+                        >
                           <span className="w-20 text-xs text-muted-foreground">
                             {w.label}
                           </span>
@@ -337,7 +361,7 @@ export default async function MyTasksPage({
                           <span className="w-6 text-right text-xs tabular-nums">
                             {w.count}
                           </span>
-                        </div>
+                        </WorkDrilldown>
                       ))
                     ) : (
                       <p className="py-6 text-center text-xs text-muted-foreground">
