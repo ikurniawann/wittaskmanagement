@@ -107,7 +107,7 @@ export function AssigneeManager({
             Assign
           </Button>
           {open ? (
-            <div className="absolute left-0 top-9 z-50 flex w-64 flex-col gap-1 rounded-lg border bg-popover p-2 shadow-lg">
+            <div className="absolute left-0 top-9 z-50 flex w-64 max-w-[calc(100vw-2rem)] flex-col gap-1 rounded-lg border bg-popover p-2 shadow-lg">
               <Input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}

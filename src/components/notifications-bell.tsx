@@ -74,7 +74,7 @@ export function NotificationsBell() {
       </Button>
 
       {open ? (
-        <div className="absolute right-0 top-10 z-50 w-80 rounded-md border bg-popover p-1 shadow-md">
+        <div className="absolute right-0 top-10 z-50 w-80 max-w-[calc(100vw-2rem)] rounded-md border bg-popover p-1 shadow-md">
           {items.length === 0 ? (
             <p className="px-3 py-6 text-center text-xs text-muted-foreground">
               No notifications yet.

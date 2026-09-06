@@ -96,7 +96,7 @@ export function LeadPicker({
       ) : null}
 
       {open ? (
-        <div className="absolute left-0 top-9 z-30 flex w-64 flex-col gap-1 rounded-md border bg-popover p-2 shadow-md">
+        <div className="absolute left-0 top-9 z-30 flex w-64 max-w-[calc(100vw-2rem)] flex-col gap-1 rounded-md border bg-popover p-2 shadow-md">
           <Input
             autoFocus
             value={query}

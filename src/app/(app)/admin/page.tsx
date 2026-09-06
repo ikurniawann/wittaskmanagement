@@ -58,7 +58,8 @@ export default async function AdminPage() {
 
   return (
     <section className="flex flex-col gap-6">
-      <div className="flex items-center justify-between">
+      {/* wraps on a phone: the title block and the quick links do not fit one row */}
+      <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex flex-col gap-1">
           <h1 className="text-3xl font-semibold tracking-tight">Admin</h1>
           <p className="text-sm text-muted-foreground">

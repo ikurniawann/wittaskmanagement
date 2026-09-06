@@ -39,7 +39,7 @@ export function ListViewToggle({
           aria-label={option.label}
           title={option.label}
           className={cn(
-            "flex size-7 items-center justify-center rounded transition-colors",
+            "flex size-9 items-center justify-center rounded transition-colors sm:size-7",
             active === option.key
               ? "bg-accent text-foreground"
               : "text-muted-foreground hover:text-foreground",

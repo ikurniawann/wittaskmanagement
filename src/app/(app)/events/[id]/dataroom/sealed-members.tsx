@@ -104,7 +104,7 @@ export function SealedMembers({
                 <button
                   type="submit"
                   aria-label={`Remove ${member.name}`}
-                  className="flex size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-destructive"
+                  className="flex size-9 sm:size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-destructive"
                 >
                   <X className="size-3.5" />
                 </button>

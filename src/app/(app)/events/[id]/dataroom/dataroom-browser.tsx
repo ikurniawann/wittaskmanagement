@@ -743,7 +743,7 @@ export function DataroomBrowser({
                           e.stopPropagation();
                           folderMenu.openNear(e.currentTarget, folder);
                         }}
-                        className="flex size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                        className="flex size-9 sm:size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
                       >
                         <MoreVertical className="size-4" />
                       </button>
@@ -799,7 +799,7 @@ export function DataroomBrowser({
                           e.stopPropagation();
                           fileMenu.openNear(e.currentTarget, file);
                         }}
-                        className="flex size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                        className="flex size-9 sm:size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
                       >
                         <MoreVertical className="size-4" />
                       </button>

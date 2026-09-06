@@ -39,7 +39,9 @@ export default async function EventsPage({
 
   return (
     <section className="flex flex-col gap-8">
-      <div className="flex items-center justify-between">
+      {/* wraps on a phone: title, the Active/Archived toggle and the New button
+          are three things that do not share 360px */}
+      <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex flex-col gap-1">
           <h1 className="text-3xl font-semibold tracking-tight">
             Projects

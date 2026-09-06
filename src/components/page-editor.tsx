@@ -79,7 +79,7 @@ function ToolButton({
       onMouseDown={(e) => e.preventDefault()} // keep editor selection
       onClick={onClick}
       className={cn(
-        "flex size-7 items-center justify-center rounded-md transition-colors",
+        "flex size-9 items-center justify-center rounded-md transition-colors sm:size-7",
         active
           ? "bg-accent text-foreground"
           : "text-muted-foreground hover:bg-accent/60 hover:text-foreground",

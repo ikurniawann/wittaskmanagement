@@ -64,7 +64,7 @@ function Popover({
       </Button>
       {open ? (
         <div
-          className="absolute left-0 top-9 z-50 w-72 rounded-lg border bg-popover p-3 shadow-lg"
+          className="absolute left-0 top-9 z-50 w-72 max-w-[calc(100vw-2rem)] rounded-lg border bg-popover p-3 shadow-lg"
           onClick={(e) => {
             if ((e.target as HTMLElement).closest("a")) setOpen(false);
           }}

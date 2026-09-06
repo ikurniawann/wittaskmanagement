@@ -81,7 +81,7 @@ export function WorkDrilldown({
       </button>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="!max-w-2xl gap-3 p-0">
+        <DialogContent className="!max-w-[calc(100%-1rem)] gap-3 p-0 sm:!max-w-2xl">
           <div className="flex items-baseline gap-2 border-b px-5 pb-3 pt-4">
             <DialogTitle className="text-sm font-semibold">{title}</DialogTitle>
             <span className="text-xs tabular-nums text-muted-foreground">

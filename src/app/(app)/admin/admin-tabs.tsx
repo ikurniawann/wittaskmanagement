@@ -192,7 +192,7 @@ function EditUserTrigger({ user, actorRole }: { user: AdminUser; actorRole: stri
         type="button"
         aria-label={`Edit ${user.name}`}
         onClick={() => setOpen(true)}
-        className="ml-auto flex size-7 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+        className="ml-auto flex size-9 shrink-0 items-center justify-center rounded-md sm:size-7 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
       >
         <Pencil className="size-3.5" />
       </button>

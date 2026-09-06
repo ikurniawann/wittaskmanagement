@@ -109,11 +109,13 @@ export async function TaskDetailPanel({ taskId }: { taskId: string }) {
             { label: "Task" },
           ]}
         />
-        <div className="flex items-start justify-between gap-4">
-          <h1 className="text-3xl font-semibold leading-tight tracking-tight">
+        {/* wraps on a phone so a long title and the three actions never fight
+            for one row */}
+        <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
+          <h1 className="min-w-0 flex-1 text-2xl font-semibold leading-tight tracking-tight sm:text-3xl">
             {task.title}
           </h1>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             {canEdit && !task.restricted ? (
               <SummaryShareButton
                 kind="task"
@@ -314,7 +316,9 @@ export async function TaskDetailPanel({ taskId }: { taskId: string }) {
                       <button
                         type="submit"
                         aria-label={`Delete ${item.title}`}
-                        className="text-xs text-muted-foreground transition-colors hover:text-destructive"
+                        // a bare "×" is a few pixels of target; pad it out to a
+                        // finger without moving the row (negative margin)
+                        className="-my-2 flex size-9 shrink-0 items-center justify-center rounded-md text-base text-muted-foreground transition-colors hover:bg-accent hover:text-destructive sm:size-7 sm:text-xs"
                       >
                         ×
                       </button>

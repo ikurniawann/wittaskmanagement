@@ -81,7 +81,7 @@ function Row({ division }: { division: DivisionRow }) {
               type="button"
               aria-label={`Rename ${division.name}`}
               onClick={() => setEditing(true)}
-              className="flex size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+              className="flex size-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground sm:size-7"
             >
               <Pencil className="size-3.5" />
             </button>
@@ -96,7 +96,7 @@ function Row({ division }: { division: DivisionRow }) {
                     : "Delete this division"
                 }
                 disabled={busy}
-                className="flex size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+                className="flex size-9 sm:size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
               >
                 <Trash2 className="size-3.5" />
               </button>
