@@ -39,6 +39,56 @@ export interface ToolSupport {
 
 export { aiConfigured } from "./provider";
 
+// OpenAI's gpt-5.x reasoning models reject function tools on Chat Completions
+// unless reasoning is switched off explicitly ("Function tools with
+// reasoning_effort are not supported … set reasoning_effort to 'none'",
+// Owner 2026-09-06). Other providers (DeepSeek, proxies) may reject the
+// parameter itself, so it is not sent blindly: the first refusal turns it
+// on and the model is remembered for the life of the process.
+const needsReasoningOff = new Set<string>();
+
+async function request(
+  config: { baseUrl: string; apiKey: string; model: string; providerName: string },
+  body: Record<string, unknown>,
+): Promise<Response> {
+  const key = `${config.baseUrl}|${config.model}`;
+  const send = (extra: Record<string, unknown>) =>
+    fetch(`${config.baseUrl}/chat/completions`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${config.apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ ...body, ...extra }),
+    });
+
+  const withTools = "tools" in body;
+  let response = await send(
+    withTools && needsReasoningOff.has(key) ? { reasoning_effort: "none" } : {},
+  );
+  if (response.ok && response.body) return response;
+
+  let detail = `${response.status}`;
+  try {
+    const parsed = (await response.json()) as { error?: { message?: string } };
+    detail = parsed.error?.message ?? detail;
+  } catch {
+    // keep the status code
+  }
+  if (withTools && !needsReasoningOff.has(key) && /reasoning_effort/i.test(detail)) {
+    needsReasoningOff.add(key);
+    response = await send({ reasoning_effort: "none" });
+    if (response.ok && response.body) return response;
+    try {
+      const parsed = (await response.json()) as { error?: { message?: string } };
+      detail = parsed.error?.message ?? `${response.status}`;
+    } catch {
+      detail = `${response.status}`;
+    }
+  }
+  throw new Error(`${config.providerName} request failed: ${detail}`);
+}
+
 /**
  * Streams assistant text chunks. Throws (with the provider's error message)
  * on a non-OK response so the route can surface a readable failure.
@@ -59,35 +109,19 @@ export async function* streamChat(
 
   for (let round = 0; round <= maxRounds; round++) {
     const lastRound = round === maxRounds;
-    const response = await fetch(`${config.baseUrl}/chat/completions`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${config.apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: config.model,
-        messages: convo,
-        stream: true,
-        // on the final permitted round the model must answer in words
-        ...(toolSupport && !lastRound
-          ? { tools: toolSupport.tools, tool_choice: "auto" }
-          : {}),
-      }),
+    const wantTools = Boolean(toolSupport) && !lastRound;
+    const response = await request(config, {
+      model: config.model,
+      messages: convo,
+      stream: true,
+      // on the final permitted round the model must answer in words
+      ...(wantTools && toolSupport
+        ? { tools: toolSupport.tools, tool_choice: "auto" }
+        : {}),
     });
-
-  if (!response.ok || !response.body) {
-    let detail = `${response.status}`;
-    try {
-      const parsed = (await response.json()) as {
-        error?: { message?: string };
-      };
-      detail = parsed.error?.message ?? detail;
-    } catch {
-      // keep the status code
+    if (!response.body) {
+      throw new Error(`${config.providerName} request failed: empty response`);
     }
-    throw new Error(`${config.providerName} request failed: ${detail}`);
-  }
 
     // accumulate tool calls by index: providers stream the name once and the
     // arguments in fragments

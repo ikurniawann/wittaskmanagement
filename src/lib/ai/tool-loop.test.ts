@@ -61,6 +61,35 @@ describe("streamChat tool loop", () => {
     expect(messages).toHaveLength(1);
   });
 
+  it("retries with reasoning_effort none when the provider refuses tools, then remembers it", async () => {
+    const bodies: Array<Record<string, unknown>> = [];
+    const fetchMock = vi.fn(async (_u: string, init: RequestInit) => {
+      const body = JSON.parse(String(init.body)) as Record<string, unknown>;
+      bodies.push(body);
+      if (body.tools && body.reasoning_effort !== "none") {
+        return new Response(
+          JSON.stringify({ error: { message: "Function tools with reasoning_effort are not supported for gpt-5.6 in /v1/chat/completions. To use function tools, use /v1/responses or set reasoning_effort to 'none'." } }),
+          { status: 400 },
+        );
+      }
+      return sse([{ choices: [{ delta: { content: "ok" } }] }]);
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    const opts = { tools: [{ type: "function" }], run: async () => ({}) };
+
+    let out = "";
+    for await (const c of streamChat([{ role: "user", content: "x" }], opts)) out += c;
+    expect(out).toBe("ok");
+    expect(bodies.map((b) => b.reasoning_effort)).toEqual([undefined, "none"]);
+
+    // second conversation: no failed round-trip, the flag is sent up front
+    out = "";
+    for await (const c of streamChat([{ role: "user", content: "y" }], opts)) out += c;
+    expect(out).toBe("ok");
+    expect(bodies).toHaveLength(3);
+    expect(bodies[2].reasoning_effort).toBe("none");
+  });
+
   it("streams plain text unchanged when no tool is requested", async () => {
     vi.stubGlobal("fetch", vi.fn(async () => sse([{ choices: [{ delta: { content: "hi" } }] }])));
     let out = "";
