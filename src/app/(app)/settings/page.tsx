@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { AiProviderPanel } from "./ai-provider-panel";
 import { IntegrationsPanel } from "./integrations-panel";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
@@ -40,6 +41,18 @@ export default async function SettingsPage({
   const canManageOrg = can(actor, "org.manage");
   const sp = await searchParams;
   const tab = canManageOrg && sp.tab === "integrations" ? "integrations" : "preferences";
+
+  // the assistant's provider settings — admin only, like the rest of the tab
+  const ai = canManageOrg
+    ? await (async () => {
+        const [{ AI_PROVIDERS, getAiSettingsView }, { getBranding }] = await Promise.all([
+          import("@/lib/ai/provider"),
+          import("@/lib/org/branding"),
+        ]);
+        const [view, branding] = await Promise.all([getAiSettingsView(actor), getBranding()]);
+        return { providers: AI_PROVIDERS.map((p) => ({ ...p })), view, assistantName: branding.assistantName };
+      })()
+    : null;
 
   const integrations = canManageOrg
     ? await (async () => {
@@ -88,7 +101,16 @@ export default async function SettingsPage({
       ) : null}
 
       {tab === "integrations" ? (
-        <IntegrationsPanel rows={integrations} />
+        <div className="flex flex-col gap-6">
+          {ai ? (
+            <AiProviderPanel
+              providers={ai.providers}
+              initial={ai.view}
+              assistantName={ai.assistantName}
+            />
+          ) : null}
+          <IntegrationsPanel rows={integrations} />
+        </div>
       ) : (
       <PreferencesForm
         initial={{

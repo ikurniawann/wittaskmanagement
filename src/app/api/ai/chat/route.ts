@@ -66,9 +66,9 @@ export async function POST(request: Request) {
   if (!can(actor, "ai.assistant")) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
-  if (!aiConfigured()) {
+  if (!(await aiConfigured())) {
     return NextResponse.json(
-      { error: "AI assistant is not configured (OPENAI_API_KEY is empty)." },
+      { error: "AI assistant is not configured — add an API key in Settings → Integrations." },
       { status: 503 },
     );
   }

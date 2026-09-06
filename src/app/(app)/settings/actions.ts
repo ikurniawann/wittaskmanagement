@@ -189,3 +189,62 @@ export async function setIntegrationAction(
     };
   }
 }
+
+// ---- Reddie AI provider (Owner 2026-09-06) --------------------------------
+// All three re-check org.manage inside the service: the panel is only shown to
+// an admin, but a server action is a public endpoint and a hidden panel proves
+// nothing. The key travels in one direction only — into the database.
+
+export interface AiSettingsState {
+  ok?: boolean;
+  error?: string;
+  message?: string;
+}
+
+export async function saveAiSettingsAction(
+  _prev: AiSettingsState,
+  formData: FormData,
+): Promise<AiSettingsState> {
+  const actor = await sessionActor();
+  if (!actor) return { error: "Not signed in." };
+  try {
+    const { saveAiSettings } = await import("@/lib/ai/provider");
+    await saveAiSettings(actor, {
+      provider: String(formData.get("provider") ?? "openai") as "openai" | "deepseek" | "custom",
+      baseUrl: String(formData.get("baseUrl") ?? ""),
+      model: String(formData.get("model") ?? ""),
+      apiKey: String(formData.get("apiKey") ?? ""),
+    });
+    revalidatePath("/settings");
+    revalidatePath("/assistant");
+    return { ok: true, message: "Saved." };
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : "Could not save." };
+  }
+}
+
+export async function testAiConnectionAction(): Promise<AiSettingsState> {
+  const actor = await sessionActor();
+  if (!actor) return { error: "Not signed in." };
+  try {
+    const { testAiConnection } = await import("@/lib/ai/provider");
+    const r = await testAiConnection(actor);
+    return r.ok ? { ok: true, message: r.message } : { error: r.message };
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : "Test failed." };
+  }
+}
+
+export async function clearAiKeyAction(): Promise<AiSettingsState> {
+  const actor = await sessionActor();
+  if (!actor) return { error: "Not signed in." };
+  try {
+    const { clearAiKey } = await import("@/lib/ai/provider");
+    await clearAiKey(actor);
+    revalidatePath("/settings");
+    revalidatePath("/assistant");
+    return { ok: true, message: "Key removed." };
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : "Could not remove the key." };
+  }
+}

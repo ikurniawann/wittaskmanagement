@@ -1,7 +1,9 @@
-import { env } from "@/lib/env";
+import { resolveAiConfig } from "./provider";
 
-// Thin OpenAI Chat Completions client (EPIC-014). Plain fetch — no SDK
-// dependency; we only need streaming chat. The key lives in env only.
+// Thin Chat Completions client (EPIC-014). Plain fetch — no SDK dependency;
+// we only need streaming chat. Which provider, URL, model and key to use is
+// decided by resolveAiConfig() (Settings first, env as the fallback), so
+// this file knows nothing about where any of it came from.
 
 /**
  * A multimodal message part. Images are sent as data: URLs so nothing has to
@@ -17,23 +19,22 @@ export interface ChatMessage {
   content: string | ContentPart[];
 }
 
-export function aiConfigured(): boolean {
-  return env.OPENAI_API_KEY.length > 0;
-}
+export { aiConfigured } from "./provider";
 
 /** Streams assistant text chunks. Throws (with OpenAI's error message) on a
  *  non-OK response so the route can surface a readable failure. */
 export async function* streamChat(
   messages: ChatMessage[],
 ): AsyncGenerator<string> {
-  const response = await fetch("https://api.openai.com/v1/chat/completions", {
+  const config = await resolveAiConfig();
+  const response = await fetch(`${config.baseUrl}/chat/completions`, {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${env.OPENAI_API_KEY}`,
+      Authorization: `Bearer ${config.apiKey}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: env.OPENAI_MODEL,
+      model: config.model,
       messages,
       stream: true,
     }),
@@ -49,7 +50,7 @@ export async function* streamChat(
     } catch {
       // keep the status code
     }
-    throw new Error(`OpenAI request failed: ${detail}`);
+    throw new Error(`${config.providerName} request failed: ${detail}`);
   }
 
   const reader = response.body.getReader();

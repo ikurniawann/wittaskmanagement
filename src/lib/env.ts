@@ -30,8 +30,9 @@ const schema = z.object({
   // WhatsApp gateway (EPIC-015)
   WHATSAPP_SESSION_DIR: z.string().default(""),
   WHATSAPP_COUNTRY_CODE: z.string().default("62"),
-  // AI assistant (EPIC-014). Key comes ONLY from the environment — an empty
-  // string disables the feature gracefully (route returns a friendly error).
+  // AI assistant (EPIC-014). Since 2026-09-06 the key normally lives in
+  // Settings → Integrations (src/lib/ai/provider.ts); these are the fallback
+  // for installs configured the old way. Empty = no fallback.
   OPENAI_API_KEY: z.string().default(""),
   OPENAI_MODEL: z.string().default("gpt-5.6"),
 });

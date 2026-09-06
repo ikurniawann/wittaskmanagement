@@ -76,7 +76,7 @@ export default async function AssistantPage({
           userName={session?.user?.name ?? "You"}
           assistantName={branding.assistantName}
           events={events.map((e) => ({ id: e.id, name: e.name }))}
-          configured={aiConfigured()}
+          configured={await aiConfigured()}
           conversationId={conversation?.id ?? null}
           initialMessages={conversation?.messages ?? []}
           initialEventId={conversation?.eventId ?? ""}

@@ -263,7 +263,7 @@ export function AssistantChat({
           {assistantName} is not configured
         </p>
         <p className="text-xs text-muted-foreground">
-          Set OPENAI_API_KEY in the server environment, then redeploy.
+          Ask an admin to add an API key in Settings → Integrations.
         </p>
       </div>
     );
