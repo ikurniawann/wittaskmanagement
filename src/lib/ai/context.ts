@@ -202,8 +202,34 @@ async function eventSnapshot(
 
   if (!opts.deep) return base;
 
+  // When one project is in focus, the titles themselves ride along (Owner
+  // 2026-09-06): "task apa saja?" is the commonest question and should not
+  // cost a tool round-trip. Capped; the list_tasks tool covers the rest.
+  const leadIds = [...new Set(taskRows.flatMap((t) => (t.leadId ? [t.leadId] : [])))];
+  const leadNames = new Map(
+    leadIds.length === 0
+      ? []
+      : (
+          await db
+            .select({ id: profiles.id, name: profiles.name })
+            .from(profiles)
+            .where(inArray(profiles.id, leadIds))
+        ).map((p) => [p.id, p.name] as const),
+  );
+  const taskList = taskRows.slice(0, 80).map((t) => ({
+    id: t.id,
+    title: t.title,
+    status: t.status,
+    priority: t.priority,
+    division: t.divisionName,
+    dueDateWIB: t.dueDate ? t.dueDate.toISOString() : null,
+    lead: t.leadId ? (leadNames.get(t.leadId) ?? null) : null,
+  }));
+
   return {
     ...base,
+    taskList,
+    taskListTruncated: taskRows.length > 80 ? taskRows.length - 80 : 0,
     overdueTasks: overdue.slice(0, 15).map((t) => ({
       title: t.title,
       division: t.divisionName,

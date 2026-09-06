@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { logActivity } from "@/lib/activity";
+import { ASSISTANT_TOOLS, runAssistantTool } from "@/lib/ai/tools";
 import { buildAssistantContext } from "@/lib/ai/context";
 import {
   appendExchange,
@@ -40,6 +41,8 @@ function systemPrompt(orgName: string, assistantName: string): string {
   return `You are ${assistantName}, the in-house analyst for ${orgName}, a production organisation. You answer questions about their live project/task data and assess whether projects are on course. If asked what you are called, use the name ${assistantName}.
 
 You receive a JSON snapshot of the data the CURRENT USER is allowed to see (their permission scope — never speculate about data outside it). All amounts are IDR. Dates/times are WIB (Asia/Jakarta).
+
+The snapshot is a SUMMARY. You also have tools (list_projects, list_tasks, get_task, my_tasks, search, list_documents, list_people, subtask_conversation) that read live data with the same permissions. Whenever a question needs names, lists or details — which tasks, who is assigned, what is in a checklist, which files exist, what a comment said — CALL THE TOOL and answer from its result. Never reply that the snapshot lacks detail; fetch it. Prefer concrete lists (titles, statuses, dates, people) over counts. Answer in the language the user writes in.
 
 When asked whether a project will run smoothly (or for any risk assessment):
 1. Give a clear verdict first: ON COURSE / AT RISK / CRITICAL, with a confidence level.
@@ -284,7 +287,10 @@ export async function POST(request: Request) {
             .join("\n")}\n\n`;
           controller.enqueue(encoder.encode(notice));
         }
-        for await (const chunk of streamChat(messages)) {
+        for await (const chunk of streamChat(messages, {
+          tools: ASSISTANT_TOOLS,
+          run: (name, args) => runAssistantTool(actor, name, args),
+        })) {
           assistantText += chunk;
           controller.enqueue(encoder.encode(chunk));
         }
