@@ -34,6 +34,13 @@ async function icon(size, { coverage = 1, background = null } = {}) {
 const WHITE = { r: 255, g: 255, b: 255, alpha: 1 };
 
 const targets = [
+  // Next's own icon conventions (Owner 2026-09-01: the .ico alone never
+  // displaced a cached favicon — browsers key that cache on the path, and
+  // /favicon.ico is the same path forever. app/icon.png is emitted as a
+  // hashed <link rel="icon"> that Chrome prefers over the .ico, so a change
+  // actually shows up).
+  ["src/app/icon.png", 192, {}],
+  ["src/app/apple-icon.png", 180, { coverage: 0.92, background: WHITE }],
   // tab + PWA: transparent, full bleed
   ["public/icon-192.png", 192, {}],
   ["public/icon-512.png", 512, {}],
