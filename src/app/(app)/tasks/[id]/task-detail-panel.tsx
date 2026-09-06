@@ -1,10 +1,10 @@
+import { Breadcrumb } from "@/components/breadcrumb";
 import { SummaryShareButton } from "@/app/(app)/summary-share/summary-share-button";
 import { SubtaskCommentButton } from "@/components/subtask-comment-button";
 import {
   commentCountByItem,
   unreadByItem,
 } from "@/lib/subtask-comments/service";
-import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { AttachmentView } from "@/components/attachment-view";
 import { CommentBody } from "@/components/comment-body";
@@ -22,7 +22,7 @@ import { LABEL_COLORS } from "@/lib/label-colors";
 import { Input } from "@/components/ui/input";
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
-import { profiles } from "@/db/schema";
+import { divisions, profiles } from "@/db/schema";
 import { sessionActor } from "@/lib/auth/session-actor";
 import { can } from "@/lib/permissions";
 import {
@@ -60,13 +60,7 @@ const dtShort = new Intl.DateTimeFormat("en-GB", {
 });
 
 // Shared between the full page and the peek drawer (T-111).
-export async function TaskDetailPanel({
-  taskId,
-  compact = false,
-}: {
-  taskId: string;
-  compact?: boolean;
-}) {
+export async function TaskDetailPanel({ taskId }: { taskId: string }) {
   const actor = await sessionActor();
   if (!actor) redirect("/login");
 
@@ -87,6 +81,11 @@ export async function TaskDetailPanel({
     .where(eq(profiles.id, actor.id))
     .limit(1);
   const reader = { kind: "member" as const, profileId: actor.id, name: me?.name ?? "Team" };
+  const [division] = await db
+    .select({ name: divisions.name })
+    .from(divisions)
+    .where(eq(divisions.id, task.divisionId))
+    .limit(1);
   const [commentUnread, commentTotals] = await Promise.all([
     unreadByItem(task.id, reader),
     commentCountByItem(task.id),
@@ -96,26 +95,22 @@ export async function TaskDetailPanel({
   return (
     <section className="flex w-full flex-col gap-7">
       <div className="flex flex-col gap-2">
-        {!compact ? (
-          <Link
-            href={`/events/${task.eventId}/board?division=${task.divisionId}`}
-            className="text-xs uppercase tracking-wider text-muted-foreground hover:text-foreground"
-          >
-            ← {task.event?.name ?? "Project"} · board
-          </Link>
-        ) : (
-          <span className="text-xs uppercase tracking-wider text-muted-foreground">
-            {task.event?.name} · {task.divisionId}
-          </span>
-        )}
+        {/* Project › Division › Task (Owner 2026-08-31). The division crumb
+            lands on that division's board — the same place the old
+            "← project · board" link went, so nothing that used to be one
+            click away moved further off. */}
+        <Breadcrumb
+          items={[
+            { label: task.event?.name ?? "Project", href: `/events/${task.eventId}` },
+            {
+              label: division?.name ?? task.divisionId,
+              href: `/events/${task.eventId}/board?division=${task.divisionId}`,
+            },
+            { label: "Task" },
+          ]}
+        />
         <div className="flex items-start justify-between gap-4">
-          <h1
-            className={
-              compact
-                ? "text-xl font-semibold leading-tight tracking-tight"
-                : "text-3xl font-semibold leading-tight tracking-tight"
-            }
-          >
+          <h1 className="text-3xl font-semibold leading-tight tracking-tight">
             {task.title}
           </h1>
           <div className="flex items-center gap-2">
