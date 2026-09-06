@@ -24,6 +24,8 @@ const nextConfig: NextConfig = {
     "exceljs",
     "mammoth",
     "unpdf",
+    // imported directly now (profile photos); keep it out of the bundle
+    "sharp",
   ],
 };
 

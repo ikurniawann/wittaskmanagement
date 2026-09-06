@@ -9,7 +9,7 @@ import path from "node:path";
 import { sessionActor } from "@/lib/auth/session-actor";
 import { hashPassword, verifyPassword } from "@/lib/auth/password";
 import { env } from "@/lib/env";
-import { saveImageUpload } from "@/lib/uploads";
+import { saveAvatarUpload } from "@/lib/uploads";
 
 // Self-service notification preferences (T-100). A user can only ever
 // mutate their OWN row — the id comes from the session, never the form.
@@ -124,8 +124,9 @@ export async function uploadMyAvatarAction(
 
   let stored: string;
   try {
-    // jpg/png/webp, 5 MB cap — enforced inside saveImageUpload
-    stored = await saveImageUpload(file, "avatars");
+    // any phone photo up to 20 MB, HEIC included — normalised to a 256px
+    // WebP inside saveAvatarUpload
+    stored = await saveAvatarUpload(file);
   } catch (error) {
     return {
       error: error instanceof Error ? error.message : "Could not save the image.",

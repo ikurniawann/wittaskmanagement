@@ -207,26 +207,44 @@ export async function testAiConnection(actor: Actor): Promise<{ ok: boolean; mes
   assertCan(actor, "org.manage");
   const c = await resolveAiConfig();
   if (!c.apiKey) return { ok: false, message: "No API key is set." };
-  try {
+  // The token cap is named differently across the ecosystem: OpenAI's
+  // current models reject `max_tokens` and want `max_completion_tokens`,
+  // while DeepSeek and most other compatible APIs know only `max_tokens`.
+  // Try the newer name first and fall back when a provider says it does
+  // not recognise it, so one Test button serves every provider.
+  //
+  // The cap is 64, not 1: a reasoning model (gpt-5.x) spends tokens thinking
+  // BEFORE it emits any text, and with a cap of 1 OpenAI answers 400 "output
+  // limit was reached" — a healthy key reported as a broken one.
+  const ping = async (capName: "max_completion_tokens" | "max_tokens") => {
     const res = await fetch(`${c.baseUrl}/chat/completions`, {
       method: "POST",
       headers: { Authorization: `Bearer ${c.apiKey}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         model: c.model,
         messages: [{ role: "user", content: "ping" }],
-        max_tokens: 1,
+        [capName]: 64,
       }),
       signal: AbortSignal.timeout(15_000),
     });
-    if (res.ok) return { ok: true, message: `${c.providerName} answered with model “${c.model}”.` };
     let detail = `HTTP ${res.status}`;
-    try {
-      const j = (await res.json()) as { error?: { message?: string } };
-      detail = j.error?.message ?? detail;
-    } catch {
-      // keep the status
+    if (!res.ok) {
+      try {
+        const j = (await res.json()) as { error?: { message?: string } };
+        detail = j.error?.message ?? detail;
+      } catch {
+        // keep the status
+      }
     }
-    return { ok: false, message: `${c.providerName} refused: ${detail}` };
+    return { ok: res.ok, detail };
+  };
+  try {
+    let r = await ping("max_completion_tokens");
+    if (!r.ok && /max_completion_tokens|unrecognized|unknown parameter|unsupported parameter/i.test(r.detail)) {
+      r = await ping("max_tokens");
+    }
+    if (r.ok) return { ok: true, message: `${c.providerName} answered with model “${c.model}”.` };
+    return { ok: false, message: `${c.providerName} refused: ${r.detail}` };
   } catch (e) {
     return { ok: false, message: `Could not reach ${c.baseUrl}: ${e instanceof Error ? e.message : "network error"}` };
   }

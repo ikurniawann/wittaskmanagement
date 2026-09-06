@@ -27,6 +27,47 @@ const FILE_EXTENSIONS = new Set([
 ]);
 const MAX_FILE_BYTES = 20 * 1024 * 1024;
 
+/**
+ * Profile photos (Owner 2026-09-06). The generic image path rejected exactly
+ * what a phone produces — a 6 MB camera JPEG over the 5 MB cap, an iPhone's
+ * HEIC — while the avatar is drawn at 56px at most. So the input is allowed
+ * to be big and messy, and what is STORED is small and uniform: auto-rotated
+ * by EXIF (phone photos arrive sideways otherwise), centre-cropped to a
+ * 256px square, encoded as WebP. sharp ships in the runtime image with HEIF
+ * support, so HEIC decodes server-side.
+ */
+const AVATAR_EXTENSIONS = new Set([".jpg", ".jpeg", ".png", ".webp", ".heic", ".heif", ".gif"]);
+const MAX_AVATAR_INPUT_BYTES = 20 * 1024 * 1024;
+const AVATAR_SIZE = 256;
+
+export async function saveAvatarUpload(file: File): Promise<string> {
+  const ext = path.extname(file.name).toLowerCase();
+  if (!AVATAR_EXTENSIONS.has(ext)) {
+    throw new Error("Unsupported image type (jpg, png, webp, heic or gif).");
+  }
+  if (file.size > MAX_AVATAR_INPUT_BYTES) {
+    throw new Error("That photo is larger than 20 MB.");
+  }
+
+  const { default: sharp } = await import("sharp");
+  let bytes: Buffer;
+  try {
+    bytes = await sharp(Buffer.from(await file.arrayBuffer()))
+      .rotate() // honour EXIF orientation, then strip it
+      .resize(AVATAR_SIZE, AVATAR_SIZE, { fit: "cover", position: "attention" })
+      .webp({ quality: 82 })
+      .toBuffer();
+  } catch {
+    throw new Error("That file could not be read as an image.");
+  }
+
+  const relative = path.join("avatars", `${randomUUID()}.webp`);
+  const absolute = path.join(path.resolve(env.UPLOADS_DIR), relative);
+  await mkdir(path.dirname(absolute), { recursive: true });
+  await writeFile(absolute, bytes);
+  return relative;
+}
+
 // Generic attachment upload (T-034): documents + images, 20 MB cap.
 export async function saveFileUpload(
   file: File,
