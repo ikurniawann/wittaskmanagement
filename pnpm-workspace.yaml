@@ -1,11 +1,21 @@
+# false = install without running the package's build script. The five
+# swagger-ui-react brings in are telemetry (@scarf/scarf), a console banner
+# (core-js-pure) and native tree-sitter, whose WASM twin is what the browser
+# bundle actually uses (API docs page, 2026-09-07).
 allowBuilds:
+  '@scarf/scarf': false
+  '@tree-sitter-grammars/tree-sitter-yaml': false
   '@whiskeysockets/baileys': true
+  core-js-pure: false
   esbuild: true
   protobufjs: true
   sharp: true
+  tree-sitter: false
+  tree-sitter-json: false
   unrs-resolver: false
 
 overrides:
   # exceljs pulls an old uuid with a buffer bounds-check advisory; the
   # patched line is API-compatible for the v4 calls exceljs makes
   uuid: ">=11.1.1"
+

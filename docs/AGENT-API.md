@@ -5,6 +5,7 @@ API untuk agent eksternal (OpenClaw / Hermes / n8n / skrip apa pun) agar bisa
 sedang berbicara dengan agent — misalnya lewat WhatsApp.
 
 - **Base URL**: `https://ingat.reddie.id/api/agent`
+- **Referensi interaktif (Swagger UI)**: `https://ingat.reddie.id/api-docs` — login admin/owner; spesifikasi OpenAPI di `/api/openapi`
 - **Format**: JSON, UTF-8. Semua respons dibungkus `{ "ok": true, "data": … }`
   atau `{ "ok": false, "error": "…" }`.
 - **Shipped**: EPIC-023, 2026-08-18. Diuji end-to-end terhadap server live.

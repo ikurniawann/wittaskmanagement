@@ -1,6 +1,7 @@
 "use client";
 
 import { Bot, Copy, Loader2 } from "lucide-react";
+import Link from "next/link";
 import { useActionState, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -45,9 +46,18 @@ export function AgentKeysCard({
 
   return (
     <section className="flex flex-col gap-4 rounded-md border bg-card p-5">
-      <h2 className="flex items-center gap-2 text-sm font-semibold">
-        <Bot className="size-4" /> Agent API keys
-      </h2>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h2 className="flex items-center gap-2 text-sm font-semibold">
+          <Bot className="size-4" /> Agent API keys
+        </h2>
+        {/* the reference lives next to the keys it needs (Owner 2026-09-07) */}
+        <Link
+          href="/api-docs"
+          className="text-xs text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+        >
+          API docs ↗
+        </Link>
+      </div>
       <p className="text-xs text-muted-foreground">
         For external agents (OpenClaw / Hermes / n8n). A key only proves which
         agent is calling — every request must also carry{" "}
