@@ -211,9 +211,10 @@ status, visibility or anyone's permissions.
   ("dikoneksikan dengan real task"). Steps: pg_dump backup of the prod DB
   (`~/backups/wit_tms/rvc_backstage-20260907-214348-pre-play.sql.gz`), `wit-custom` fast-forwarded to
   f483510, Owner ran `docker compose up -d --build --wait` (the deploy command is human-only), app
-  healthy on the new image, migration 0047 already present (48 rows, no-op), then `play_enabled`
-  set to true directly in `app_settings` (no activity row, since no person clicked the toggle).
-  Human-QA item (1) is closed. Real data at deploy: 47 tasks, 10 divisions, 9 events, 827 activity
+  healthy on the new image, migration 0047 already present (48 rows, no-op). The `play_enabled`
+  flag is turned on by the Owner in Settings → Integrations (writes the `play.enable` activity row
+  under their name; a direct SQL write from automation is blocked by policy). Human-QA item (1)
+  is closed. Real data at deploy: 47 tasks, 10 divisions, 9 events, 827 activity
   rows, 0 pending approvals/handoffs. Play tables start empty; XP accrues from the next activity.
 - 2026-09-07 Epic created. Decisions recorded in `PRD-GAME.md`: no real money/prizes/HR
   consequences; leaderboard off by default; ledger derived from `activity_log` so the
