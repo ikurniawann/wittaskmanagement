@@ -3,6 +3,7 @@ import {
   castShadow,
   GameLoop,
   InstancedManager,
+  type InstanceRecord,
   materialFactory,
   mergeParts,
   ParticlePool,
@@ -39,7 +40,10 @@ export type OfficeHandlers = {
   onHover: (p: Pick) => void;
 };
 
-type DeskRef = { slot: DeskSlot; room: Room };
+/** Hide/show one static instanced prop; the InstancedManager rewrites its chunk within a few frames. */
+function setInstanceScale(r: InstanceRecord, s: number): void { r.sx = s; r.sy = s; r.sz = s; }
+
+type DeskRef = { slot: DeskSlot; room: Room; monitor?: InstanceRecord; chair?: InstanceRecord };
 type StackRef = { task: PlayTask; visual: TaskVisual; x: number; y: number; z: number; pop: number; fade: number };
 type PersonRef = { id: string; x: number; z: number; facing: number; clip: ClipName; phase: number };
 type CourierRef = { handoff: PlayHandoff; char: Character | null; path: THREE.Vector3[]; seg: number; t: number; done: boolean; placeholderIndex: number };
@@ -212,6 +216,31 @@ export class OfficeScene {
       fern.position.set(desk.slot.x + Math.cos(f) * 0.7, 0.82, desk.slot.z - Math.sin(f) * 0.7);
       this.scene.add(fern); out.push(fern);
     }
+    // Instanced props are static, so an upgraded monitor/chair hides its instance
+    // (scale 0, picked up by the next chunk pass) and draws a dedicated mesh instead.
+    if (desk?.monitor) setInstanceScale(desk.monitor, c.monitor === "wide" ? 0 : 1);
+    if (desk?.chair) setInstanceScale(desk.chair, c.chair === "red" ? 0 : 1);
+    if (c.monitor === "wide" && desk) {
+      const wide = new THREE.Mesh(mergeParts([
+        { g: new THREE.BoxGeometry(1.15, 0.46, 0.04), c: 0x1b1e23, m: partMatrix(0, 1.07, -0.2) },
+        { g: new THREE.BoxGeometry(1.05, 0.36, 0.01), c: 0x3a6ea5, m: partMatrix(0, 1.08, -0.175) },
+        { g: new THREE.BoxGeometry(0.26, 0.2, 0.1), c: 0x4a4e55, m: partMatrix(0, 0.83, -0.2) },
+      ]), materialFactory(S, 0xffffff, "metal"));
+      wide.position.set(desk.slot.x, 0, desk.slot.z); wide.rotation.y = desk.slot.facing;
+      this.scene.add(wide); out.push(wide);
+    }
+    if (c.chair === "red" && desk) {
+      const f = desk.slot.facing;
+      const chair = castShadow(new THREE.Mesh(mergeParts([
+        { g: new THREE.BoxGeometry(0.54, 0.1, 0.54), c: 0xc0262e, m: partMatrix(0, 0.46, 0) },
+        { g: new THREE.BoxGeometry(0.54, 0.62, 0.1), c: 0xc0262e, m: partMatrix(0, 0.8, -0.24) },
+        { g: new THREE.BoxGeometry(0.1, 0.1, 0.4), c: 0x2a2e36, m: partMatrix(-0.3, 0.62, 0) },
+        { g: new THREE.BoxGeometry(0.1, 0.1, 0.4), c: 0x2a2e36, m: partMatrix(0.3, 0.62, 0) },
+        { g: new THREE.CylinderGeometry(0.04, 0.04, 0.45, 6), c: 0x8c8f94, m: partMatrix(0, 0.22, 0) },
+      ]), materialFactory(S, 0xffffff, "metal")));
+      chair.position.set(desk.slot.x - Math.sin(f) * 0.9, 0, desk.slot.z - Math.cos(f) * 0.9); chair.rotation.y = f;
+      this.scene.add(chair); out.push(chair);
+    }
     this.cosmeticMeshes.set(personId, out);
   }
 
@@ -305,9 +334,9 @@ export class OfficeScene {
         const f = desk.facing;
         this.instanced.add(deskK, desk.x, 0.78, desk.z, 0, f, 0, 1);
         this.instanced.add(legK, desk.x, 0.36, desk.z, 0, f, 0, 1);
-        this.instanced.add(monK, desk.x, 0, desk.z, 0, f, 0, 1);
-        this.instanced.add(chairK, desk.x - Math.sin(f) * 0.9, 0, desk.z - Math.cos(f) * 0.9, 0, f, 0, 1);
-        if (desk.personId) this.deskOf.set(desk.personId, { slot: desk, room });
+        const monitor = this.instanced.add(monK, desk.x, 0, desk.z, 0, f, 0, 1);
+        const chair = this.instanced.add(chairK, desk.x - Math.sin(f) * 0.9, 0, desk.z - Math.cos(f) * 0.9, 0, f, 0, 1);
+        if (desk.personId) this.deskOf.set(desk.personId, { slot: desk, room, monitor, chair });
       }
     }
     const plantK = this.instanced.addKind("plant", mergeParts([

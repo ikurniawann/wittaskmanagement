@@ -198,6 +198,15 @@ status, visibility or anyone's permissions.
 - 2026-09-07 Status → ready-for-qa. Open for human QA: (1) run `pnpm db:migrate` on production
   before deploying this branch, (2) decide the leaderboard policy (default off), (3) WhatsApp
   recap mirror yes/no, (4) monitor/chair cosmetics are unlocked but not drawn (instanced kinds).
+- 2026-09-07 (night) Owner ("lanjutkan progress") → the T-263 deferral closed: **wide monitor (L3)
+  and red chair (L4) are now drawn**. Desk props are static instances, so `DeskRef` keeps the
+  desk's monitor/chair `InstanceRecord`; `applyCosmetics` scales that instance to 0 (the
+  InstancedManager rewrites its chunk within a few frames) and adds a dedicated mesh at the same
+  transform — a two-tone wide screen and a red seat/back — and restores scale 1 when the
+  cosmetic is gone (season reset). Verified on the test instance (fixture user set to L4 in the
+  TEST DB only, 1650 XP): cap + fern + wide monitor + red chair render, other desks unchanged,
+  0 console errors, 96 draw calls, tests 673/673, typecheck clean. Human-QA item (4) is closed;
+  (1)–(3) remain the Owner's decisions.
 - 2026-09-07 Epic created. Decisions recorded in `PRD-GAME.md`: no real money/prizes/HR
   consequences; leaderboard off by default; ledger derived from `activity_log` so the
   score can always be recomputed.
