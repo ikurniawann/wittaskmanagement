@@ -29,6 +29,8 @@ export class IsoCamera {
   private readonly handlers: Array<[string, EventListener, AddEventListenerOptions | undefined]> = [];
   minDist = 14;
   maxDist = 140;
+  /** prefers-reduced-motion: every move is a cut instead of a glide. */
+  snapMoves = false;
 
   constructor(el: HTMLElement, aspect: number, onClick: (x: number, y: number) => void, onMove: (x: number, y: number) => void) {
     this.el = el;
@@ -148,7 +150,7 @@ export class IsoCamera {
     if (this.keys.has("KeyS") || this.keys.has("ArrowDown")) this.goalTarget.addScaledVector(fwd, -speed);
     if (this.keys.has("KeyA") || this.keys.has("ArrowLeft")) this.goalTarget.addScaledVector(right, -speed);
     if (this.keys.has("KeyD") || this.keys.has("ArrowRight")) this.goalTarget.addScaledVector(right, speed);
-    this.apply(false, dt);
+    this.apply(this.snapMoves, dt);
   }
 
   private apply(snap: boolean, dt = 0): void {

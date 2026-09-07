@@ -19,6 +19,7 @@ export default async function PlayPage({ searchParams }: PageProps<"/play">) {
   if (!can(actor, "play.view")) redirect("/my-tasks");
   const sp = await searchParams;
   const focusTask = typeof sp.task === "string" ? sp.task : null;
+  const focusMe = sp.focus === "me";
   const world = await getPlayWorld(actor);
-  return <PlayCanvas world={world} focusTask={focusTask} />;
+  return <PlayCanvas world={world} focusTask={focusTask} focusMe={focusMe} />;
 }

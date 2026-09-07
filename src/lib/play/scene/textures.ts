@@ -67,3 +67,14 @@ export function countdownLabel(showDate: string | null, now: Date): string {
   const p = (n: number) => String(n).padStart(2, "0");
   return `D-${days} ${p(h)}:${p(m)}:${p(s)}`;
 }
+
+/** Speech bubble canvas (512×128, transparent). Redrawn per use. */
+export function bubbleTexture(): { tex: THREE.CanvasTexture; ctx: CanvasRenderingContext2D } {
+  const cv = document.createElement("canvas");
+  cv.width = 512;
+  cv.height = 128;
+  const ctx = cv.getContext("2d")!;
+  const tex = new THREE.CanvasTexture(cv);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return { tex, ctx };
+}

@@ -21,7 +21,7 @@ export class ShadowRig {
   readonly rt: THREE.WebGLRenderTarget;
   readonly depthTex: THREE.DepthTexture;
   private readonly depthMat = new THREE.MeshDepthMaterial({ colorWrite: false });
-  private readonly offset: THREE.Vector3;
+  private offset: THREE.Vector3;
 
   constructor(
     private readonly shared: SharedUniforms,
@@ -43,6 +43,12 @@ export class ShadowRig {
     this.offset = opts.offset ?? new THREE.Vector3(110, 200, 70);
     shared.uShadowMap.value = this.depthTex;
     shared.uSunDir.value.copy(this.offset).normalize();
+  }
+
+  /** Move the sun: the camera offset and the shared direction follow (time of day, T-253). */
+  setDirection(dir: THREE.Vector3): void {
+    this.offset = dir.clone().normalize().multiplyScalar(240);
+    this.shared.uSunDir.value.copy(dir).normalize();
   }
 
   /** Render the depth-only pass centred on (cx, 0, cz). */
