@@ -152,7 +152,8 @@ export class IsoCamera {
   }
 
   private apply(snap: boolean, dt = 0): void {
-    const k = snap ? 1 : Math.min(1, dt * 8);
+    // exponential easing: the same feel at 30, 60 or 144 fps (T-270)
+    const k = snap ? 1 : 1 - Math.exp(-dt * 8);
     this.target.lerp(this.goalTarget, k);
     this.yaw += (this.goalYaw - this.yaw) * k;
     this.dist += (this.goalDist - this.dist) * k;

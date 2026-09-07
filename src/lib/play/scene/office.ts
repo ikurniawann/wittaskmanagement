@@ -1,20 +1,25 @@
 import * as THREE from "three";
 import {
   castShadow,
+  detectTier,
   GameLoop,
   InstancedManager,
+  type InstanceKind,
   type InstanceRecord,
+  type MergePart,
   materialFactory,
   mergeParts,
   ParticlePool,
   partMatrix,
   PlayRenderer,
   srgbToLinear,
+  type QualityPref,
   type UnifiedMaterial,
 } from "../engine";
 import type { PlayHandoff, PlayTask, PlayWorld } from "../types";
 import { layout, type DeskSlot, type OfficeLayout, type Room } from "../world/layout";
 import { ENVELOPE_SCALE, mapTask, personClip, type AmountTier, type TaskVisual } from "../world/mapping";
+import { corridorCentreZ, furnish, type FurnitureKind } from "../world/furniture";
 import { IsoCamera } from "./camera";
 import { CharacterKit, type Character, type ClipName } from "./characters";
 import { cosmeticsForLevel } from "../xp/badges";
@@ -43,6 +48,7 @@ export type OfficeHandlers = {
 /** Hide/show one static instanced prop; the InstancedManager rewrites its chunk within a few frames. */
 function setInstanceScale(r: InstanceRecord, s: number): void { r.sx = s; r.sy = s; r.sz = s; }
 
+type BoardRef = { id: string; ctx: CanvasRenderingContext2D; tex: THREE.CanvasTexture; mesh: THREE.Mesh; name: string; showDate: string | null; phase: string; health: string | null };
 type DeskRef = { slot: DeskSlot; room: Room; monitor?: InstanceRecord; chair?: InstanceRecord };
 type StackRef = { task: PlayTask; visual: TaskVisual; x: number; y: number; z: number; pop: number; fade: number };
 type PersonRef = { id: string; x: number; z: number; facing: number; clip: ClipName; phase: number };
@@ -83,7 +89,7 @@ export class OfficeScene {
   private courierMesh!: THREE.InstancedMesh;
   private readonly couriers: CourierRef[] = [];
   private envelopeMesh: THREE.InstancedMesh | null = null;
-  private readonly boards: { id: string; ctx: CanvasRenderingContext2D; tex: THREE.CanvasTexture; mesh: THREE.Mesh; name: string; showDate: string | null; phase: string; health: string | null }[] = [];
+  private readonly boards: BoardRef[] = [];
   private readonly bubbles: Bubble[] = [];
   private readonly highlight: THREE.Mesh;
   private readonly pickables: THREE.Object3D[] = [];
@@ -100,12 +106,12 @@ export class OfficeScene {
   private tweening = false;
   fpsSamples: number[] = [];
 
-  constructor(container: HTMLElement, world: PlayWorld, private readonly handlers: OfficeHandlers) {
+  constructor(container: HTMLElement, world: PlayWorld, private readonly handlers: OfficeHandlers, quality: QualityPref = "auto") {
     this.container = container;
     this.world = world;
     this.layout = layout(world.divisions);
     const b = this.layout.bounds;
-    this.r = new PlayRenderer(container, undefined, { fogNear: 260, fogFar: 700 });
+    this.r = new PlayRenderer(container, detectTier(quality), { fogNear: 260, fogFar: 700 });
     this.r.canvas.style.display = "block";
     this.r.canvas.style.touchAction = "none";
     this.r.canvas.tabIndex = 0;
@@ -122,6 +128,7 @@ export class OfficeScene {
     container.appendChild(this.stats);
 
     this.buildStatic();
+    this.buildFurniture();
     this.buildPeople();
     this.buildTasks();
     this.buildCouriers(world.handoffs);
@@ -137,9 +144,12 @@ export class OfficeScene {
     this.ro = new ResizeObserver(() => this.resize());
     this.ro.observe(container);
     this.resize();
+    const dpr = window.devicePixelRatio || 1;
     this.loop = new GameLoop({
       render: (dt, now) => this.frame(dt, now),
       applyPixelRatio: (ratio) => { this.r.setPixelRatio(ratio); this.resize(); },
+      ratioMax: Math.min(dpr, this.r.tier.ratioMax),
+      ratioStart: Math.min(dpr, this.r.tier.ratioMax, 1.25),
     });
     this.loop.start();
     window.addEventListener("keydown", this.onKey);
@@ -344,12 +354,126 @@ export class OfficeScene {
       { g: new THREE.SphereGeometry(0.42, 8, 6), c: 0x3e8e4e, m: partMatrix(0, 0.75, 0) },
     ]), materialFactory(S, 0xffffff, "foliage"));
     for (const room of L.rooms) this.instanced.add(plantK, room.rect.x + 0.8, 0, room.rect.z + room.rect.d - 0.8, 0, 0, 0, 1);
+    this.plantKind = plantK;
     // approval room table
     const table = castShadow(new THREE.Mesh(new THREE.BoxGeometry(5, 0.1, 2.2), materialFactory(S, 0x8a5a3c, "rock")));
     table.position.set(L.approvalRoom.x + L.approvalRoom.w / 2, 0.9, L.approvalRoom.z + L.approvalRoom.d / 2);
     table.userData.pick = { kind: "approvals" } satisfies Pick;
     this.scene.add(table);
     this.pickables.push(table);
+  }
+
+  // ---- furniture (EPIC-027 T-272) ---------------------------------------------
+  private plantKind: InstanceKind | null = null;
+
+  /** Lobby lounge, coffee bar, service corner and plants — placements come from the pure `furnish()`. */
+  private buildFurniture(): void {
+    const S = this.r.shared;
+    const box = (w: number, h: number, d: number) => new THREE.BoxGeometry(w, h, d);
+    const cyl = (rt: number, rb: number, h: number, seg = 14) => new THREE.CylinderGeometry(rt, rb, h, seg);
+    const P = partMatrix;
+    const WOOD = 0x8a5a3c, WOOD_DARK = 0x5b3a29, DARK = 0x2a2e36, GREY = 0x8c8f94, CREAM = 0xf4efe2, REDDIE = 0xd62b2b, TEAL = 0x3f7f8c, TEAL_LIGHT = 0x5a9aa6, WARM = 0xc76a3a;
+    const kinds: Partial<Record<FurnitureKind, InstanceKind>> = {};
+    const kind = (name: FurnitureKind, parts: MergePart[], mat: "skin" | "metal" | "rock" = "skin", cast = true) => {
+      kinds[name] = this.instanced.addKind(name, mergeParts(parts), materialFactory(S, 0xffffff, mat), { cast });
+    };
+    kind("sofa", [
+      { g: box(2.4, 0.42, 1.0), c: TEAL, m: P(0, 0.21, 0) },
+      { g: box(2.4, 0.5, 0.25), c: TEAL, m: P(0, 0.67, -0.375) },
+      { g: box(0.2, 0.62, 1.0), c: TEAL, m: P(-1.1, 0.31, 0) },
+      { g: box(0.2, 0.62, 1.0), c: TEAL, m: P(1.1, 0.31, 0) },
+      { g: box(0.96, 0.12, 0.72), c: TEAL_LIGHT, m: P(-0.52, 0.48, 0.08) },
+      { g: box(0.96, 0.12, 0.72), c: TEAL_LIGHT, m: P(0.52, 0.48, 0.08) },
+      { g: box(0.42, 0.3, 0.12), c: REDDIE, m: P(-0.6, 0.62, -0.2) },
+    ]);
+    kind("armchair", [
+      { g: box(1.0, 0.42, 1.0), c: WARM, m: P(0, 0.21, 0) },
+      { g: box(1.0, 0.5, 0.25), c: WARM, m: P(0, 0.67, -0.375) },
+      { g: box(0.18, 0.62, 1.0), c: WARM, m: P(-0.41, 0.31, 0) },
+      { g: box(0.18, 0.62, 1.0), c: WARM, m: P(0.41, 0.31, 0) },
+      { g: box(0.58, 0.12, 0.7), c: 0xd98a5a, m: P(0, 0.48, 0.08) },
+    ]);
+    kind("coffeeTable", [
+      { g: box(1.4, 0.06, 0.8), c: WOOD, m: P(0, 0.42, 0) },
+      ...[[-0.62, -0.32], [0.62, -0.32], [-0.62, 0.32], [0.62, 0.32]].map(([x, z]) => ({ g: box(0.06, 0.4, 0.06), c: DARK, m: P(x, 0.2, z) })),
+      { g: cyl(0.05, 0.04, 0.09, 10), c: CREAM, m: P(0.35, 0.495, 0.12) },
+      { g: cyl(0.05, 0.04, 0.09, 10), c: REDDIE, m: P(-0.3, 0.495, -0.1) },
+      { g: box(0.3, 0.02, 0.22), c: 0x3a6ea5, m: P(-0.2, 0.46, 0.15) },
+    ], "rock");
+    kind("rug", [{ g: box(1, 0.02, 1), c: 0x7a4a5c, m: P(0, 0.012, 0) }], "skin", false);
+    kind("floorLamp", [
+      { g: cyl(0.18, 0.2, 0.04), c: DARK, m: P(0, 0.02, 0) },
+      { g: cyl(0.025, 0.025, 1.6, 8), c: GREY, m: P(0, 0.82, 0) },
+      { g: cyl(0.2, 0.28, 0.32, 16), c: 0xf4e2b8, m: P(0, 1.72, 0) },
+    ], "metal");
+    kind("coffeeBar", [
+      { g: box(3.6, 0.95, 1.2), c: WOOD_DARK, m: P(0, 0.475, 0) },
+      { g: box(3.7, 0.06, 1.3), c: 0xe8e2d6, m: P(0, 0.98, 0) },
+      { g: box(3.6, 0.28, 0.02), c: REDDIE, m: P(0, 0.62, 0.61) },
+      { g: box(0.6, 0.45, 0.5), c: DARK, m: P(-1.0, 1.235, -0.15) },
+      { g: box(0.62, 0.08, 0.52), c: GREY, m: P(-1.0, 1.5, -0.15) },
+      { g: box(0.3, 0.06, 0.2), c: GREY, m: P(-1.0, 1.05, 0.18) },
+      { g: cyl(0.1, 0.12, 0.4, 12), c: DARK, m: P(-0.3, 1.21, -0.2) },
+      { g: cyl(0.05, 0.04, 0.09, 10), c: CREAM, m: P(0.4, 1.055, 0.15) },
+      { g: cyl(0.05, 0.04, 0.09, 10), c: REDDIE, m: P(0.6, 1.055, -0.1) },
+      { g: cyl(0.05, 0.04, 0.09, 10), c: CREAM, m: P(0.85, 1.055, 0.18) },
+      { g: new THREE.SphereGeometry(0.16, 14, 10), c: 0xd8e7f0, m: P(1.25, 1.1, 0) },
+      { g: cyl(0.17, 0.17, 0.03, 14), c: GREY, m: P(1.25, 1.02, 0) },
+    ]);
+    kind("stool", [
+      { g: cyl(0.17, 0.19, 0.03), c: DARK, m: P(0, 0.015, 0) },
+      { g: cyl(0.025, 0.025, 0.7, 8), c: GREY, m: P(0, 0.36, 0) },
+      { g: new THREE.TorusGeometry(0.15, 0.015, 6, 16), c: GREY, m: P(0, 0.25, 0, Math.PI / 2) },
+      { g: cyl(0.2, 0.2, 0.06, 16), c: REDDIE, m: P(0, 0.74, 0) },
+    ], "metal");
+    kind("highTable", [
+      { g: cyl(0.3, 0.32, 0.04), c: DARK, m: P(0, 0.02, 0) },
+      { g: cyl(0.04, 0.04, 1.0, 8), c: GREY, m: P(0, 0.52, 0) },
+      { g: cyl(0.5, 0.5, 0.05, 20), c: WOOD, m: P(0, 1.045, 0) },
+      ...[-0.45, 0.45].flatMap((x) => [
+        { g: cyl(0.14, 0.16, 0.03), c: DARK, m: P(x, 0.015, 0.1) },
+        { g: cyl(0.02, 0.02, 0.7, 8), c: GREY, m: P(x, 0.36, 0.1) },
+        { g: cyl(0.17, 0.17, 0.05, 14), c: REDDIE, m: P(x, 0.735, 0.1) },
+      ]),
+    ], "metal");
+    kind("waterCooler", [
+      { g: box(0.35, 0.95, 0.35), c: 0xe6e8ea, m: P(0, 0.475, 0) },
+      { g: cyl(0.13, 0.12, 0.42, 14), c: 0x8fc7ea, m: P(0, 1.16, 0) },
+      { g: box(0.05, 0.05, 0.06), c: 0x2b6cb0, m: P(-0.06, 0.82, 0.19) },
+      { g: box(0.05, 0.05, 0.06), c: REDDIE, m: P(0.06, 0.82, 0.19) },
+    ], "metal");
+    kind("printer", [
+      { g: box(1.1, 0.8, 0.8), c: 0xd9d4c7, m: P(0, 0.4, 0) },
+      { g: box(0.72, 0.32, 0.56), c: 0x4a4e55, m: P(0, 0.96, 0) },
+      { g: box(0.5, 0.03, 0.3), c: CREAM, m: P(0, 1.13, -0.08) },
+      { g: box(0.22, 0.02, 0.1), c: 0x3a6ea5, m: P(0.2, 1.125, 0.2) },
+    ], "metal");
+    const books: MergePart[] = [];
+    const palette = [REDDIE, TEAL, 0xf5c518, 0x4fa35a, DARK, CREAM, 0x3a6ea5];
+    for (let s = 0; s < 3; s++) for (let i = 0; i < 12; i++) {
+      const h = 0.24 + ((s * 7 + i * 3) % 4) * 0.03;
+      books.push({ g: box(0.13, h, 0.3), c: palette[(s * 5 + i) % palette.length], m: P(-1.0 + i * 0.17 + (s % 2) * 0.05, 0.53 + s * 0.5 + h / 2, -0.02) });
+    }
+    kind("bookshelf", [
+      { g: box(2.4, 2.0, 0.04), c: WOOD, m: P(0, 1.0, -0.23) },
+      { g: box(0.04, 2.0, 0.5), c: WOOD, m: P(-1.18, 1.0, 0) },
+      { g: box(0.04, 2.0, 0.5), c: WOOD, m: P(1.18, 1.0, 0) },
+      { g: box(2.4, 0.04, 0.5), c: WOOD, m: P(0, 1.98, 0) },
+      ...[0.5, 1.0, 1.5].map((y) => ({ g: box(2.32, 0.04, 0.46), c: 0xa87c5a, m: P(0, y, 0) })),
+      ...books,
+    ], "rock");
+    kind("bin", [
+      { g: cyl(0.17, 0.15, 0.5, 14), c: 0x4a4e55, m: P(0, 0.25, 0) },
+      { g: cyl(0.18, 0.18, 0.03, 14), c: REDDIE, m: P(0, 0.51, 0) },
+    ], "metal");
+
+    for (const p of furnish(this.layout)) {
+      const k = p.kind === "plant" ? this.plantKind : kinds[p.kind];
+      if (!k) continue;
+      // the lobby/corridor slabs are 0.1 m thick with their top at y = 0.1: furniture stands on that
+      if (p.kind === "rug") this.instanced.add(k, p.x, 0.1, p.z, 0, p.ry, 0, p.foot.w, 1, p.foot.d);
+      else this.instanced.add(k, p.x, 0.1, p.z, 0, p.ry, 0, 1);
+    }
   }
 
   // ---- people ---------------------------------------------------------------
@@ -585,11 +709,20 @@ export class OfficeScene {
     const lobbyZ = L.lobby.z + L.lobby.d / 2;
     const a = from?.door ?? { x: L.lobby.x + 2, z: lobbyZ };
     const b = to?.door ?? { x: L.lobby.x + L.lobby.w - 2, z: lobbyZ };
-    const corridorZ = (side: -1 | 1) => (side === -1 ? L.corridors[0].z + L.corridors[0].d / 2 : L.corridors[1].z + L.corridors[1].d / 2);
+    const corridorZ = (side: -1 | 1) => corridorCentreZ(L, side);
+    // Walk along corridors and cross the lobby only on a door's lane (T-272: the
+    // lounge sits in the middle, so no diagonals through the lobby any more).
     const pts = [new THREE.Vector3(a.x, 0, a.z)];
+    const startSide: -1 | 1 = from?.side ?? to?.side ?? -1;
     if (from) pts.push(new THREE.Vector3(a.x, 0, corridorZ(from.side)));
-    if (to) pts.push(new THREE.Vector3(b.x, 0, corridorZ(to.side)));
-    else pts.push(new THREE.Vector3(b.x, 0, lobbyZ));
+    else pts.push(new THREE.Vector3(a.x, 0, corridorZ(startSide)));
+    if (to) {
+      if (from && from.side !== to.side) pts.push(new THREE.Vector3(b.x, 0, corridorZ(from.side)));
+      pts.push(new THREE.Vector3(b.x, 0, corridorZ(to.side)));
+    } else {
+      pts.push(new THREE.Vector3(b.x, 0, corridorZ(startSide)));
+      pts.push(new THREE.Vector3(b.x, 0, lobbyZ));
+    }
     // wait just outside the destination door, on the corridor side
     pts.push(new THREE.Vector3(b.x + 1.2, 0, to ? corridorZ(to.side) : lobbyZ));
     return pts;
@@ -691,16 +824,19 @@ export class OfficeScene {
     this.redrawBoards(new Date());
   }
 
+  private boardCursor = 0;
   private redrawBoards(now: Date): void {
-    for (const b of this.boards) {
-      drawBoard(b.ctx, { name: b.name, countdown: countdownLabel(b.showDate, now), phase: b.phase, health: b.health });
-      b.tex.needsUpdate = true;
-      // show week: the board pulses (emissive), unless motion is reduced
-      const ms = b.showDate ? new Date(b.showDate).getTime() - now.getTime() : Infinity;
-      const mat = b.mesh.material as UnifiedMaterial;
-      const week = ms > 0 && ms < 7 * 86400000;
-      mat.uniforms.uEmissive.value.setScalar(week && !this.reducedMotion ? 0.25 + 0.25 * Math.sin(now.getTime() / 400) : 0);
-    }
+    for (const b of this.boards) this.redrawBoard(b, now);
+  }
+
+  private redrawBoard(b: BoardRef, now: Date): void {
+    drawBoard(b.ctx, { name: b.name, countdown: countdownLabel(b.showDate, now), phase: b.phase, health: b.health });
+    b.tex.needsUpdate = true;
+    // show week: the board pulses (emissive), unless motion is reduced
+    const ms = b.showDate ? new Date(b.showDate).getTime() - now.getTime() : Infinity;
+    const mat = b.mesh.material as UnifiedMaterial;
+    const week = ms > 0 && ms < 7 * 86400000;
+    mat.uniforms.uEmissive.value.setScalar(week && !this.reducedMotion ? 0.25 + 0.25 * Math.sin(now.getTime() / 400) : 0);
   }
 
   /** Sun + sky follow the clock (WIB). Cosmetic only. */
@@ -889,7 +1025,8 @@ export class OfficeScene {
     this.tickCouriers(dt);
     this.tickTweens(dt);
     this.tickBubbles(dt);
-    if (now - this.lastBoard > 1000) { this.lastBoard = now; this.redrawBoards(new Date()); }
+    // one board per slice of the second instead of all six at once (T-270: no 1 Hz hitch)
+    if (this.boards.length && now - this.lastBoard > 1000 / this.boards.length) { this.lastBoard = now; this.redrawBoard(this.boards[this.boardCursor++ % this.boards.length], new Date()); }
     if (!this.reducedMotion && now - this.lastSmoke > 180) { this.lastSmoke = now; this.emitSmoke(); }
     this.instanced.update([this.camera.cam.position]);
     this.particles.update(dt, this.camera.cam);

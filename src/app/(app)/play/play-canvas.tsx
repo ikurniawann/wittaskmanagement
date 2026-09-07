@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, useTransition } from "react";
 import type { PlayHandoff, PlayTask, PlayWorld } from "@/lib/play/types";
 import type { OfficeScene, Pick } from "@/lib/play/scene/office";
 import { STATUS_COLOUR } from "@/lib/play/world/mapping";
 import { applyDiff, coalesce, type ActivityRow, type Intent } from "@/lib/play/world/diff";
 import { setPlayActive } from "@/lib/play/active-store";
+import { readQualityPref, writeQualityPref, type QualityPref } from "@/lib/play/engine/renderer";
 import { STATUS_LABELS, TASK_STATUS_ORDER, type TaskStatus } from "@/lib/tasks/status";
 import { claimTaskAction, commentTaskAction, decideHandoffAction, recordPlaySessionAction, setLeaderboardOptInAction, setTaskStatusAction } from "./actions";
 
@@ -23,6 +24,12 @@ const btn = "rounded bg-background/85 px-2 py-1 text-xs backdrop-blur hover:bg-a
 const panel = "flex flex-col gap-2 rounded-md border bg-card p-3 text-sm shadow-lg";
 const rowBtn = "w-full truncate rounded px-1 py-0.5 text-left hover:bg-accent focus-visible:bg-accent";
 
+const qualityListeners = new Set<() => void>();
+function subscribeQuality(cb: () => void): () => void {
+  qualityListeners.add(cb);
+  return () => { qualityListeners.delete(cb); };
+}
+
 export function PlayCanvas({ world: initial, focusTask, focusMe }: Props) {
   const router = useRouter();
   const host = useRef<HTMLDivElement>(null);
@@ -36,6 +43,9 @@ export function PlayCanvas({ world: initial, focusTask, focusMe }: Props) {
   const [live, setLive] = useState<"connecting" | "live" | "off">("connecting");
   const [cursor, setCursor] = useState(initial.cursor);
   const [trayOpen, setTrayOpen] = useState(true);
+  // per-browser preference; "auto" on the server so hydration matches, the real value on the client
+  const quality = useSyncExternalStore(subscribeQuality, readQualityPref, () => "auto" as QualityPref);
+  const chooseQuality = (q: QualityPref) => { writeQualityPref(q); qualityListeners.forEach((cb) => cb()); };
 
   const peopleById = useMemo(() => new Map(world.people.map((p) => [p.id, p])), [world.people]);
   const tasksById = useMemo(() => new Map(world.tasks.map((t) => [t.id, t])), [world.tasks]);
@@ -64,7 +74,7 @@ export function PlayCanvas({ world: initial, focusTask, focusMe }: Props) {
       scene = new Scene(el, initial, {
         onPick: (p) => selectRef.current(p),
         onHover: (p) => setHover(p),
-      });
+      }, quality);
       sceneRef.current = scene;
       mq = window.matchMedia("(prefers-reduced-motion: reduce)");
       mq.addEventListener("change", onMq);
@@ -91,9 +101,10 @@ export function PlayCanvas({ world: initial, focusTask, focusMe }: Props) {
       scene?.dispose();
       sceneRef.current = null;
     };
-    // the snapshot is fixed for this page load; live changes flow through the stream
+    // the snapshot is fixed for this page load; live changes flow through the stream.
+    // A quality change rebuilds the scene (MSAA lives on the gbuffer).
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [quality]);
 
   // ---- live stream (T-250) --------------------------------------------------------
   const refetchTask = useCallback(async (id: string): Promise<PlayTask | null> => {
@@ -289,6 +300,18 @@ export function PlayCanvas({ world: initial, focusTask, focusMe }: Props) {
         <button type="button" className={btn} onClick={() => sceneRef.current?.focusPerson(me) || sceneRef.current?.focusLobby()}>My desk</button>
         <button type="button" className={btn} onClick={() => sceneRef.current?.focusLobby()}>Lobby</button>
         <button type="button" className={btn} onClick={() => sceneRef.current?.focusApprovals()}>Approvals</button>
+        <select
+          aria-label="Render quality"
+          title="Render quality (Auto picks by GPU)"
+          className={btn}
+          value={quality}
+          onChange={(e) => chooseQuality(e.target.value as QualityPref)}
+          data-testid="play-quality"
+        >
+          <option value="auto">Auto</option>
+          <option value="performance">Performance</option>
+          <option value="quality">Quality</option>
+        </select>
         <span data-testid="play-live" className={`self-center rounded px-1.5 py-0.5 text-[10px] ${live === "live" ? "bg-emerald-600/80 text-white" : "bg-muted text-muted-foreground"}`} title="Live updates from the activity log">
           {live === "live" ? "LIVE" : live === "off" ? "RECONNECTING" : "…"}
         </span>

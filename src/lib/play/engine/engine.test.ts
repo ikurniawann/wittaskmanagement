@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import * as THREE from "three";
 import { chunkOf, lodScale, InstancedManager } from "./instanced";
 import { nextPixelRatio } from "./loop";
+import { classifyRenderer, QUALITY, tierFor } from "./renderer";
 import { buildLutData } from "./post";
 import { ParticlePool } from "./particles";
 import { createSharedUniforms } from "./shared";
@@ -49,10 +50,29 @@ describe("InstancedManager chunking", () => {
 describe("GameLoop adaptive resolution", () => {
   it("steps down under 50 fps and up over 58 fps within clamps", () => {
     expect(nextPixelRatio(1.5, 30, 1, 2)).toBe(1.35);
-    expect(nextPixelRatio(1.5, 60, 1, 2)).toBe(1.6);
+    expect(nextPixelRatio(1.5, 60, 1, 2)).toBe(1.55);
     expect(nextPixelRatio(1.0, 30, 1, 2)).toBe(1.0);
     expect(nextPixelRatio(2.0, 60, 1, 2)).toBe(2.0);
+    // hysteresis band: 45–57 fps holds
     expect(nextPixelRatio(1.5, 55, 1, 2)).toBe(1.5);
+    expect(nextPixelRatio(1.5, 46, 1, 2)).toBe(1.5);
+    // ceiling memory: never climb back to a ratio that just failed
+    expect(nextPixelRatio(1.35, 60, 1, 2, 1.5)).toBe(1.4);
+    expect(nextPixelRatio(1.45, 60, 1, 2, 1.5)).toBe(1.45);
+  });
+  it("classifyRenderer + tierFor pick a tier per GPU class and preference", () => {
+    expect(classifyRenderer("ANGLE (Intel, Intel(R) UHD Graphics 620 Direct3D11 vs_5_0 ps_5_0)")).toBe("integrated");
+    expect(classifyRenderer("ANGLE (NVIDIA, NVIDIA GeForce RTX 3060 Direct3D11)")).toBe("discrete");
+    expect(classifyRenderer("Apple M2")).toBe("integrated");
+    expect(classifyRenderer("Google SwiftShader")).toBe("integrated");
+    expect(classifyRenderer(null)).toBe("unknown");
+    expect(tierFor("auto", false, "discrete")).toBe(QUALITY.desktop);
+    expect(tierFor("auto", false, "integrated")).toBe(QUALITY.laptop);
+    expect(tierFor("auto", false, "unknown")).toBe(QUALITY.laptop);
+    expect(tierFor("auto", true, "discrete")).toBe(QUALITY.touch);
+    expect(tierFor("performance", false, "discrete")).toBe(QUALITY.performance);
+    expect(tierFor("quality", false, "integrated")).toBe(QUALITY.desktop);
+    expect(tierFor("quality", true, "integrated").msaa).toBe(2);
   });
 });
 

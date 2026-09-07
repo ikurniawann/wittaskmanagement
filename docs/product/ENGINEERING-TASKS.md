@@ -251,6 +251,18 @@
 
 ---
 
+## EPIC-027 — Backstage Play: polish (Phase 5)
+
+| ID | Task | Type | Cx | Depends | Exit | Stories |
+| --- | --- | --- | --- | --- | --- | --- |
+| T-270 | GPU-class quality tiers, adaptive DPR with hysteresis, exp camera easing, staggered board redraws, Auto/Performance/Quality switch | FE | M | T-247 | No resolution breathing; switch applies live; pure parts tested | US-PLAY-1 |
+| T-271 | Procedural Reddie robot rig (one SkinnedMesh, 5 code-authored clips, division accents), replaces `robot.glb` | FE | L | T-244 | Mascot shape; 1 draw call/character; sits at desk; cosmetics attach | US-PLAY-1 |
+| T-272 | Pure `furnish(layout)` — lounge, coffee bar, printer corner, plants; couriers cross the lobby on door lanes | FE | M | T-243, T-252 | Reachability holds with furniture blocked; nothing on a lane; ≤ 20 extra draw calls | US-PLAY-4 |
+
+**Exit:** the Owner reports Play as smooth on the office laptops; characters are Reddie; the lobby reads as an office.
+
+---
+
 ## Summary
 
 | Epic | Tasks | FE | BE | FS | Infra | Heaviest dependency |
@@ -269,6 +281,7 @@
 | EPIC-024 | 8 | 5 | 1 | 1 | 1 | T-241 (engine port), T-120 (fan-in) |
 | EPIC-025 | 7 | 4 | — | 3 | — | T-250 (stream + diff) |
 | EPIC-026 | 7 | — | 3 | 4 | — | T-261 (rules engine) |
+| EPIC-027 | 3 | — | — | 3 | — | T-271 (character rig) |
 | **Total** | **56** | **14** | **19** | **20** | **3** | — (Phase 0–4 as originally planned; Phase 5 adds 22) |
 
 **Sequencing note:** T-012 (central permission module) is the single most load-bearing task — every later epic depends on it; treat it as a protected-path deliverable with the strongest test suite. T-037 (SSE notifications) is soft-required by EPIC-004/006/007 triggers; if those epics start first, triggers can write `notifications` rows without the SSE stream and light up later. T-093 (ticket snapshots) depends on the EPIC-006 dashboard shipping first, per the PLAN's phasing.

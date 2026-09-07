@@ -11,15 +11,76 @@ export type QualityTier = {
   ratioMax: number;
 };
 
-export const QUALITY: Record<"desktop" | "touch", QualityTier> = {
-  desktop: { msaa: 4, shadowSize: 1024, particles: 512, chunks: 8, ratioMax: Infinity },
+export const QUALITY: Record<"desktop" | "laptop" | "touch" | "performance", QualityTier> = {
+  /** Discrete GPU: full MSAA, up to 2× DPR. */
+  desktop: { msaa: 4, shadowSize: 1024, particles: 512, chunks: 8, ratioMax: 2 },
+  /** Integrated GPU (most office laptops): 2× MSAA, DPR capped so the MRT gbuffer stays small. */
+  laptop: { msaa: 2, shadowSize: 1024, particles: 384, chunks: 8, ratioMax: 1.25 },
   touch: { msaa: 0, shadowSize: 1024, particles: 256, chunks: 8, ratioMax: 1.0 },
+  /** "Performance" preference: no MSAA, 1× DPR, small shadow map. */
+  performance: { msaa: 0, shadowSize: 512, particles: 256, chunks: 8, ratioMax: 1.0 },
 };
 
-export function detectTier(): QualityTier {
+export type QualityPref = "auto" | "performance" | "quality";
+export const QUALITY_PREF_KEY = "play.quality";
+
+export type GpuClass = "discrete" | "integrated" | "unknown";
+
+/** Pure: classify a WEBGL_debug_renderer_info string (EPIC-027 T-270). */
+export function classifyRenderer(name: string | null | undefined): GpuClass {
+  if (!name) return "unknown";
+  const n = name.toLowerCase();
+  if (/nvidia|geforce|quadro|rtx|gtx|radeon (rx|pro|vii)|arc a\d/.test(n)) return "discrete";
+  if (/intel|iris|uhd|hd graphics|mali|adreno|powervr|apple (gpu|m\d)|swiftshader|llvmpipe|softpipe|mesa|vivante|videocore|amd radeon\(tm\) graphics|radeon graphics/.test(n)) return "integrated";
+  return "unknown";
+}
+
+/** Reads the unmasked renderer name from a throwaway WebGL2 context; null when unavailable. */
+export function gpuName(): string | null {
+  if (typeof document === "undefined") return null;
+  try {
+    const gl = document.createElement("canvas").getContext("webgl2");
+    if (!gl) return null;
+    const ext = gl.getExtension("WEBGL_debug_renderer_info") as { UNMASKED_RENDERER_WEBGL: number } | null;
+    const name = ext ? (gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) as string) : (gl.getParameter(gl.RENDERER) as string);
+    gl.getExtension("WEBGL_lose_context")?.loseContext();
+    return name || null;
+  } catch {
+    return null;
+  }
+}
+
+/** Pure: which tier a device class + preference resolve to. */
+export function tierFor(pref: QualityPref, touch: boolean, gpu: GpuClass): QualityTier {
+  if (pref === "performance") return QUALITY.performance;
+  if (pref === "quality") return touch ? { ...QUALITY.touch, msaa: 2 } : QUALITY.desktop;
+  if (touch) return QUALITY.touch;
+  return gpu === "discrete" ? QUALITY.desktop : QUALITY.laptop;
+}
+
+export function readQualityPref(): QualityPref {
+  try {
+    const v = typeof localStorage !== "undefined" ? localStorage.getItem(QUALITY_PREF_KEY) : null;
+    return v === "performance" || v === "quality" ? v : "auto";
+  } catch {
+    return "auto";
+  }
+}
+
+export function writeQualityPref(pref: QualityPref): void {
+  try {
+    if (typeof localStorage === "undefined") return;
+    if (pref === "auto") localStorage.removeItem(QUALITY_PREF_KEY);
+    else localStorage.setItem(QUALITY_PREF_KEY, pref);
+  } catch {
+    /* private mode etc. — the choice simply does not persist */
+  }
+}
+
+export function detectTier(pref: QualityPref = "auto"): QualityTier {
   if (typeof window === "undefined") return QUALITY.desktop;
   const touch = "ontouchstart" in window || navigator.maxTouchPoints > 0;
-  return touch ? QUALITY.touch : QUALITY.desktop;
+  return tierFor(pref, touch, classifyRenderer(gpuName()));
 }
 
 export function hasWebGL2(): boolean {

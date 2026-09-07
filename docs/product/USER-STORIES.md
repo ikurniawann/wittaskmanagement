@@ -170,6 +170,7 @@
 | US-PLAY-8 | As a staff member, I want daily quests made from my real tasks, so that the game points me at what actually matters today. | P1 | EPIC-026 |
 | US-PLAY-9 | As a division head, I want to see my team's pulse and choose whether a leaderboard is shown, so that recognition motivates without shaming. | P1 | EPIC-026 |
 | US-PLAY-10 | As the Owner, I want to tune rule weights, caps and seasons and see flagged gaming attempts, so that the incentives stay aligned with the business. | P1 | EPIC-026 |
+| US-PLAY-11 | As a Backstage user, I want the 3D office to run smoothly on my laptop, to show our own Reddie robot, and to look like a real office (coffee spot, lounge), so that walking it feels good enough to do daily. | P1 | EPIC-027 |
 
 **Acceptance:** the world shows exactly what the permission module allows and nothing moves without a data change; every in-world action leaves the same audit row as the app (plus `source: play`); XP is recomputable from `activity_log` and documented exploits score 0.
 
