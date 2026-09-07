@@ -1,3 +1,4 @@
+import { amountTier } from "./world/mapping";
 import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { activityLog, handoffs, playProfiles, taskChecklistItems } from "@/db/schema";
@@ -158,9 +159,12 @@ export async function getPlayWorld(actor: Actor): Promise<PlayWorld> {
 
   // ---- my queue, bell, cursor ---------------------------------------------
   let approvalsWaiting = 0;
+  let approvalTiers: number[] = [];
   try {
-    const { listMyQueue } = await import("@/lib/approvals/service");
-    approvalsWaiting = (await listMyQueue(actor)).length;
+    const { listMyQueue, getThresholds } = await import("@/lib/approvals/service");
+    const [queue, thresholds] = await Promise.all([listMyQueue(actor), getThresholds()]);
+    approvalsWaiting = queue.length;
+    approvalTiers = queue.map((a) => amountTier(a.amount, thresholds));
   } catch (error) {
     if (!(error instanceof PermissionError)) throw error;
   }
@@ -189,6 +193,7 @@ export async function getPlayWorld(actor: Actor): Promise<PlayWorld> {
     handoffs: handoffList,
     events,
     approvalsWaiting,
+    approvalTiers,
     unreadNotifications: unread,
     cursor: latest?.createdAt ? latest.createdAt.toISOString() : null,
     generatedAt: now.toISOString(),

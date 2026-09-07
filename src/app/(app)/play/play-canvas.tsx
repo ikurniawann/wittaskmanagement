@@ -133,8 +133,8 @@ export function PlayCanvas({ world: initial, focusTask, focusMe }: Props) {
       const fresh = await refetchWorld();
       if (fresh) {
         scene?.setHandoffs(fresh.handoffs);
-        scene?.setApprovalsWaiting(fresh.approvalsWaiting);
-        setWorld((w) => ({ ...w, handoffs: fresh.handoffs, approvalsWaiting: fresh.approvalsWaiting, unreadNotifications: fresh.unreadNotifications, me: fresh.me, quests: fresh.quests, pulse: fresh.pulse, leaderboard: fresh.leaderboard }));
+        scene?.setApprovalsWaiting(fresh.approvalsWaiting, fresh.approvalTiers);
+        setWorld((w) => ({ ...w, handoffs: fresh.handoffs, approvalsWaiting: fresh.approvalsWaiting, approvalTiers: fresh.approvalTiers, unreadNotifications: fresh.unreadNotifications, me: fresh.me, quests: fresh.quests, pulse: fresh.pulse, leaderboard: fresh.leaderboard }));
       }
     }
   }, [mergeTask, refetchTask, refetchWorld]);

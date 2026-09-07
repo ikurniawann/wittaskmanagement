@@ -14,7 +14,7 @@ import {
 } from "../engine";
 import type { PlayHandoff, PlayTask, PlayWorld } from "../types";
 import { layout, type DeskSlot, type OfficeLayout, type Room } from "../world/layout";
-import { mapTask, personClip, type TaskVisual } from "../world/mapping";
+import { ENVELOPE_SCALE, mapTask, personClip, type AmountTier, type TaskVisual } from "../world/mapping";
 import { IsoCamera } from "./camera";
 import { CharacterKit, type Character, type ClipName } from "./characters";
 import { cosmeticsForLevel } from "../xp/badges";
@@ -126,7 +126,7 @@ export class OfficeScene {
     this.buildTasks();
     this.buildCouriers(world.handoffs);
     this.buildBoards();
-    this.buildApprovalRoom(world.approvalsWaiting);
+    this.buildApprovalRoom(world.approvalsWaiting, world.approvalTiers);
     this.buildBubbles();
     this.instanced.build(this.scene);
 
@@ -722,20 +722,23 @@ export class OfficeScene {
   }
 
   // ---- approval room (T-252) ----------------------------------------------------
-  private buildApprovalRoom(n: number): void {
-    this.setApprovalsWaiting(n);
+  private buildApprovalRoom(n: number, tiers: number[]): void {
+    this.setApprovalsWaiting(n, tiers);
   }
 
-  setApprovalsWaiting(n: number): void {
+  /** One envelope per waiting decision; its footprint follows the amount tier (PRD mapping table). */
+  setApprovalsWaiting(n: number, tiers: number[] = []): void {
     const A = this.layout.approvalRoom, S = this.r.shared;
     if (this.envelopeMesh) { this.scene.remove(this.envelopeMesh); const i = this.pickables.indexOf(this.envelopeMesh); if (i >= 0) this.pickables.splice(i, 1); this.envelopeMesh.dispose(); this.envelopeMesh = null; }
     this.world.approvalsWaiting = n;
+    this.world.approvalTiers = tiers;
     if (n <= 0) return;
     const env = new THREE.InstancedMesh(new THREE.BoxGeometry(0.5, 0.04, 0.34), materialFactory(S, 0xf4efe2, "skin"), n);
     const d = this.dummy;
     for (let i = 0; i < n; i++) {
       d.position.set(A.x + A.w / 2 - 2 + (i % 8) * 0.55, 0.98 + Math.floor(i / 8) * 0.05, A.z + A.d / 2 - 0.6 + Math.floor(i / 8) * 0.5);
-      d.rotation.set(0, ((i * 0.37) % 0.4) - 0.2, 0); d.scale.set(1, 1, 1); d.updateMatrix();
+      const k = ENVELOPE_SCALE[(tiers[i] === 1 || tiers[i] === 2 ? tiers[i] : 0) as AmountTier];
+      d.rotation.set(0, ((i * 0.37) % 0.4) - 0.2, 0); d.scale.set(k, 1, k); d.updateMatrix();
       env.setMatrixAt(i, d.matrix);
     }
     env.userData.pick = { kind: "approvals" } satisfies Pick;

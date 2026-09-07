@@ -39,6 +39,15 @@ export const STATUS_COLOUR: Record<PlayTask["status"], string> = {
 
 export const GHOST_CAP = 6;
 
+/** PRD "amount tier = envelope size": 0 ≤ a (division head only), 1 ≤ b (+ finance), 2 above b. */
+export type AmountTier = 0 | 1 | 2;
+export function amountTier(amount: number | null | undefined, t: { a: number; b: number }): AmountTier {
+  const v = amount ?? 0;
+  return v <= t.a ? 0 : v <= t.b ? 1 : 2;
+}
+/** Envelope footprint per tier, relative to the base 0.5 × 0.34 m envelope. */
+export const ENVELOPE_SCALE: Record<AmountTier, number> = { 0: 0.8, 1: 1, 2: 1.35 };
+
 export function mapTask(t: PlayTask): TaskVisual {
   const hidden = t.status === "done" || t.status === "cancelled";
   const target: DeskTarget = t.assigneeIds[0]

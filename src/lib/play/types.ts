@@ -88,6 +88,8 @@ export type PlayWorld = {
   handoffs: PlayHandoff[];
   events: PlayEvent[];
   approvalsWaiting: number;
+  /** One amount tier (0 | 1 | 2) per waiting approval, same order as the queue — envelope size. */
+  approvalTiers: number[];
   unreadNotifications: number;
   /** Latest activity_log id at snapshot time — EPIC-025 streams from here. */
   cursor: string | null;

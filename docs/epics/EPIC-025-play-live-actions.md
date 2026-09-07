@@ -186,6 +186,12 @@ player's own day is the default focus.
 - 2026-09-07 **T-256 shipped**: `prefers-reduced-motion` → mixers frozen, no smoke, no pop/fade
   tweens, camera cuts; buttons have visible focus rings; `--disable-3d-apis` run shows the
   fallback with the dashboard link and no canvas; canvas has an aria-label pointing to the tray.
+- 2026-09-07 (night) T-252 gap closed: **envelope size follows the amount tier**. The snapshot now
+  carries `approvalTiers` (one 0 | 1 | 2 per waiting approval, from the app's own
+  `approval_threshold_a/b` via pure `amountTier()` in `world/mapping.ts`); the scene scales each
+  envelope's footprint 0.8× / 1× / 1.35× (`ENVELOPE_SCALE`), refreshed on the same path as the
+  count. Verified on the test instance with three fixture approvals (2.5 M / 45 M / 750 M IDR,
+  TEST DB only): three envelopes of three sizes on the table, 0 console errors; tests 674/674.
 - 2026-09-07 Status → ready-for-qa. Open for human QA: (1) physical Android run for T-255,
   (2) decide whether "comment → bubble for other people" is wanted (needs the notifications
   stream), (3) decide whether approvals must be decidable inside the office or the jump to

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { divisionColor, hashId, layout, overlaps, reachable } from "./layout";
-import { GHOST_CAP, mapTask, personClip, STATUS_COLOUR } from "./mapping";
+import { amountTier, ENVELOPE_SCALE, GHOST_CAP, mapTask, personClip, STATUS_COLOUR } from "./mapping";
 import type { PlayDivision, PlayTask } from "../types";
 
 function divs(n: number, members = (i: number) => 3 + (i % 5)): PlayDivision[] {
@@ -89,5 +89,16 @@ describe("mapTask()", () => {
     expect(personClip([idle, work])).toBe("work");
     expect(personClip([work, panic, idle])).toBe("panic");
     expect(personClip([mapTask({ ...base, status: "done", critical: true })])).toBe("idle");
+  });
+  it("amountTier follows the approval thresholds and grows the envelope", () => {
+    const t = { a: 10_000_000, b: 100_000_000 };
+    expect(amountTier(null, t)).toBe(0);
+    expect(amountTier(0, t)).toBe(0);
+    expect(amountTier(10_000_000, t)).toBe(0);
+    expect(amountTier(10_000_001, t)).toBe(1);
+    expect(amountTier(100_000_000, t)).toBe(1);
+    expect(amountTier(100_000_001, t)).toBe(2);
+    expect(ENVELOPE_SCALE[0]).toBeLessThan(ENVELOPE_SCALE[1]);
+    expect(ENVELOPE_SCALE[1]).toBeLessThan(ENVELOPE_SCALE[2]);
   });
 });
