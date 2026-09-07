@@ -1031,7 +1031,8 @@ export class OfficeScene {
     this.instanced.update([this.camera.cam.position]);
     this.particles.update(dt, this.camera.cam);
     const t = this.camera.target;
-    this.r.shadow.render(this.r.renderer, this.scene, t.x, t.z);
+    // shadow window follows the zoom: ~0.75 × camera distance, 28–95 m half-width
+    this.r.shadow.render(this.r.renderer, this.scene, t.x, t.z, Math.max(28, Math.min(95, this.camera.distance * 0.75)));
     const w = this.container.clientWidth, h = this.container.clientHeight;
     this.r.renderView(this.scene, this.camera.cam, { x: 0, y: 0, w, h }, false);
     if (this.statsOn) {

@@ -61,7 +61,18 @@ export const FS_UNIFIED = /* glsl */ `
   uniform float uUnlit; uniform vec3 uEmissive; uniform float uWriteG; uniform float uSky; uniform float uFogMul;
   uniform vec3 uSunDir; uniform vec3 uSunColor; uniform vec3 uHemiSky; uniform vec3 uHemiGround;
   uniform vec3 uSkyTop; uniform vec3 uSkyMid; uniform vec3 uSkyBottom;
-  uniform vec3 uFogColor; uniform vec2 uFogRange; uniform sampler2D uShadowMap; uniform float uShadowBias; uniform float uFar;
+  uniform vec3 uFogColor; uniform vec2 uFogRange;
+  uniform sampler2D uShadowMap; uniform float uShadowBias; uniform float uShadowTexel; uniform float uShadowStrength; uniform float uFar;
+  float pcfBilinear(vec2 uv, float z) {
+    vec2 p = uv / uShadowTexel - 0.5;
+    vec2 f = fract(p);
+    vec2 b = (floor(p) + 0.5) * uShadowTexel;
+    float s00 = step(z, texture(uShadowMap, b).r);
+    float s10 = step(z, texture(uShadowMap, b + vec2(uShadowTexel, 0.0)).r);
+    float s01 = step(z, texture(uShadowMap, b + vec2(0.0, uShadowTexel)).r);
+    float s11 = step(z, texture(uShadowMap, b + vec2(uShadowTexel)).r);
+    return mix(mix(s00, s10, f.x), mix(s01, s11, f.x), f.y);
+  }
   vec3 skyGradient(float h) { return h > 0.0 ? mix(uSkyMid, uSkyTop, pow(h, 0.55)) : mix(uSkyMid, uSkyBottom, clamp(-h * 5.0, 0.0, 1.0)); }
   float ramp3(float x) {
     float w = fwidth(x) * 1.5 + 0.01;
@@ -83,7 +94,13 @@ export const FS_UNIFIED = /* glsl */ `
     vec3 V = normalize(cameraPosition - vWP);
     vec3 sc = vShadow.xyz / vShadow.w;
     float sh = 1.0;
-    if (sc.x > 0.0 && sc.x < 1.0 && sc.y > 0.0 && sc.y < 1.0 && sc.z < 1.0) sh = step(sc.z - uShadowBias, texture(uShadowMap, sc.xy).r);
+    // Manual bilinear PCF (4 fetches, weights from the sub-texel position) at two
+    // diagonal offsets: a smooth edge about 2 texels wide instead of a hard staircase.
+    if (uShadowStrength > 0.0 && sc.x > 0.0 && sc.x < 1.0 && sc.y > 0.0 && sc.y < 1.0 && sc.z < 1.0) {
+      float z = sc.z - uShadowBias;
+      sh = 0.5 * (pcfBilinear(sc.xy + vec2(-0.5, -0.5) * uShadowTexel, z) + pcfBilinear(sc.xy + vec2(0.5, 0.5) * uShadowTexel, z));
+      sh = mix(1.0, sh, uShadowStrength);
+    }
     float ndl = max(dot(N, uSunDir), 0.0) * sh;
     float band = ramp3(ndl);
     vec3 hemi = mix(uHemiGround, uHemiSky, N.y * 0.5 + 0.5);
@@ -119,11 +136,11 @@ type KindPreset = {
 /** ramp = band intensities [dark, mid, lit]; thr = band edges; rim/spec = [strength, power]. */
 export const KINDS: Record<MaterialKind, KindPreset> = {
   metal: { ramp: [0.42, 0.78, 1.0], thr: [0.18, 0.55], rim: [0.35, 3.0], spec: [0.7, 48], hatch: 0.0, reflect: 0.3 },
-  rock: { ramp: [0.32, 0.66, 1.0], thr: [0.22, 0.6], rim: [0.12, 2.5], spec: [0.0, 8], hatch: 0.7, reflect: 0.0 },
-  foliage: { ramp: [0.45, 0.8, 1.0], thr: [0.15, 0.5], rim: [0.3, 2.0], spec: [0.0, 8], hatch: 0.35, reflect: 0.0 },
+  rock: { ramp: [0.32, 0.66, 1.0], thr: [0.22, 0.6], rim: [0.12, 2.5], spec: [0.0, 8], hatch: 0.25, reflect: 0.0 },
+  foliage: { ramp: [0.45, 0.8, 1.0], thr: [0.15, 0.5], rim: [0.3, 2.0], spec: [0.0, 8], hatch: 0.15, reflect: 0.0 },
   skin: { ramp: [0.5, 0.85, 1.0], thr: [0.2, 0.55], rim: [0.2, 3.0], spec: [0.2, 16], hatch: 0.0, reflect: 0.0 },
   water: { ramp: [0.6, 0.85, 1.0], thr: [0.2, 0.5], rim: [0.4, 2.0], spec: [1.0, 96], hatch: 0.0, reflect: 0.8 },
-  dirt: { ramp: [0.4, 0.75, 1.0], thr: [0.2, 0.55], rim: [0.0, 1.0], spec: [0.0, 8], hatch: 0.5, reflect: 0.0 },
+  dirt: { ramp: [0.4, 0.75, 1.0], thr: [0.2, 0.55], rim: [0.0, 1.0], spec: [0.0, 8], hatch: 0.15, reflect: 0.0 },
   glow: { unlit: 1 },
   sky: { sky: 1 },
 };

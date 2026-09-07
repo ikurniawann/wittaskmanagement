@@ -13,12 +13,12 @@ export type QualityTier = {
 
 export const QUALITY: Record<"desktop" | "laptop" | "touch" | "performance", QualityTier> = {
   /** Discrete GPU: full MSAA, up to 2× DPR. */
-  desktop: { msaa: 4, shadowSize: 1024, particles: 512, chunks: 8, ratioMax: 2 },
+  desktop: { msaa: 4, shadowSize: 2048, particles: 512, chunks: 8, ratioMax: 2 },
   /** Integrated GPU (most office laptops): 2× MSAA, DPR capped so the MRT gbuffer stays small. */
   laptop: { msaa: 2, shadowSize: 1024, particles: 384, chunks: 8, ratioMax: 1.25 },
   touch: { msaa: 0, shadowSize: 1024, particles: 256, chunks: 8, ratioMax: 1.0 },
-  /** "Performance" preference: no MSAA, 1× DPR, small shadow map. */
-  performance: { msaa: 0, shadowSize: 512, particles: 256, chunks: 8, ratioMax: 1.0 },
+  /** "Performance" preference: no MSAA, 1× DPR, no shadow pass at all. */
+  performance: { msaa: 0, shadowSize: 0, particles: 256, chunks: 8, ratioMax: 1.0 },
 };
 
 export type QualityPref = "auto" | "performance" | "quality";

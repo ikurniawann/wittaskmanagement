@@ -70,6 +70,17 @@ from data, nothing moves unless data changed, and nothing here touches permissio
   note the checkout also carries uncommitted Swagger/OpenAPI work that a `docker compose build`
   would include.
 
+- 2026-09-07 (late) Owner: "perbaiki bayangannya, kalau susah hapus saja" → fixed, not removed
+  (T-270 addendum). Cause: one 1024 px map over a fixed 190 m window (18 cm/texel) sampled with a
+  single hard `step`, plus the hatch stripes on floors. Now: the ortho window follows the camera
+  (0.75 × distance, 28–95 m half-width), 2048 px on discrete GPUs, the light camera snaps to whole
+  texels (no edge crawl while panning), manual bilinear PCF × 2 diagonal taps in the shader (soft
+  ~2-texel edge), bias 0.0012 → 0.0005, hatch 0.5/0.7/0.35 → 0.15/0.25/0.15. "Performance" now skips
+  the shadow pass entirely (`uShadowStrength` 0). Tried `sampler2DShadow` hardware PCF first: three
+  r170 does not apply `compareFunction` to render-target depth textures → GL "sampler type mismatch",
+  reverted to the manual path. Verified on the test instance: smooth shadows at desk and lobby zoom,
+  0 console warnings.
+
 ## Dependencies
 
 - EPIC-024 (engine, layout, characters), EPIC-025 (couriers), EPIC-026 (cosmetics on the character).

@@ -18,6 +18,10 @@ export type SharedUniforms = {
   uShadowMatrix: { value: THREE.Matrix4 };
   uShadowMap: { value: THREE.Texture | null };
   uShadowBias: { value: number };
+  /** 1 / shadow map size, for the PCF tap offsets. */
+  uShadowTexel: { value: number };
+  /** 0 = shadows off (performance tier), 1 = full. */
+  uShadowStrength: { value: number };
   uFar: { value: number };
   uTime: { value: number };
 };
@@ -40,7 +44,9 @@ export function createSharedUniforms(opts?: {
     uFogRange: { value: new THREE.Vector2(opts?.fogNear ?? 220, opts?.fogFar ?? 760) },
     uShadowMatrix: { value: new THREE.Matrix4() },
     uShadowMap: { value: null },
-    uShadowBias: { value: 0.0012 },
+    uShadowBias: { value: 0.0005 },
+    uShadowTexel: { value: 1 / 1024 },
+    uShadowStrength: { value: 1 },
     uFar: { value: opts?.far ?? 1500 },
     uTime: { value: 0 },
   };

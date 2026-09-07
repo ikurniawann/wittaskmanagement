@@ -106,6 +106,11 @@ export class IsoCamera {
     this.handlers.push(["keydown", kd as unknown as EventListener, undefined], ["keyup", ku as unknown as EventListener, undefined]);
   }
 
+  /** Current (eased) distance from the target — drives the shadow window size. */
+  get distance(): number {
+    return this.dist;
+  }
+
   rotateStep(dir: number): void {
     this.yawStep += dir;
     this.goalYaw = (this.yawStep * Math.PI) / 4;
