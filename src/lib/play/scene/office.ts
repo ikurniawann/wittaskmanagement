@@ -20,6 +20,7 @@ import type { PlayHandoff, PlayTask, PlayWorld } from "../types";
 import { layout, type DeskSlot, type OfficeLayout, type Room } from "../world/layout";
 import { ENVELOPE_SCALE, mapTask, personClip, type AmountTier, type TaskVisual } from "../world/mapping";
 import { corridorCentreZ, furnish, type FurnitureKind } from "../world/furniture";
+import { tourStops, type TourStop } from "./cinematic";
 import { IsoCamera } from "./camera";
 import { CharacterKit, type Character, type ClipName } from "./characters";
 import { cosmeticsForLevel } from "../xp/badges";
@@ -40,9 +41,12 @@ export type Pick =
   | { kind: "approvals" }
   | null;
 
+export type TourState = { index: number; total: number; stop: TourStop };
 export type OfficeHandlers = {
   onPick: (p: Pick) => void;
   onHover: (p: Pick) => void;
+  /** Guided tour progress (T-273); null when the tour ends or is interrupted. */
+  onTour?: (t: TourState | null) => void;
 };
 
 /** Hide/show one static instanced prop; the InstancedManager rewrites its chunk within a few frames. */
@@ -110,7 +114,6 @@ export class OfficeScene {
     this.container = container;
     this.world = world;
     this.layout = layout(world.divisions);
-    const b = this.layout.bounds;
     this.r = new PlayRenderer(container, detectTier(quality), { fogNear: 260, fogFar: 700 });
     this.r.canvas.style.display = "block";
     this.r.canvas.style.touchAction = "none";
@@ -137,9 +140,14 @@ export class OfficeScene {
     this.buildBubbles();
     this.instanced.build(this.scene);
 
+    // establishing shot → fly-in to my desk (T-273); reduced motion lands instantly via finishMove()
     const mine = this.deskOf.get(world.me.id);
-    if (mine) this.camera.jump(mine.slot.x, mine.slot.z, 34);
-    else this.camera.jump(b.x + b.w / 2, this.layout.lobby.z + this.layout.lobby.d / 2, 60);
+    const lobbyC = { x: this.layout.lobby.x + this.layout.lobby.w / 2, z: this.layout.lobby.z + this.layout.lobby.d / 2 };
+    this.camera.rotateBy(-0.7);
+    this.camera.jump(lobbyC.x, lobbyC.z, 120);
+    if (mine) this.camera.flyTo(mine.slot.x, mine.slot.z, 34, { duration: 2.6, yaw: Math.PI / 4, crane: 0.15 });
+    else this.camera.flyTo(lobbyC.x, lobbyC.z, 60, { duration: 2.2, yaw: Math.PI / 4, crane: 0.1 });
+    this.camera.onUserInput = () => this.stopTour();
 
     this.ro = new ResizeObserver(() => this.resize());
     this.ro.observe(container);
@@ -966,28 +974,78 @@ export class OfficeScene {
   focusTask(id: string): boolean {
     const s = this.stacks.find((r) => r.task.id === id);
     if (!s) return false;
-    this.camera.focus(s.x, s.z, 26);
+    this.stopTour();
+    this.camera.flyTo(s.x, s.z, 26, { duration: 1.2 });
     return true;
   }
   focusPerson(id: string): boolean {
     const d = this.deskOf.get(id);
     if (!d) return false;
-    this.camera.focus(d.slot.x, d.slot.z, 30);
+    this.stopTour();
+    this.camera.flyTo(d.slot.x, d.slot.z, 30, { duration: 1.3 });
     return true;
   }
   focusLobby(): void {
-    this.camera.focus(this.layout.lobby.x + this.layout.lobby.w / 2, this.layout.lobby.z + this.layout.lobby.d / 2, 60);
+    this.stopTour();
+    this.camera.flyTo(this.layout.lobby.x + this.layout.lobby.w / 2, this.layout.lobby.z + this.layout.lobby.d / 2, 60, { duration: 1.5 });
   }
   focusApprovals(): void {
     const A = this.layout.approvalRoom;
-    this.camera.focus(A.x + A.w / 2, A.z + A.d / 2, 30);
+    this.stopTour();
+    this.camera.flyTo(A.x + A.w / 2, A.z + A.d / 2, 30, { duration: 1.4 });
   }
   focusHandoff(id: string): boolean {
     const c = this.couriers.find((x) => x.handoff.id === id);
     if (!c) return false;
     const p = this.courierPos(c);
-    this.camera.focus(p.x, p.z, 26);
+    this.stopTour();
+    this.camera.flyTo(p.x, p.z, 26, { duration: 1.2 });
     return true;
+  }
+
+  // ---- guided tour (T-273) -------------------------------------------------------------
+  private tour: { stops: TourStop[]; i: number; hold: number; phase: "fly" | "hold" } | null = null;
+  get touring(): boolean {
+    return this.tour !== null;
+  }
+  startTour(): void {
+    this.stopTour();
+    this.tour = { stops: tourStops(this.layout, this.world.me.id), i: -1, hold: 0, phase: "hold" };
+    this.nextStop();
+  }
+  stopTour(): void {
+    if (!this.tour) return;
+    this.tour = null;
+    this.handlers.onTour?.(null);
+  }
+  private nextStop(): void {
+    const t = this.tour;
+    if (!t) return;
+    t.i++;
+    if (t.i >= t.stops.length) { this.stopTour(); return; }
+    const s = t.stops[t.i];
+    t.phase = "fly";
+    this.camera.flyTo(s.x, s.z, s.dist, { duration: 2.4, yaw: s.yaw, crane: 0.22 });
+    this.handlers.onTour?.({ index: t.i, total: t.stops.length, stop: s });
+  }
+  private tickTour(dt: number): void {
+    const t = this.tour;
+    if (!t) return;
+    if (t.phase === "fly") { if (!this.camera.moving) { t.phase = "hold"; t.hold = t.stops[t.i].hold; } return; }
+    t.hold -= dt;
+    if (t.hold <= 0) this.nextStop();
+  }
+
+  /** Atmosphere (T-274): depth of field, vignette, grain follow the camera state. Performance tier keeps it off. */
+  private tickAtmosphere(dt: number): void {
+    const u = this.r.post.uniforms;
+    const off = this.r.tier.shadowSize === 0 || this.reducedMotion;
+    const dofGoal = off ? 0 : this.camera.moving ? 1 : this.tour ? 0.65 : 0.35;
+    u.uDof.value += (dofGoal - u.uDof.value) * Math.min(1, dt * 2.5);
+    u.uFocus.value = this.camera.distance / this.r.shared.uFar.value;
+    u.uVignette.value = 0.35 + 0.22 * u.uDof.value;
+    u.uGrain.value = off ? 0 : 0.02;
+    u.uCA.value = off ? 0 : 1;
   }
   rotate(dir: 1 | -1): void {
     this.camera.rotateStep(dir);
@@ -995,6 +1053,7 @@ export class OfficeScene {
   setReducedMotion(on: boolean): void {
     this.reducedMotion = on;
     this.camera.snapMoves = on;
+    if (on) this.camera.finishMove();
     this.characters.forEach((c) => { c.mixer.timeScale = on ? 0 : 1; });
     this.couriers.forEach((c) => { if (c.char) c.char.mixer.timeScale = on ? 0 : 1; });
     if (on) this.particles.clear();
@@ -1018,6 +1077,8 @@ export class OfficeScene {
     this.time += dt;
     this.r.beginFrame(this.time);
     this.camera.update(dt);
+    this.tickTour(dt);
+    this.tickAtmosphere(dt);
     this.sky.position.copy(this.camera.cam.position);
     if (this.characters.size) this.characters.forEach((c) => c.mixer.update(dt));
     else this.animatePlaceholders();
@@ -1084,6 +1145,7 @@ export class OfficeScene {
     this.camera.dispose();
     this.instanced.dispose();
     this.particles.dispose();
+    this.camera.onUserInput = null;
     this.characters.forEach((c) => c.dispose());
     this.couriers.forEach((c) => c.char?.dispose());
     this.scene.traverse((o) => {

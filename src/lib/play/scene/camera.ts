@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { craneDist, easeInOutCubic, yawDelta } from "./cinematic";
 
 /**
  * Isometric-style orbit camera: fixed pitch, yaw in 45° steps, pan on the
@@ -31,6 +32,9 @@ export class IsoCamera {
   maxDist = 140;
   /** prefers-reduced-motion: every move is a cut instead of a glide. */
   snapMoves = false;
+  /** Fired on any pointer / wheel / key input — the scene uses it to end a guided tour. */
+  onUserInput: (() => void) | null = null;
+  private move: { t: number; dur: number; crane: number; from: { x: number; z: number; dist: number; yaw: number }; to: { x: number; z: number; dist: number; yaw: number } } | null = null;
 
   constructor(el: HTMLElement, aspect: number, onClick: (x: number, y: number) => void, onMove: (x: number, y: number) => void) {
     this.el = el;
@@ -48,6 +52,7 @@ export class IsoCamera {
     };
     on("pointerdown", (e) => {
       if (e.pointerType === "mouse" && e.button !== 0 && e.button !== 2) return;
+      this.interrupt();
       this.dragging = true;
       this.moved = false;
       this.lastX = e.clientX;
@@ -76,6 +81,7 @@ export class IsoCamera {
     on("contextmenu", (e) => e.preventDefault());
     on("wheel", (e) => {
       e.preventDefault();
+      this.interrupt();
       this.goalDist = clamp(this.goalDist * (1 + Math.sign(e.deltaY) * 0.12), this.minDist, this.maxDist);
     }, { passive: false });
     on("touchstart", (e) => {
@@ -96,6 +102,8 @@ export class IsoCamera {
     }, { passive: false });
     const kd = (e: KeyboardEvent) => {
       if ((e.target as HTMLElement | null)?.tagName === "INPUT" || (e.target as HTMLElement | null)?.tagName === "TEXTAREA") return;
+      if (e.code === "Escape") { this.onUserInput?.(); return; }
+      this.interrupt();
       this.keys.add(e.code);
       if (e.code === "KeyQ") this.rotateStep(-1);
       if (e.code === "KeyE") this.rotateStep(1);
@@ -116,7 +124,7 @@ export class IsoCamera {
     this.goalYaw = (this.yawStep * Math.PI) / 4;
   }
 
-  private rotateBy(rad: number): void {
+  rotateBy(rad: number): void {
     this.goalYaw += rad;
     this.yawStep = Math.round(this.goalYaw / (Math.PI / 4));
   }
@@ -132,8 +140,49 @@ export class IsoCamera {
 
   /** Move the camera target to a world point (smoothly). */
   focus(x: number, z: number, dist?: number): void {
+    this.move = null;
     this.goalTarget.set(x, 0, z);
     if (dist != null) this.goalDist = clamp(dist, this.minDist, this.maxDist);
+  }
+
+  /**
+   * Cinematic flight (T-273): a timed, eased move of target, distance and yaw
+   * with a crane rise in the middle. Reduced motion → a cut. Any user input
+   * interrupts it and hands control back.
+   */
+  flyTo(x: number, z: number, dist: number, opts: { duration?: number; yaw?: number; crane?: number } = {}): void {
+    const d = clamp(dist, this.minDist, this.maxDist);
+    const dur = this.snapMoves ? 0 : (opts.duration ?? 1.4);
+    if (dur <= 0) {
+      if (opts.yaw != null) { this.goalYaw = opts.yaw; this.yawStep = Math.round(this.goalYaw / (Math.PI / 4)); }
+      this.jump(x, z, d);
+      return;
+    }
+    const toYaw = opts.yaw != null ? this.yaw + yawDelta(this.yaw, opts.yaw) : this.goalYaw;
+    this.move = {
+      t: 0, dur, crane: opts.crane ?? 0.28,
+      from: { x: this.target.x, z: this.target.z, dist: this.dist, yaw: this.yaw },
+      to: { x, z, dist: d, yaw: toYaw },
+    };
+  }
+
+  /** True while a flyTo is in progress. */
+  get moving(): boolean {
+    return this.move !== null;
+  }
+
+  /** Land any flight immediately (reduced motion switched on mid-flight). */
+  finishMove(): void {
+    const m = this.move;
+    if (!m) return;
+    this.move = null;
+    this.goalYaw = m.to.yaw; this.yawStep = Math.round(m.to.yaw / (Math.PI / 4));
+    this.jump(m.to.x, m.to.z, m.to.dist);
+  }
+
+  private interrupt(): void {
+    if (this.move) { this.goalTarget.copy(this.target); this.goalDist = this.dist; this.goalYaw = this.yaw; this.yawStep = Math.round(this.yaw / (Math.PI / 4)); this.move = null; }
+    this.onUserInput?.();
   }
 
   jump(x: number, z: number, dist?: number): void {
@@ -147,6 +196,18 @@ export class IsoCamera {
   }
 
   update(dt: number): void {
+    const m = this.move;
+    if (m) {
+      m.t += dt;
+      const s = easeInOutCubic(m.t / m.dur);
+      this.target.set(m.from.x + (m.to.x - m.from.x) * s, 0, m.from.z + (m.to.z - m.from.z) * s);
+      this.dist = craneDist(m.from.dist, m.to.dist, s, m.crane);
+      this.yaw = m.from.yaw + (m.to.yaw - m.from.yaw) * s;
+      this.goalTarget.copy(this.target); this.goalDist = this.dist; this.goalYaw = this.yaw;
+      if (m.t >= m.dur) { this.move = null; this.goalDist = m.to.dist; this.yawStep = Math.round(this.yaw / (Math.PI / 4)); }
+      this.apply(true);
+      return;
+    }
     const speed = 22 * dt * (this.dist / 42);
     const { fwd, right } = groundBasis(this.yaw);
     if (this.keys.has("KeyW") || this.keys.has("ArrowUp")) this.goalTarget.addScaledVector(fwd, speed);

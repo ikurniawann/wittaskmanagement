@@ -35,6 +35,8 @@ const FS_POST = /* glsl */ `
   layout(location = 0) out vec4 outColor;
   uniform sampler2D tColor; uniform sampler2D tNormal; uniform sampler2D tLut;
   uniform vec2 uRes; uniform vec4 uViewport; uniform float uPulse; uniform float uTime; uniform float uLine; uniform float uBloom; uniform float uVignette;
+  uniform float uDof; uniform float uFocus; uniform float uGrain; uniform float uCA;
+  float hash12(vec2 p) { vec3 p3 = fract(vec3(p.xyx) * 0.1031); p3 += dot(p3, p3.yzx + 33.33); return fract((p3.x + p3.y) * p3.z); }
   float lum(vec3 c) { return dot(c, vec3(0.2126, 0.7152, 0.0722)); }
   vec3 lin2srgb(vec3 c) { return mix(c * 12.92, 1.055 * pow(c, vec3(1.0 / 2.4)) - 0.055, step(0.0031308, c)); }
   vec3 lut3d(vec3 c) {
@@ -45,8 +47,22 @@ const FS_POST = /* glsl */ `
   }
   void main() {
     vec2 px = gl_FragCoord.xy, uv = px / uRes, tx = 1.0 / uRes;
-    vec3 col = texture(tColor, uv).rgb;
+    vec2 luv = (px - uViewport.xy) / uViewport.zw, d = luv - 0.5; d.x *= uViewport.z / uViewport.w;
+    float r = length(d);
+    // chromatic aberration: a whisper of lens at the frame edges (T-274)
+    vec2 ca = d * r * uCA * 1.6 * tx;
+    vec3 col = vec3(texture(tColor, uv + ca).r, texture(tColor, uv).g, texture(tColor, uv - ca).b);
     vec4 nc = texture(tNormal, uv);
+    // depth of field around the camera target: the office stays sharp, the far edge and the
+    // near foreground soften (tilt-shift feel); strength rises during camera flights.
+    float coc = clamp(abs(nc.w - uFocus) / max(uFocus * 0.55, 0.01) - 0.3, 0.0, 1.0) * uDof;
+    if (coc > 0.01) {
+      const vec2 K[8] = vec2[8](vec2(1,0), vec2(-1,0), vec2(0,1), vec2(0,-1), vec2(0.7,0.7), vec2(-0.7,0.7), vec2(0.7,-0.7), vec2(-0.7,-0.7));
+      float rad = coc * 6.0;
+      vec3 acc = col;
+      for (int i = 0; i < 8; i++) acc += texture(tColor, uv + K[i] * rad * tx).rgb;
+      col = mix(col, acc / 9.0, coc);
+    }
     vec4 n00 = texture(tNormal, uv + tx * vec2(-1.0, -1.0)), n10 = texture(tNormal, uv + tx * vec2(0.0, -1.0)), n20 = texture(tNormal, uv + tx * vec2(1.0, -1.0));
     vec4 n01 = texture(tNormal, uv + tx * vec2(-1.0, 0.0)),                                                    n21 = texture(tNormal, uv + tx * vec2(1.0, 0.0));
     vec4 n02 = texture(tNormal, uv + tx * vec2(-1.0, 1.0)),  n12 = texture(tNormal, uv + tx * vec2(0.0, 1.0)),  n22 = texture(tNormal, uv + tx * vec2(1.0, 1.0));
@@ -55,17 +71,17 @@ const FS_POST = /* glsl */ `
     float en = length(gx.xyz) + length(gy.xyz);
     float ed = (abs(gx.w) + abs(gy.w)) * 60.0;
     float edge = max(smoothstep(0.9, 1.8, en), smoothstep(0.35, 1.2, ed));
-    float fade = 1.0 - smoothstep(0.12, 0.4, nc.w);
+    float fade = (1.0 - smoothstep(0.12, 0.4, nc.w)) * (1.0 - coc * 0.85);
     col *= 1.0 - edge * uLine * fade;
     vec3 bl = vec3(0.0);
     const vec2 O[8] = vec2[8](vec2(3,0), vec2(-3,0), vec2(0,3), vec2(0,-3), vec2(5,5), vec2(-5,5), vec2(5,-5), vec2(-5,-5));
     for (int i = 0; i < 8; i++) { vec3 s = texture(tColor, uv + O[i] * tx).rgb; bl += s * step(1.0, lum(s)); }
     col += bl * (uBloom / 8.0);
     // Focus pulse: a soft radial brightening around the viewport centre (replaces racing speed lines).
-    vec2 luv = (px - uViewport.xy) / uViewport.zw, d = luv - 0.5; d.x *= uViewport.z / uViewport.w;
-    float r = length(d);
     col += vec3(0.12) * uPulse * (1.0 - smoothstep(0.0, 0.35, r)) * (0.5 + 0.5 * sin(uTime * 4.0));
     col *= 1.0 - uVignette * smoothstep(0.45, 1.05, r);
+    // film grain, luminance-weighted so highlights stay clean
+    col += (hash12(px + fract(uTime * 7.31) * 311.0) - 0.5) * uGrain * (1.0 - 0.6 * lum(col));
     col = lin2srgb(clamp(col, 0.0, 1.0));
     outColor = vec4(lut3d(col), 1.0);
   }`;
@@ -81,6 +97,10 @@ export type PostUniforms = {
   uLine: { value: number };
   uBloom: { value: number };
   uVignette: { value: number };
+  uDof: { value: number };
+  uFocus: { value: number };
+  uGrain: { value: number };
+  uCA: { value: number };
 };
 
 /**
@@ -105,6 +125,10 @@ export class PostPass {
       uLine: { value: 0.75 },
       uBloom: { value: 0.6 },
       uVignette: { value: 0.35 },
+      uDof: { value: 0 },
+      uFocus: { value: 0.03 },
+      uGrain: { value: 0 },
+      uCA: { value: 0 },
     };
     this.mat = new THREE.ShaderMaterial({
       glslVersion: THREE.GLSL3,

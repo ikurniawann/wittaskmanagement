@@ -25,6 +25,8 @@ from data, nothing moves unless data changed, and nothing here touches permissio
 | --- | --- | --- |
 | T-270 | Smoothness: GPU-class quality tiers (integrated vs discrete), adaptive resolution with hysteresis + ceiling memory, frame-rate-independent camera easing, staggered board redraws, Auto / Performance / Quality switch in the Play toolbar (persisted per browser) | No periodic resolution "breathing"; the switch changes MSAA/DPR live; pure parts unit-tested |
 | T-271 | Reddie character: procedural rigged robot in the shape of the reddie.id mascot (one SkinnedMesh, same unified shader), five clips authored in code (idle, work/sitting, walk, wave, panic), division colour on shoulders/chest emblem, cosmetics still attach | Looks like the mascot; one draw call per character; sits at the desk correctly; `robot.glb` no longer shipped |
+| T-273 | Cinematic camera: establishing shot + fly-in on load, eased crane flights for every programmatic focus, guided tour (lobby → each division → approvals → my desk) with letterbox bars and data captions, any input or Esc interrupts | Flights land exactly; tour visits every room; reduced motion = cuts; pure parts tested |
+| T-274 | Atmosphere in the post pass: depth of field around the camera target (rises during flights), film grain, edge chromatic aberration, vignette that breathes with the flight; all off on the Performance tier and under reduced motion | 0 console errors; ≤ 1 extra fullscreen pass (none — same pass) |
 | T-272 | Furnished lobby & corridors: pure `furnish(layout)` places a lounge island (sofas, coffee table, rug, lamp), a coffee bar (counter, machine, stools, mugs), water cooler, printer corner, bookshelf, bins, plants — deterministic, never on a courier lane; couriers cross the lobby along door lanes instead of diagonals | Every desk/door still reachable on the walkable grid with furniture blocked; no placement overlaps a lane; ≤ 20 extra draw calls |
 
 ## Acceptance Criteria
@@ -80,6 +82,29 @@ from data, nothing moves unless data changed, and nothing here touches permissio
   r170 does not apply `compareFunction` to render-target depth textures → GL "sampler type mismatch",
   reverted to the manual path. Verified on the test instance: smooth shadows at desk and lobby zoom,
   0 console warnings.
+
+- 2026-09-07 (late) Owner pasted an "Awwwards-level" brief with GSAP ScrollTrigger / Lenis / R3F /
+  Framer Motion. Decision: ScrollTrigger and Lenis are scroll-page tools and Play has no scroll; R3F
+  would mean rewriting the MRT engine for no visual gain; Framer Motion adds ~100 KB for what Tailwind
+  transitions already do. What *does* raise the bar was built instead:
+- 2026-09-07 (late) **T-273 shipped**: `scene/cinematic.ts` (pure: `easeInOutCubic`, `craneDist`,
+  `yawDelta`, `tourStops()`; 4 tests). `IsoCamera.flyTo()` = timed eased move of target + distance +
+  yaw with a crane rise; pointer/wheel/key interrupt it and hand control back; `finishMove()` lands it
+  when reduced motion switches on. On load: establishing shot from 120 m over the lobby, then a 2.6 s
+  fly-in to my desk. Every focus (tray rows, buttons, deep links) is now a 1.2–1.5 s flight. Guided
+  tour: `startTour()` walks lobby → each division (alternating angles) → approval room → my desk,
+  2.4 s flights + 3 s holds; React shows 9 vh letterbox bars, a numbered caption (division name in
+  its colour, people / open / blocked / overdue from the live world) with a 700 ms `cine-in`
+  entrance, hides the HUD, and "Stop tour · Esc". Tray/panels use the app's `rise-in` entrance
+  (tray excluded: `animation-fill-mode: both` would defeat the HUD fade).
+- 2026-09-07 (late) **T-274 shipped**: post pass gains `uDof/uFocus` (8-tap disc blur weighted by
+  |depth − target depth|, edge ink fades with the blur), `uGrain` (hash noise, luminance-weighted),
+  `uCA` (radial R/B split at the edges); vignette 0.35 → 0.57 while flying. DOF strength eases
+  0.35 → 1.0 during flights and 0.65 on tour. Performance tier and reduced motion: all off.
+- 2026-09-07 (late) Verified on office.reddie.id (SwiftShader): fly-in lands on my desk, tour caption
+  1/14 "Backstage · 2 events · 47 open tasks · 26 people" → 2/14 "Production · 3 people · 3 open · 1
+  blocked · 1 overdue", Esc ends it and restores the HUD, 0 console errors, 100 draw calls at the desk.
+  Real-GPU feel (flight smoothness at 60 fps) is the Owner's QA reading; SwiftShader runs at 2 fps.
 
 ## Dependencies
 

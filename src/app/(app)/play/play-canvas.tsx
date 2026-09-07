@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, useTransition } from "react";
 import type { PlayHandoff, PlayTask, PlayWorld } from "@/lib/play/types";
-import type { OfficeScene, Pick } from "@/lib/play/scene/office";
+import type { OfficeScene, Pick, TourState } from "@/lib/play/scene/office";
 import { STATUS_COLOUR } from "@/lib/play/world/mapping";
 import { applyDiff, coalesce, type ActivityRow, type Intent } from "@/lib/play/world/diff";
 import { setPlayActive } from "@/lib/play/active-store";
@@ -43,6 +43,7 @@ export function PlayCanvas({ world: initial, focusTask, focusMe }: Props) {
   const [live, setLive] = useState<"connecting" | "live" | "off">("connecting");
   const [cursor, setCursor] = useState(initial.cursor);
   const [trayOpen, setTrayOpen] = useState(true);
+  const [tour, setTour] = useState<TourState | null>(null);
   // per-browser preference; "auto" on the server so hydration matches, the real value on the client
   const quality = useSyncExternalStore(subscribeQuality, readQualityPref, () => "auto" as QualityPref);
   const chooseQuality = (q: QualityPref) => { writeQualityPref(q); qualityListeners.forEach((cb) => cb()); };
@@ -74,6 +75,7 @@ export function PlayCanvas({ world: initial, focusTask, focusMe }: Props) {
       scene = new Scene(el, initial, {
         onPick: (p) => selectRef.current(p),
         onHover: (p) => setHover(p),
+        onTour: (t) => setTour(t),
       }, quality);
       sceneRef.current = scene;
       mq = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -279,6 +281,18 @@ export function PlayCanvas({ world: initial, focusTask, focusMe }: Props) {
   }
 
   const focusTaskFromTray = (id: string) => { sceneRef.current?.focusTask(id); select({ kind: "task", id }); };
+  const toggleTour = () => { const s = sceneRef.current; if (!s) return; if (s.touring) s.stopTour(); else { setSelected(null); s.startTour(); } };
+  const caption = (() => {
+    if (!tour) return null;
+    const s = tour.stop;
+    if (s.kind === "lobby") return { title: "Backstage", sub: `${world.events.length} event${world.events.length === 1 ? "" : "s"} · ${world.tasks.length} open task${world.tasks.length === 1 ? "" : "s"} · ${world.people.length} people` };
+    if (s.kind === "approvals") return { title: "Approval room", sub: world.approvalsWaiting ? `${world.approvalsWaiting} waiting on you` : "Nothing waiting on you" };
+    if (s.kind === "me") { const mine = world.tasks.filter((t) => t.assigneeIds.includes(me)); return { title: "Your desk", sub: `${mine.length} open · ${mine.filter((t) => t.overdue).length} overdue · Lv ${world.me.level}` }; }
+    const d = s.divisionId ? divisionsById.get(s.divisionId) : undefined;
+    const theirs = world.tasks.filter((t) => t.divisionId === s.divisionId);
+    return { title: d?.name ?? "Division", sub: `${d?.memberIds.length ?? 0} people · ${theirs.length} open · ${theirs.filter((t) => t.status === "blocked").length} blocked · ${theirs.filter((t) => t.overdue).length} overdue`, color: d?.color };
+  })();
+  const hud = tour ? "opacity-0 pointer-events-none" : "opacity-100";
   const dot = (s: TaskStatus) => <i className="mr-1 inline-block size-2 rounded-sm" style={{ background: STATUS_COLOUR[s] }} />;
 
   return (
@@ -288,13 +302,28 @@ export function PlayCanvas({ world: initial, focusTask, focusMe }: Props) {
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center text-sm text-muted-foreground">Building the office…</div>
       ) : null}
 
-      <div className="pointer-events-none absolute left-3 top-3 flex flex-col gap-1 text-xs">
+      {/* guided tour: letterbox + caption (T-273) */}
+      <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 bg-black transition-[height] duration-700 ease-out" style={{ height: tour ? "9vh" : 0 }} />
+      <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 bg-black transition-[height] duration-700 ease-out" style={{ height: tour ? "9vh" : 0 }} />
+      {tour && caption ? (
+        <div key={tour.index} data-testid="play-tour-caption" className="cine-in pointer-events-none absolute bottom-[12vh] left-6 flex max-w-[70%] flex-col gap-1 text-white drop-shadow-[0_2px_12px_rgba(0,0,0,0.7)]">
+          <span className="text-[10px] uppercase tracking-[0.3em] text-white/70">{tour.index + 1} / {tour.total}</span>
+          <span className="text-3xl font-semibold leading-tight sm:text-5xl" style={caption.color ? { color: caption.color } : undefined}>{caption.title}</span>
+          <span className="text-sm text-white/85 sm:text-base">{caption.sub}</span>
+        </div>
+      ) : null}
+      {tour ? (
+        <button type="button" data-testid="play-tour-stop" className={`absolute right-3 top-[calc(9vh+0.75rem)] ${btn} transition-opacity duration-500`} onClick={toggleTour}>Stop tour · Esc</button>
+      ) : null}
+
+      <div className={`pointer-events-none absolute left-3 top-3 flex flex-col gap-1 text-xs transition-opacity duration-500 ${hud}`}>
         <div data-testid="play-hint" className="rounded bg-background/85 px-2 py-1 font-medium backdrop-blur">
           {hoverLabel ?? "Drag to pan · wheel to zoom · Q/E rotate · click a desk, a stack or a courier"}
         </div>
       </div>
 
-      <div className="absolute right-3 top-3 flex flex-wrap justify-end gap-1">
+      <div className={`absolute right-3 top-3 flex flex-wrap justify-end gap-1 transition-opacity duration-500 ${hud}`}>
+        <button type="button" className={btn} data-testid="play-tour" onClick={toggleTour}>Tour</button>
         <button type="button" className={btn} onClick={() => sceneRef.current?.rotate(-1)} aria-label="Rotate left">⟲</button>
         <button type="button" className={btn} onClick={() => sceneRef.current?.rotate(1)} aria-label="Rotate right">⟳</button>
         <button type="button" className={btn} onClick={() => sceneRef.current?.focusPerson(me) || sceneRef.current?.focusLobby()}>My desk</button>
@@ -317,7 +346,7 @@ export function PlayCanvas({ world: initial, focusTask, focusMe }: Props) {
         </span>
       </div>
 
-      <div className="pointer-events-none absolute bottom-3 left-3 hidden flex-wrap gap-2 rounded bg-background/85 px-2 py-1 text-[11px] backdrop-blur sm:flex">
+      <div className={`pointer-events-none absolute bottom-3 left-3 hidden flex-wrap gap-2 rounded bg-background/85 px-2 py-1 text-[11px] backdrop-blur transition-opacity duration-500 sm:flex ${hud}`}>
         {(["todo", "in_progress", "in_review", "blocked"] as const).map((s) => (
           <span key={s} className="flex items-center gap-1">{dot(s)}{STATUS_LABELS[s]}</span>
         ))}
@@ -325,7 +354,7 @@ export function PlayCanvas({ world: initial, focusTask, focusMe }: Props) {
       </div>
 
       {/* Today tray (T-254) */}
-      <div data-testid="play-tray" className={`absolute left-3 top-14 ${panel} w-64 max-sm:left-2 max-sm:top-12 max-sm:w-[calc(100%-1rem)]`}>
+      <div data-testid="play-tray" className={`absolute left-3 top-14 ${panel} w-64 transition-opacity duration-500 max-sm:left-2 max-sm:top-12 max-sm:w-[calc(100%-1rem)] ${hud}`}>
         <button type="button" className="flex items-center justify-between gap-2 text-left font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring" onClick={() => setTrayOpen((v) => !v)} aria-expanded={trayOpen}>
           <span>Today <span data-testid="play-level" className="ml-1 rounded bg-accent px-1.5 py-0.5 text-[10px] font-normal text-muted-foreground" title={`${world.me.xp} XP · next level at ${world.me.nextLevelXp}`}>Lv {world.me.level} · {world.me.xp} XP{world.me.todayXp ? ` · +${world.me.todayXp} today` : ""}</span></span>
           <span data-testid="play-tray-summary" className="text-xs text-muted-foreground">
@@ -372,7 +401,7 @@ export function PlayCanvas({ world: initial, focusTask, focusMe }: Props) {
 
       {/* quick actions (T-251) */}
       {selectedTask ? (
-        <div data-testid="play-task-panel" className={`absolute bottom-3 right-3 ${panel} w-80 max-sm:inset-x-2 max-sm:bottom-2 max-sm:w-auto`}>
+        <div data-testid="play-task-panel" className={`rise-in absolute bottom-3 right-3 ${panel} w-80 max-sm:inset-x-2 max-sm:bottom-2 max-sm:w-auto`}>
           <div className="flex items-start justify-between gap-2">
             <div className="flex min-w-0 flex-col">
               <span className="truncate font-medium">{selectedTask.title}</span>
@@ -402,7 +431,7 @@ export function PlayCanvas({ world: initial, focusTask, focusMe }: Props) {
 
       {/* person card */}
       {selectedPerson ? (
-        <div className={`absolute bottom-3 right-3 ${panel} w-72 max-sm:inset-x-2 max-sm:bottom-2 max-sm:w-auto`}>
+        <div className={`rise-in absolute bottom-3 right-3 ${panel} w-72 max-sm:inset-x-2 max-sm:bottom-2 max-sm:w-auto`}>
           <div className="flex items-start justify-between gap-2">
             <div className="flex flex-col">
               <span className="font-medium">{selectedPerson.name}</span>
@@ -431,7 +460,7 @@ export function PlayCanvas({ world: initial, focusTask, focusMe }: Props) {
 
       {/* handoff card (T-252) */}
       {selectedHandoff ? (
-        <div data-testid="play-handoff-panel" className={`absolute bottom-3 right-3 ${panel} w-80 max-sm:inset-x-2 max-sm:bottom-2 max-sm:w-auto`}>
+        <div data-testid="play-handoff-panel" className={`rise-in absolute bottom-3 right-3 ${panel} w-80 max-sm:inset-x-2 max-sm:bottom-2 max-sm:w-auto`}>
           <div className="flex items-start justify-between gap-2">
             <div className="flex min-w-0 flex-col">
               <span className="truncate font-medium">Handoff · {selectedHandoff.title}</span>
