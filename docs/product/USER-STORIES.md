@@ -154,6 +154,27 @@
 
 ---
 
+## 12. Backstage Play — EPIC-024 · EPIC-025 · EPIC-026
+
+> PRD: [`PRD-GAME.md`](PRD-GAME.md). A data-driven 3D office; characters are not autonomous.
+
+| ID | Story | Priority | Epic |
+| --- | --- | --- | --- |
+| US-PLAY-1 | As a staff member, I want to see the office as a 3D world where my desk holds my real tasks, so that I understand my day at a glance. | P1 | EPIC-024 |
+| US-PLAY-2 | As a division head, I want to see at a glance which desk in my room has people waiting on it, so that I spot bottlenecks before the meeting. | P1 | EPIC-024 |
+| US-PLAY-3 | As the Owner, I want to walk the whole office and open any task, person or event from where it physically is, so that the world is a real entry point and not a decoration. | P1 | EPIC-024 |
+| US-PLAY-4 | As a staff member, I want to change status, comment and tick checklist items on my tasks from inside the world, so that I do not have to switch views to act on what I see. | P1 | EPIC-025 |
+| US-PLAY-5 | As a division head or the Owner, I want pending handoffs and approvals to be visible as things happening in the office and decidable there, so that decisions do not wait for a board visit. | P1 | EPIC-025 |
+| US-PLAY-6 | As any user, I want a change made by anyone anywhere in Backstage to appear in the world within seconds, so that the office reflects reality. | P1 | EPIC-025 |
+| US-PLAY-7 | As a staff member, I want to earn XP and levels for finishing on time and unblocking others, so that doing the right work is visibly recognised. | P1 | EPIC-026 |
+| US-PLAY-8 | As a staff member, I want daily quests made from my real tasks, so that the game points me at what actually matters today. | P1 | EPIC-026 |
+| US-PLAY-9 | As a division head, I want to see my team's pulse and choose whether a leaderboard is shown, so that recognition motivates without shaming. | P1 | EPIC-026 |
+| US-PLAY-10 | As the Owner, I want to tune rule weights, caps and seasons and see flagged gaming attempts, so that the incentives stay aligned with the business. | P1 | EPIC-026 |
+
+**Acceptance:** the world shows exactly what the permission module allows and nothing moves without a data change; every in-world action leaves the same audit row as the app (plus `source: play`); XP is recomputable from `activity_log` and documented exploits score 0.
+
+---
+
 ## Coverage Check
 
-Every screen in PRD Appendix A maps to a domain above: Auth/Admin → §1, Events → §2, Tasks → §3, Approvals → §4, Budget → §5, Dashboard/Audit → §6, Guest/Review → §7, Timeline/Calendar/Documents/Run-of-show → §8, Templates/Snapshots → §9, Search/Polish → §10. All domains are planned; none delivered yet.
+Every screen in PRD Appendix A maps to a domain above: Auth/Admin → §1, Events → §2, Tasks → §3, Approvals → §4, Budget → §5, Dashboard/Audit → §6, Guest/Review → §7, Timeline/Calendar/Documents/Run-of-show → §8, Templates/Snapshots → §9, Search/Polish → §10, Backstage Play (`PRD-GAME.md`) → §12. All domains are planned; none delivered yet.

@@ -1,6 +1,7 @@
 import { cn } from "@/lib/utils";
 import { AiProviderPanel } from "./ai-provider-panel";
 import { IntegrationsPanel } from "./integrations-panel";
+import { PlayPanel } from "./play-panel";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { eq } from "drizzle-orm";
@@ -64,6 +65,13 @@ export default async function SettingsPage({
       })()
     : [];
 
+  const playEnabled = canManageOrg
+    ? await (async () => {
+        const { isPlayEnabled } = await import("@/lib/play/settings");
+        return isPlayEnabled();
+      })()
+    : false;
+
   return (
     <section className="flex flex-col gap-8">
       <div className="flex flex-col gap-1">
@@ -110,6 +118,7 @@ export default async function SettingsPage({
             />
           ) : null}
           <IntegrationsPanel rows={integrations} />
+          <PlayPanel enabled={playEnabled} />
         </div>
       ) : (
       <PreferencesForm

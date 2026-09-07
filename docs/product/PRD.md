@@ -56,6 +56,7 @@ We'll know we're right when **staff adopt My Tasks as their daily landing page**
 - **EPIC-008 — Planning Views, Documents & Run of Show**: Gantt timeline, calendar, per-event document library, minute-by-minute run of show.
 - **EPIC-009 — Event Playbooks & Ticket Snapshots**: "International Concert" template generation, daily ticket sales snapshots.
 - **EPIC-010 — Reports, Search & Polish**: digests, settlement report, global search, PWA polish.
+- **EPIC-024 → EPIC-026 — Backstage Play** (Phase 5, 2026-09-07): a gamified 3D office generated from the same data and services — see [`PRD-GAME.md`](PRD-GAME.md).
 
 **Out of scope (v1)**
 

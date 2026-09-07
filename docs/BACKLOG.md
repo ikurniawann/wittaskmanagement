@@ -93,6 +93,19 @@
 - [ ] **P2** (Full-stack) Global search (⌘K), permission-scoped
 - [ ] **P2** (Frontend) Mobile/PWA polish
 
+## Phase 5 · Backstage Play — gamified 3D office _(EPIC-024 → EPIC-026, PRD-GAME.md)_
+
+- [ ] **P1** (Full-stack) `/play` route + `play.view` capability + feature flag (T-240)
+- [ ] **P1** (Frontend) Engine port from the racing prototype into `src/lib/play/engine` (T-241)
+- [ ] **P1** (Backend) Permission-scoped world snapshot with cursor (T-242)
+- [ ] **P1** (Frontend) Deterministic office layout + characters/props + task visual mapping (T-243 … T-245)
+- [ ] **P1** (Frontend) Camera, picking, click-through to existing modals; perf smoke gate (T-246, T-247)
+- [ ] **P1** (Full-stack) Activity SSE stream + diff animations; quick actions via existing services (T-250, T-251)
+- [ ] **P1** (Full-stack) Handoff couriers, approval room, event boards, "my day" focus (T-252 … T-254)
+- [ ] **P1** (Frontend) Touch tier, reduced motion, no-WebGL fallback (T-255, T-256)
+- [ ] **P1** (Backend) `play_*` schema + recomputable XP rules engine + anti-gaming guards (T-260, T-261, T-266)
+- [ ] **P1** (Full-stack) Daily quests, levels/badges/cosmetics, team pulse + opt-in leaderboard, Owner controls (T-262 … T-265)
+
 ---
 
 ### Promotion flow

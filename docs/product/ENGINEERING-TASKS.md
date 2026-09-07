@@ -200,6 +200,57 @@
 
 ---
 
+## EPIC-024 — Backstage Play: foundation (Phase 5)
+
+> PRD: `PRD-GAME.md`. Engine ported from the racing prototype (`permainan.reddie.id/racing`). Read-only world; every click opens existing UI.
+
+| ID | Task | Type | Cx | Depends | Exit | Stories |
+| --- | --- | --- | --- | --- | --- | --- |
+| T-240 | `play.view` capability (reviewed, protected path) + `play_enabled` flag + `/play` client-only page + sidebar entry | FS | S | T-012 | Flag off → 404; flag on + capability → renders; guest → 403 | US-PLAY-1 |
+| T-241 | Engine port to `src/lib/play/engine/**` (MRT renderer, unified shader + materialFactory, 1-tap shadow, post pass, InstancedManager, ParticlePool, fixed loop + adaptive DPR); three@0.170 pinned; unit tests for pure parts | FE | L | T-240 | Demo scene renders through MRT + post; `pnpm test` green | US-PLAY-1 |
+| T-242 | `getPlayWorld(actor)` permission-scoped snapshot + `GET /api/play/world` with `cursor` | BE | M | T-012, T-120 | Seed snapshot ≤ 200 KB; restricted tasks of other divisions absent (test) | US-PLAY-1, US-PLAY-3 |
+| T-243 | Deterministic `layout(divisions, members)` → rooms/desks/corridors/lobby/approval room, seeded by division id | FE | M | — | Same input → same output; no overlaps; every desk reachable (tests) | US-PLAY-1 |
+| T-244 | CC0 rigged character + prop glTF set; skinning chunks in unified shader; division tint + initials badge; 5 clips; props instanced | FE | L | T-241 | 60 characters + 400 props ≥ 50 fps p50 @1.0 DPR integrated GPU | US-PLAY-1 |
+| T-245 | `mapTask(task, ctx)` visual-state mapping per PRD table (status colour, smoke, chain, ghost queue, critical aura) | FE | M | T-242, T-244 | Table test over 7 statuses × overdue × fan-in × critical; screenshots per state | US-PLAY-2 |
+| T-246 | Isometric camera (mouse/keyboard/touch), instance-id picking, click → existing task modal / profile card / event page; deep link `?task=` | FE | M | T-245 | Click-through opens existing modal with identical permission outcome | US-PLAY-3 |
+| T-247 | Quality tiers, F3 stats, `play.session` telemetry, Playwright SwiftShader smoke in `gates.test` (0 console errors, ≤ 300 draw calls) | Infra | S | T-246 | Smoke test fails on console error or > 300 draw calls | US-PLAY-1 |
+
+**Exit:** the Owner walks the office and opens any visible task from its desk; a staff member sees exactly what the app lets them see.
+
+---
+
+## EPIC-025 — Backstage Play: live world & actions (Phase 5)
+
+| ID | Task | Type | Cx | Depends | Exit | Stories |
+| --- | --- | --- | --- | --- | --- | --- |
+| T-250 | `GET /api/play/stream?cursor=` SSE of permission-filtered `activity_log` rows + pure `applyDiff` (activity kind → animation intent; unknown → refetch one task) | FS | M | T-242, T-037 | Change in tab A animates in tab B ≤ 5 s; diff table test per activity kind | US-PLAY-6 |
+| T-251 | Quick-action panel: status, comment, checklist, claim via existing services with `metadata.source = "play"` | FS | M | T-246, T-031 | Activity row identical to app's except `source`; denied → same message | US-PLAY-4 |
+| T-252 | Handoff couriers (A* along corridors) + approval room envelopes; decide via existing dialogs | FS | L | T-250, T-036, T-041 | Path never crosses walls; only actor's envelopes visible; decisions appear in app log | US-PLAY-5 |
+| T-253 | Event lobby boards (countdown, phase, health) + WIB time-of-day lighting | FE | S | T-242 | Countdown equals event header to the second; visibility per EPIC-021 | US-PLAY-6 |
+| T-254 | "My day" focus: camera to own desk, Today tray, `Tab` cycling, notification speech bubbles, `?focus=me` | FE | M | T-250 | Tray counts equal My Tasks and bell | US-PLAY-4 |
+| T-255 | Touch controls + touch quality tier + portrait bottom-sheet layout | FE | M | T-247 | Mid-range Android ≥ 30 fps p50, 0 console errors (recorded) | US-PLAY-4 |
+| T-256 | Reduced-motion mode, keyboard navigation, no-WebGL/context-lost fallback to `/dashboard`, canvas a11y label | FE | S | T-246 | Playwright WebGL-disabled test shows fallback; keyboard walkthrough verified | US-PLAY-6 |
+
+**Exit:** a decision or status change made anywhere appears in the office within 5 s and can be acted on there with identical audit trail.
+
+---
+
+## EPIC-026 — Backstage Play: gamification (Phase 5)
+
+| ID | Task | Type | Cx | Depends | Exit | Stories |
+| --- | --- | --- | --- | --- | --- | --- |
+| T-260 | Reviewed migration: `play_profiles`, `play_xp_ledger` (unique activity+rule), `play_badges`, `play_badge_awards`, `play_quests`, `play_seasons` + badge seed | BE | M | T-003 | Migration applies clean + dev; unique constraints present | US-PLAY-7 |
+| T-261 | Rule table + pure `scoreActivity`, incremental hook after activity write, `recompute(userId)`, nightly drift job (02:00 WIB) | BE | L | T-260, T-120 | Per-rule tests; property test recompute == incremental; zero drift on fixture | US-PLAY-7 |
+| T-262 | Daily quest generator (06:00 WIB) from real tasks/handoffs/approvals; completion from ledger; lobby notice board + My Tasks strip | FS | M | T-261 | Quests reference only visible objects; idempotent regeneration | US-PLAY-8 |
+| T-263 | Level curve + level-up moment, badge awards, cosmetic unlocks rendered on character/desk, profile page section | FS | M | T-261, T-244 | Level-up once per threshold; badges never duplicated; cosmetics persist | US-PLAY-7 |
+| T-264 | Team pulse panel, opt-in leaderboard, weekly recap (in-app + optional WhatsApp via EPIC-015) | FS | M | T-261 | Leaderboard hidden by default; recap respects opt-ins; numbers reconcile with ledger | US-PLAY-9 |
+| T-265 | Admin → Play settings: flag, rule weights/caps (zod), leaderboard policy, season reset, flagged-activity report | FS | M | T-261, T-266 | Weight change applies without restart; season reset archives totals, keeps badges | US-PLAY-10 |
+| T-266 | Anti-gaming guards as tested rules (reopen cooldown, 5-min self-tasks, bulk flips) + flag surfacing | BE | S | T-261 | Each documented exploit scores 0 XP in tests and appears in the report | US-PLAY-10 |
+
+**Exit:** a scripted week of activity scores identically by recompute and incrementally; exploits score 0; nothing in `src/lib/play/xp/**` writes to tasks or approvals.
+
+---
+
 ## Summary
 
 | Epic | Tasks | FE | BE | FS | Infra | Heaviest dependency |
@@ -215,6 +266,9 @@
 | EPIC-008 | 4 | 2 | — | 2 | — | T-035 (dependencies) |
 | EPIC-009 | 4 | — | 1 | 3 | — | T-031 (task service) |
 | EPIC-010 | 4 | 1 | 1 | 2 | — | T-062 (email) |
-| **Total** | **56** | **14** | **19** | **20** | **3** | — |
+| EPIC-024 | 8 | 5 | 1 | 1 | 1 | T-241 (engine port), T-120 (fan-in) |
+| EPIC-025 | 7 | 4 | — | 3 | — | T-250 (stream + diff) |
+| EPIC-026 | 7 | — | 3 | 4 | — | T-261 (rules engine) |
+| **Total** | **56** | **14** | **19** | **20** | **3** | — (Phase 0–4 as originally planned; Phase 5 adds 22) |
 
 **Sequencing note:** T-012 (central permission module) is the single most load-bearing task — every later epic depends on it; treat it as a protected-path deliverable with the strongest test suite. T-037 (SSE notifications) is soft-required by EPIC-004/006/007 triggers; if those epics start first, triggers can write `notifications` rows without the SSE stream and light up later. T-093 (ticket snapshots) depends on the EPIC-006 dashboard shipping first, per the PLAN's phasing.

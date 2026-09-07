@@ -41,6 +41,10 @@
     {
       "phase": 4,
       "title": "Phase 4 — Polish"
+    },
+    {
+      "phase": 5,
+      "title": "Phase 5 — Backstage Play (gamified 3D office)"
     }
   ],
   "epics": [
@@ -406,6 +410,105 @@
           "area": "Frontend",
           "priority": "P2",
           "body": "(T-103)"
+        }
+      ]
+    },
+    {
+      "key": "E024",
+      "title": "Backstage Play — foundation",
+      "phase": 5,
+      "issues": [
+        {
+          "title": "/play route, play.view capability, feature flag",
+          "area": "Full-stack",
+          "priority": "P1",
+          "body": "(T-240)"
+        },
+        {
+          "title": "Engine port from racing prototype",
+          "area": "Frontend",
+          "priority": "P1",
+          "body": "(T-241)"
+        },
+        {
+          "title": "Permission-scoped world snapshot + cursor",
+          "area": "Backend",
+          "priority": "P1",
+          "body": "(T-242)"
+        },
+        {
+          "title": "Deterministic layout, characters/props, task visual mapping",
+          "area": "Frontend",
+          "priority": "P1",
+          "body": "(T-243, T-244, T-245)"
+        },
+        {
+          "title": "Camera, picking, click-through; perf smoke gate",
+          "area": "Frontend",
+          "priority": "P1",
+          "body": "(T-246, T-247)"
+        }
+      ]
+    },
+    {
+      "key": "E025",
+      "title": "Backstage Play — live world & actions",
+      "phase": 5,
+      "issues": [
+        {
+          "title": "Activity SSE stream + diff animations",
+          "area": "Full-stack",
+          "priority": "P1",
+          "body": "(T-250)"
+        },
+        {
+          "title": "Quick actions via existing services (source: play)",
+          "area": "Full-stack",
+          "priority": "P1",
+          "body": "(T-251)"
+        },
+        {
+          "title": "Handoff couriers, approval room, event boards, my-day focus",
+          "area": "Full-stack",
+          "priority": "P1",
+          "body": "(T-252, T-253, T-254)"
+        },
+        {
+          "title": "Touch tier, reduced motion, no-WebGL fallback",
+          "area": "Frontend",
+          "priority": "P1",
+          "body": "(T-255, T-256)"
+        }
+      ]
+    },
+    {
+      "key": "E026",
+      "title": "Backstage Play — gamification",
+      "phase": 5,
+      "issues": [
+        {
+          "title": "play_* schema (reviewed migration)",
+          "area": "Backend",
+          "priority": "P1",
+          "body": "(T-260)"
+        },
+        {
+          "title": "Recomputable XP rules engine + anti-gaming guards",
+          "area": "Backend",
+          "priority": "P1",
+          "body": "(T-261, T-266)"
+        },
+        {
+          "title": "Daily quests, levels/badges/cosmetics",
+          "area": "Full-stack",
+          "priority": "P1",
+          "body": "(T-262, T-263)"
+        },
+        {
+          "title": "Team pulse, opt-in leaderboard, weekly recap, Owner controls",
+          "area": "Full-stack",
+          "priority": "P1",
+          "body": "(T-264, T-265)"
         }
       ]
     }

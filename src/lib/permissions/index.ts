@@ -71,8 +71,11 @@ export type Capability =
   // AI assistant (EPIC-014 T-140)
   | "ai.assistant" // predictive chat over org data (leadership only)
   // standalone workspace pages (EPIC-016 T-160)
-  | "page.use"; // reach the Pages module at all — per-page access is
-// row-level and decided by src/lib/pages/access.ts, not by this capability
+  | "page.use" // reach the Pages module at all — per-page access is
+  // row-level and decided by src/lib/pages/access.ts, not by this capability
+  // Backstage Play (EPIC-024 T-240)
+  | "play.view"; // enter the 3D office — what it SHOWS is still decided per
+// task / event / division by the existing rules; this only opens the door
 
 export interface PermissionContext {
   /** division the action targets (source division for handoffs) */
@@ -241,6 +244,12 @@ export function can(
       // any internal user may keep workspace pages; who can see a GIVEN page
       // is row-level and decided by src/lib/pages/access.ts (private by
       // default, shared explicitly). Externals never reach the module.
+      return actor.role !== "external";
+
+    case "play.view":
+      // any internal user may walk the office (EPIC-024). The snapshot it is
+      // built from is assembled through listActiveEvents / listEventTasks
+      // and friends, so nothing becomes visible here that the app hides.
       return actor.role !== "external";
 
     // ---- documents ------------------------------------------------------

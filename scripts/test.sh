@@ -20,4 +20,9 @@ if grep -q '"typecheck"' package.json; then "$PM" run typecheck; else "$PM" run 
 echo "[test] unit/integration tests"
 if grep -q '"test"' package.json; then "$PM" run test; else echo "[test] no test script — add one (EPIC-000)"; fi
 
+# Backstage Play render smoke (EPIC-024 T-247) — opt-in: needs a running app,
+# Playwright and a Chromium build. Skips itself cleanly when PLAY_SMOKE_URL is unset.
+echo "[test] play smoke"
+node scripts/play-smoke.mjs
+
 echo "[test] PASS"

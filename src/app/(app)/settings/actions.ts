@@ -249,3 +249,23 @@ export async function clearAiKeyAction(): Promise<AiSettingsState> {
     return { error: error instanceof Error ? error.message : "Could not remove the key." };
   }
 }
+
+// ---- Backstage Play (EPIC-024 T-240) -----------------------------------------
+// The service re-checks org.manage: the panel is only rendered for an admin,
+// but a server action is a public endpoint and a hidden panel proves nothing.
+export async function setPlayEnabledAction(
+  enabled: boolean,
+): Promise<{ error?: string } | void> {
+  const actor = await sessionActor();
+  if (!actor) return { error: "Not signed in." };
+  try {
+    const { setPlayEnabled } = await import("@/lib/play/settings");
+    await setPlayEnabled(actor, enabled);
+    revalidatePath("/settings");
+    revalidatePath("/", "layout");
+  } catch (error) {
+    return {
+      error: error instanceof Error ? error.message : "Could not change that.",
+    };
+  }
+}

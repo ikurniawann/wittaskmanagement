@@ -39,6 +39,13 @@ export async function AppShell({ children }: { children: ReactNode }) {
       })()
     : null;
 
+  const playEnabled = actor
+    ? await (async () => {
+        const { isPlayEnabled } = await import("@/lib/play/settings");
+        return isPlayEnabled();
+      })()
+    : false;
+
   const timelineCounts = actor
     ? await (async () => {
         const { getUnreadCounts } = await import("@/lib/timeline/service");
@@ -61,6 +68,11 @@ export async function AppShell({ children }: { children: ReactNode }) {
       ? [{ href: "/pages", label: "Pages", icon: "pages" as const }]
       : []),
     { href: "/dashboard", label: "Dashboard", icon: "dashboard" },
+    // Backstage Play (EPIC-024): the entry appears only while the org flag is
+    // on AND the person may enter; the page re-checks both.
+    ...(actor && playEnabled && can(actor, "play.view")
+      ? [{ href: "/play", label: "Play", icon: "play" as const }]
+      : []),
     ...(actor && can(actor, "ai.assistant")
       ? [
           {
