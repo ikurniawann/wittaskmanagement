@@ -239,6 +239,12 @@ adalah meng-gamifikasi dari sistem task management ini").
 - 2026-09-07 Engine source of truth for the port: `/home/wit/docker-infra/permainan/racing/index.html`
   (Three.js 0.170 build, ~110 draw calls solo, 13 programs). The single-file racing build
   stays as a demo; `src/lib/play/engine` becomes the only maintained copy.
+- 2026-09-07 (night) Owner ("untuk pergerakan mouse nya jangan inverter") → camera bug fixed in
+  T-246: the ground-plane `right` vector was fwd × down (screen-left), so horizontal drag and A/D
+  moved opposite to the hand while vertical drag was correct. Now `groundBasis(yaw)` (pure,
+  exported, unit-tested against fwd × up for all 8 yaw steps) feeds both pan and WASD. Verified
+  on the test instance: drag right → office moves right, drag down → office moves down, 0 console
+  errors. Tests 676/676.
 
 ## Dependencies
 

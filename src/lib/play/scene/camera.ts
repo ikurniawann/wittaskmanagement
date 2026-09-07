@@ -120,8 +120,7 @@ export class IsoCamera {
   private panPixels(dx: number, dy: number): void {
     const h = this.el.clientHeight || 1;
     const worldPerPx = (2 * this.dist * Math.tan((this.cam.fov * Math.PI) / 360)) / h;
-    const fwd = new THREE.Vector3(-Math.sin(this.yaw), 0, -Math.cos(this.yaw));
-    const right = new THREE.Vector3(fwd.z, 0, -fwd.x);
+    const { fwd, right } = groundBasis(this.yaw);
     this.goalTarget.addScaledVector(right, -dx * worldPerPx);
     this.goalTarget.addScaledVector(fwd, dy * worldPerPx / Math.sin(this.pitch));
   }
@@ -144,8 +143,7 @@ export class IsoCamera {
 
   update(dt: number): void {
     const speed = 22 * dt * (this.dist / 42);
-    const fwd = new THREE.Vector3(-Math.sin(this.yaw), 0, -Math.cos(this.yaw));
-    const right = new THREE.Vector3(fwd.z, 0, -fwd.x);
+    const { fwd, right } = groundBasis(this.yaw);
     if (this.keys.has("KeyW") || this.keys.has("ArrowUp")) this.goalTarget.addScaledVector(fwd, speed);
     if (this.keys.has("KeyS") || this.keys.has("ArrowDown")) this.goalTarget.addScaledVector(fwd, -speed);
     if (this.keys.has("KeyA") || this.keys.has("ArrowLeft")) this.goalTarget.addScaledVector(right, -speed);
@@ -169,6 +167,19 @@ export class IsoCamera {
       else this.el.removeEventListener(name, fn, opts);
     }
   }
+}
+
+/**
+ * Pure: the camera's ground-plane basis for a yaw. `fwd` is where the camera
+ * looks (horizontal), `right` is screen-right = fwd × up. Dragging moves the
+ * target against the pointer so the ground follows the hand; WASD moves it with
+ * the key. (The previous `right` was fwd × down, i.e. screen-left, which made
+ * horizontal drag and A/D feel inverted.)
+ */
+export function groundBasis(yaw: number): { fwd: THREE.Vector3; right: THREE.Vector3 } {
+  const fwd = new THREE.Vector3(-Math.sin(yaw), 0, -Math.cos(yaw));
+  const right = new THREE.Vector3(-fwd.z, 0, fwd.x);
+  return { fwd, right };
 }
 
 function clamp(v: number, a: number, b: number): number {
