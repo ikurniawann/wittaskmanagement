@@ -207,6 +207,14 @@ status, visibility or anyone's permissions.
   TEST DB only, 1650 XP): cap + fern + wide monitor + red chair render, other desks unchanged,
   0 console errors, 96 draw calls, tests 673/673, typecheck clean. Human-QA item (4) is closed;
   (1)–(3) remain the Owner's decisions.
+- 2026-09-07 21:50 WIB **Deployed to production (ingat.reddie.id)** on the Owner's instruction
+  ("dikoneksikan dengan real task"). Steps: pg_dump backup of the prod DB
+  (`~/backups/wit_tms/rvc_backstage-20260907-214348-pre-play.sql.gz`), `wit-custom` fast-forwarded to
+  f483510, Owner ran `docker compose up -d --build --wait` (the deploy command is human-only), app
+  healthy on the new image, migration 0047 already present (48 rows, no-op), then `play_enabled`
+  set to true directly in `app_settings` (no activity row, since no person clicked the toggle).
+  Human-QA item (1) is closed. Real data at deploy: 47 tasks, 10 divisions, 9 events, 827 activity
+  rows, 0 pending approvals/handoffs. Play tables start empty; XP accrues from the next activity.
 - 2026-09-07 Epic created. Decisions recorded in `PRD-GAME.md`: no real money/prizes/HR
   consequences; leaderboard off by default; ledger derived from `activity_log` so the
   score can always be recomputed.
