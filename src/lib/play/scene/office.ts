@@ -15,6 +15,7 @@ import type { PlayTask, PlayWorld } from "../types";
 import { layout, type DeskSlot, type OfficeLayout, type Room } from "../world/layout";
 import { mapTask, personClip, type TaskVisual } from "../world/mapping";
 import { IsoCamera } from "./camera";
+import { CharacterKit, type Character, type ClipName } from "./characters";
 import { boardTexture, countdownLabel, drawBoard, signTexture } from "./textures";
 
 // EPIC-024 — the office scene. Everything drawn here comes from `layout()` and
@@ -54,6 +55,9 @@ export class OfficeScene {
   private readonly deskOf = new Map<string, DeskRef>(); // personId → desk
   private readonly stacks: StackRef[] = [];
   private readonly people: { id: string; x: number; z: number; facing: number; clip: "idle" | "work" | "panic"; phase: number }[] = [];
+  /** Rigged characters (T-244); empty until the kit has loaded, placeholders show meanwhile. */
+  private readonly characters: { id: string | null; char: Character }[] = [];
+  private kitFailed = false;
   private stackMesh!: THREE.InstancedMesh;
   private auraMesh!: THREE.InstancedMesh;
   private chainMesh!: THREE.InstancedMesh;
@@ -117,6 +121,53 @@ export class OfficeScene {
     });
     this.loop.start();
     window.addEventListener("keydown", this.onKey);
+    void this.loadCharacters();
+  }
+
+  // ---- rigged characters (T-244) --------------------------------------------
+  private async loadCharacters(): Promise<void> {
+    let kit: CharacterKit;
+    try {
+      kit = await CharacterKit.load();
+    } catch (e) {
+      this.kitFailed = true;
+      console.warn("[play] character model unavailable, keeping placeholders", e);
+      return;
+    }
+    if (this.disposed) return;
+    const S = this.r.shared;
+    // people at their desks
+    this.people.forEach((p) => {
+      const room = this.deskOf.get(p.id)?.room;
+      const tint = hex(this.world.divisions.find((d) => d.id === room?.divisionId)?.color ?? "#999999");
+      const char = kit.create(S, tint);
+      char.group.position.set(p.x, 0, p.z);
+      char.group.rotation.y = p.facing;
+      char.play(p.clip as ClipName, 0);
+      char.mixer.update(p.phase); // desynchronise the loops
+      char.proxy.userData.pick = { kind: "person", id: p.id } satisfies Pick;
+      castShadow(char.mesh);
+      this.scene.add(char.group);
+      this.pickables.push(char.proxy);
+      this.characters.push({ id: p.id, char });
+    });
+    // couriers walk in place between the two rooms
+    this.world.handoffs.forEach((h, i) => {
+      const m = new THREE.Matrix4();
+      this.courierMesh.getMatrixAt(i, m);
+      const char = kit.create(S, 0xf5c518);
+      char.group.applyMatrix4(m);
+      char.play("walk", 0);
+      char.mixer.update((i * 0.7) % 1.2);
+      castShadow(char.mesh);
+      this.scene.add(char.group);
+      this.characters.push({ id: null, char });
+    });
+    // placeholders off, picking now goes through the proxies
+    this.personMesh.visible = false;
+    this.courierMesh.visible = false;
+    const idx = this.pickables.indexOf(this.personMesh);
+    if (idx >= 0) this.pickables.splice(idx, 1);
   }
 
   private onKey = (e: KeyboardEvent) => {
@@ -181,8 +232,8 @@ export class OfficeScene {
       { g: new THREE.CylinderGeometry(0.04, 0.04, 0.45, 6), c: 0x8c8f94, m: partMatrix(0, 0.22, 0) },
     ]), materialFactory(S, 0xffffff, "metal"));
     const monK = this.instanced.addKind("monitor", mergeParts([
-      { g: new THREE.BoxGeometry(0.7, 0.42, 0.04), c: 0x1b1e23, m: partMatrix(0, 1.05, 0.25) },
-      { g: new THREE.BoxGeometry(0.2, 0.2, 0.1), c: 0x4a4e55, m: partMatrix(0, 0.83, 0.25) },
+      { g: new THREE.BoxGeometry(0.7, 0.42, 0.04), c: 0x1b1e23, m: partMatrix(0, 1.05, -0.2) },
+      { g: new THREE.BoxGeometry(0.2, 0.2, 0.1), c: 0x4a4e55, m: partMatrix(0, 0.83, -0.2) },
     ]), materialFactory(S, 0xffffff, "metal"), { cast: false });
     for (const room of L.rooms) {
       for (const desk of room.desks) {
@@ -251,7 +302,7 @@ export class OfficeScene {
         const n = perDesk.get(key) ?? 0;
         perDesk.set(key, n + 1);
         const f = d.slot.facing;
-        const lx = -0.55 + (n % 3) * 0.5, lz = 0.15 - Math.floor(n / 3) * 0.32;
+        const lx = -0.55 + (n % 3) * 0.5, lz = 0.22 - Math.floor(n / 3) * 0.3; // far half of the desk, monitor keeps the near half
         dx = d.slot.x + Math.cos(f) * lx + Math.sin(f) * lz;
         dz = d.slot.z - Math.sin(f) * lx + Math.cos(f) * lz;
         this.stacks.push({ task: t, visual: v, x: dx, y: 0.82, z: dz });
@@ -437,6 +488,13 @@ export class OfficeScene {
   get fps(): number {
     return this.loop.fps;
   }
+  /** "rigged" once the glTF characters are in, "placeholder" while loading or if the model failed. */
+  get characterMode(): "rigged" | "placeholder" {
+    return this.characters.length ? "rigged" : "placeholder";
+  }
+  get characterKitFailed(): boolean {
+    return this.kitFailed;
+  }
 
   // ---- per frame ------------------------------------------------------------------
   private frame(dt: number, now: number): void {
@@ -445,7 +503,8 @@ export class OfficeScene {
     this.r.beginFrame(this.time);
     this.camera.update(dt);
     this.sky.position.copy(this.camera.cam.position);
-    this.animatePeople();
+    if (this.characters.length) for (const c of this.characters) c.char.mixer.update(dt);
+    else this.animatePeople();
     if (now - this.lastBoard > 1000) { this.lastBoard = now; this.redrawBoards(new Date()); }
     if (now - this.lastSmoke > 180) { this.lastSmoke = now; this.emitSmoke(); }
     this.instanced.update([this.camera.cam.position]);
@@ -501,6 +560,7 @@ export class OfficeScene {
     this.camera.dispose();
     this.instanced.dispose();
     this.particles.dispose();
+    this.characters.forEach((c) => c.char.dispose());
     this.scene.traverse((o) => {
       const m = o as THREE.Mesh;
       if (m.geometry) m.geometry.dispose();

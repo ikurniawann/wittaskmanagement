@@ -18,7 +18,7 @@ export const VS_UNIFIED = /* glsl */ `
   uniform mat4 uShadowMatrix;
   uniform float uNormalOffset;
   #include <skinning_pars_vertex>
-  out vec3 vWN; out vec3 vWP; out vec2 vUv; out vec3 vCol; out vec4 vShadow; out float vViewZ;
+  out vec3 vWN; out vec3 vWP; out vec2 vUv; out vec3 vCol; out vec4 vShadow; out float vViewZ; out float vTint;
   void main() {
     vec3 transformed = position;
     vec3 objectNormal = normal;
@@ -35,7 +35,13 @@ export const VS_UNIFIED = /* glsl */ `
     vWP = wp.xyz;
     vWN = normalize(mat3(modelMatrix) * n);
     vUv = uv;
-    vCol = color;
+    vCol = color.rgb;
+    // colour alpha (when present) is a tint mask: 1 = takes uColor, 0 = keeps its own colour
+    #ifdef USE_COLOR_ALPHA
+      vTint = color.a;
+    #else
+      vTint = 1.0;
+    #endif
     #ifdef USE_INSTANCING_COLOR
       vCol *= instanceColor;
     #endif
@@ -49,7 +55,7 @@ export const VS_UNIFIED = /* glsl */ `
 export const FS_UNIFIED = /* glsl */ `
   layout(location = 0) out vec4 gColor;
   layout(location = 1) out vec4 gNormal;
-  in vec3 vWN; in vec3 vWP; in vec2 vUv; in vec3 vCol; in vec4 vShadow; in float vViewZ;
+  in vec3 vWN; in vec3 vWP; in vec2 vUv; in vec3 vCol; in vec4 vShadow; in float vViewZ; in float vTint;
   uniform vec3 uColor; uniform float uOpacity; uniform sampler2D uMap; uniform float uUseMap;
   uniform vec3 uRamp; uniform vec2 uThresholds; uniform vec2 uRim; uniform vec2 uSpec; uniform float uHatch; uniform float uReflect;
   uniform float uUnlit; uniform vec3 uEmissive; uniform float uWriteG; uniform float uSky; uniform float uFogMul;
@@ -72,7 +78,7 @@ export const FS_UNIFIED = /* glsl */ `
     }
     vec3 N = normalize(vWN); if (!gl_FrontFacing) N = -N;
     vec4 tex = mix(vec4(1.0), texture(uMap, vUv), uUseMap);
-    vec3 base = uColor * vCol * tex.rgb;
+    vec3 base = mix(vCol, uColor * vCol, vTint) * tex.rgb;
     float alpha = uOpacity * tex.a;
     vec3 V = normalize(cameraPosition - vWP);
     vec3 sc = vShadow.xyz / vShadow.w;

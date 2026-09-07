@@ -1,6 +1,6 @@
 # EPIC-024: Backstage Play — foundation (world from data, read-only)
 
-status: on-progress
+status: ready-for-qa
 environment: dev
 phase: 5
 priority: P1
@@ -95,7 +95,7 @@ adalah meng-gamifikasi dari sistem task management ini").
 
 ### Characters & props
 
-- [ ] **T-244** Add CC0 rigged low-poly character glTF + prop set (desk, chair, monitor,
+- [x] **T-244** Add CC0 rigged low-poly character glTF + prop set (desk, chair, monitor,
       paper stacks ×3, plant, whiteboard, envelope, parcel, chain, sign) under
       `public/play/`; extend the unified vertex shader with three.js `skinning` chunks so
       `SkinnedMesh` renders through the same program family; per-character tint from
@@ -126,7 +126,7 @@ adalah meng-gamifikasi dari sistem task management ini").
 
 ### Performance gate & telemetry
 
-- [~] **T-247** Quality tiers (desktop: MSAA 4, DPR ≤ dpr; touch: MSAA 0, DPR ≤ 1.0,
+- [x] **T-247** Quality tiers (desktop: MSAA 4, DPR ≤ dpr; touch: MSAA 0, DPR ≤ 1.0,
       particles 256), stats overlay (F3), `play.session` activity entry on enter with
       device class + p50 fps after 30 s (no PII beyond the actor); Playwright SwiftShader
       smoke in `scripts/test.sh`: page loads, zero console errors/warnings, draw calls
@@ -214,9 +214,17 @@ adalah meng-gamifikasi dari sistem task management ini").
   cleanly otherwise because Playwright is not a project dependency). Measured on the fixture
   (25 people, 49 open tasks, 2 projects): **60 draw calls, 10 programs, ~59 k triangles**,
   zero console output on `/play`. Real-GPU fps not yet measured (SwiftShader only).
-- 2026-09-07 **T-244 open**: characters are procedural placeholders (capsule + head, tinted by
-  division, three data-driven motion states). Rigged CC0 glTF + `SkinnedMesh` through the unified
-  shader (chunks already in place) is the remaining work of this epic.
+- 2026-09-07 **T-244 shipped**: `public/play/robot.glb` (RobotExpressive, CC0, licence in
+  `public/play/LICENSE.md`) loaded once by `CharacterKit`; its 14 parts are folded into ONE
+  SkinnedMesh per character (rigid parts weighted 100 % to their parent bone, hands remapped onto
+  a shared 43-bone skeleton) so a character stays one draw call. Vertex-colour alpha is a tint
+  mask (unified shader: `mix(vCol, uColor*vCol, vTint)`) — only the "Main" parts take the
+  division colour. Clips: idle→Idle, work→Sitting, panic→No, walk→Walking (couriers), wave→Wave
+  (reserved for EPIC-026). Picking uses an invisible box proxy, never the skinned triangles.
+  Placeholders stay until the model loads and remain if it fails. Measured with 25 rigged people
+  + 1 courier: **91 draw calls, 12 programs, ~198 k triangles**, zero console output.
+  Deviation from the task text: no per-person initials badge in 3D — the hover label and the
+  person card carry the name (a badge per person would cost a texture + draw call each).
 - 2026-09-07 Dev verification setup: throwaway Postgres (`postgres:17-alpine`, port 5440),
   `pnpm db:migrate` + `pnpm seed` + `scripts/play-fixture.ts` (refuses without
   `PLAY_FIXTURE=1`), `pnpm dev --port 3401`, Playwright with SwiftShader. Production data was not
@@ -224,6 +232,8 @@ adalah meng-gamifikasi dari sistem task management ini").
 - 2026-09-07 Owner: the public entry point is `permainan.reddie.id/office`. Play needs the
   Backstage session cookie (host-bound), so that path is a 302 to `ingat.reddie.id/play`, not a
   second deployment; a standalone build would need a new token flow (rejected in PRD-GAME.md).
+- 2026-09-07 Status → ready-for-qa: all task groups shipped and gates green; the human QA step is
+  the real-GPU fps reading (F3 on an office laptop) that decides the final quality tiers.
 - 2026-09-07 Epic created from Owner request; scope locked to a data-driven, non-autonomous
   world — decision recorded in `PRD-GAME.md` (Scope / Out of scope).
 - 2026-09-07 Engine source of truth for the port: `/home/wit/docker-infra/permainan/racing/index.html`

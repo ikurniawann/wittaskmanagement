@@ -34,7 +34,7 @@
 | [EPIC-021](EPIC-021-event-visibility.md) | Phase 4 | Event visibility follows involvement | P0 | ready-for-qa |
 | [EPIC-022](EPIC-022-ticketing-channels.md) | Phase 4 | Ticketing channels — Tessera + Megatix | P1 | ready-for-qa |
 | [EPIC-023](EPIC-023-agent-api.md) | Phase 4 | Agent API — external agents over WhatsApp | P1 | ready-for-qa |
-| [EPIC-024](EPIC-024-play-foundation.md) | Phase 5 | Backstage Play — foundation (3D office generated from data, read-only) | P1 | on-progress |
+| [EPIC-024](EPIC-024-play-foundation.md) | Phase 5 | Backstage Play — foundation (3D office generated from data, read-only) | P1 | ready-for-qa |
 | [EPIC-025](EPIC-025-play-live-actions.md) | Phase 5 | Backstage Play — live world & in-world actions | P1 | backlog |
 | [EPIC-026](EPIC-026-play-gamification.md) | Phase 5 | Backstage Play — gamification (XP, quests, recognition) | P1 | backlog |
 
