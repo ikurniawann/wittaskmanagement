@@ -66,11 +66,22 @@ export async function listActivity(
 }
 
 export async function logActivity(input: LogInput): Promise<void> {
-  await db.insert(activityLog).values({
-    actorId: input.actorId,
-    action: input.action,
-    entity: input.entity,
-    detail: input.detail ?? null,
-    eventId: input.eventId ?? null,
-  });
+  const [row] = await db
+    .insert(activityLog)
+    .values({
+      actorId: input.actorId,
+      action: input.action,
+      entity: input.entity,
+      detail: input.detail ?? null,
+      eventId: input.eventId ?? null,
+    })
+    .returning();
+  // Backstage Play (EPIC-026 T-261): the XP ledger is derived from this log.
+  // Scored after the row exists, never awaited — a scoring failure must not
+  // fail the mutation that produced the row, and never delays it.
+  if (row && row.actorId) {
+    void import("@/lib/play/xp/service")
+      .then((m) => m.onActivityLogged(row))
+      .catch((error) => console.error("[play] scoring failed:", error));
+  }
 }

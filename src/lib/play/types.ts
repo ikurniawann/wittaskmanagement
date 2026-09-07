@@ -22,7 +22,23 @@ export type PlayPerson = {
   avatarUrl: string | null;
   divisionId: string | null;
   isHead: boolean;
+  /** EPIC-026: level drives cosmetics; 0 = no XP yet */
+  level: number;
+  cosmetics: { hat?: string; plant?: string; monitor?: string; chair?: string };
 };
+
+export type PlayQuest = {
+  id: string;
+  kind: string;
+  title: string;
+  targetIds: string[];
+  targetCount: number;
+  progress: number;
+  completedAt: string | null;
+};
+
+export type PlayPulse = { divisionId: string; weekXp: number; onTimeRate: number | null; activeMembers: number };
+export type PlayLeader = { userId: string; name: string; xp: number; level: number };
 
 export type PlayTask = {
   id: string;
@@ -59,7 +75,13 @@ export type PlayEvent = {
 };
 
 export type PlayWorld = {
-  me: { id: string; divisionId: string | null };
+  me: { id: string; divisionId: string | null; xp: number; level: number; nextLevelXp: number; todayXp: number; leaderboardOptIn: boolean };
+  /** today's quests for me (EPIC-026 T-262) */
+  quests: PlayQuest[];
+  /** my division's aggregate this week; null without a division */
+  pulse: PlayPulse | null;
+  /** ranking, only when policy + opt-ins allow; null otherwise */
+  leaderboard: PlayLeader[] | null;
   divisions: PlayDivision[];
   people: PlayPerson[];
   tasks: PlayTask[];

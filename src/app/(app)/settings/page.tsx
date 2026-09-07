@@ -2,6 +2,7 @@ import { cn } from "@/lib/utils";
 import { AiProviderPanel } from "./ai-provider-panel";
 import { IntegrationsPanel } from "./integrations-panel";
 import { PlayPanel } from "./play-panel";
+import { PlayAdminPanel } from "./play-admin-panel";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { eq } from "drizzle-orm";
@@ -71,6 +72,12 @@ export default async function SettingsPage({
         return isPlayEnabled();
       })()
     : false;
+  const playAdmin = canManageOrg
+    ? await (async () => {
+        const { getPlayAdminView } = await import("@/lib/play/xp/admin");
+        return getPlayAdminView(actor);
+      })()
+    : null;
 
   return (
     <section className="flex flex-col gap-8">
@@ -119,6 +126,7 @@ export default async function SettingsPage({
           ) : null}
           <IntegrationsPanel rows={integrations} />
           <PlayPanel enabled={playEnabled} />
+          {playAdmin ? <PlayAdminPanel view={playAdmin} /> : null}
         </div>
       ) : (
       <PreferencesForm

@@ -5,6 +5,7 @@ import { db } from "@/db";
 import { divisionMembers, divisions, profiles } from "@/db/schema";
 import { AvatarUploader } from "./avatar-uploader";
 import { sessionActor } from "@/lib/auth/session-actor";
+import { PlayProgress } from "@/components/play-progress";
 import { ProfileForm } from "./profile-form";
 
 export const metadata: Metadata = { title: "Profile" };
@@ -37,6 +38,7 @@ export default async function ProfilePage() {
 
   return (
     <section className="flex flex-col gap-8">
+      <PlayProgress userId={actor.id} />
       <div className="flex items-center gap-4">
         <AvatarUploader name={me.name} avatarPath={me.avatarPath} />
         <div className="flex flex-col gap-0.5">

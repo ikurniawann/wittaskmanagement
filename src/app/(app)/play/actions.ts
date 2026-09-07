@@ -104,3 +104,12 @@ export async function decideHandoffAction(handoffId: string, accept: boolean): P
     return f.ok ? { ok: true } : f;
   }
 }
+
+// EPIC-026 T-264 — the person's own leaderboard consent. Nobody else can set it.
+export async function setLeaderboardOptInAction(on: boolean): Promise<{ ok: true } | { ok: false; error: string }> {
+  const actor = await sessionActor();
+  if (!actor || !can(actor, "play.view")) return { ok: false, error: "Not signed in." };
+  const { setMyLeaderboardOptIn } = await import("@/lib/play/xp/admin");
+  await setMyLeaderboardOptIn(actor, on);
+  return { ok: true };
+}

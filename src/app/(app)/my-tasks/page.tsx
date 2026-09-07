@@ -12,6 +12,7 @@ import { DependencyBadge } from "@/components/dependency-badge";
 import { EventChip } from "@/components/event-chip";
 import { PriorityIcon, StatusChip, StatusDot, UserAvatar } from "@/components/task-meta";
 import { sessionActor } from "@/lib/auth/session-actor";
+import { PlayProgress } from "@/components/play-progress";
 import { signOut } from "@/lib/auth";
 import { bucketForDue, type DueBucket } from "@/lib/tasks/dates";
 import {
@@ -210,6 +211,7 @@ export default async function MyTasksPage({
         <h1 className="text-3xl font-semibold tracking-tight">
           Your work
         </h1>
+        <PlayProgress userId={actor.id} compact />
         <nav className="flex gap-1 overflow-x-auto border-b">
           {TABS.map((t) => (
             <Link

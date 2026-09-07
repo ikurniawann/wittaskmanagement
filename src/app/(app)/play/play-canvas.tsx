@@ -9,7 +9,7 @@ import { STATUS_COLOUR } from "@/lib/play/world/mapping";
 import { applyDiff, coalesce, type ActivityRow, type Intent } from "@/lib/play/world/diff";
 import { setPlayActive } from "@/lib/play/active-store";
 import { STATUS_LABELS, TASK_STATUS_ORDER, type TaskStatus } from "@/lib/tasks/status";
-import { claimTaskAction, commentTaskAction, decideHandoffAction, recordPlaySessionAction, setTaskStatusAction } from "./actions";
+import { claimTaskAction, commentTaskAction, decideHandoffAction, recordPlaySessionAction, setLeaderboardOptInAction, setTaskStatusAction } from "./actions";
 
 // The only client boundary for Play. The engine is imported lazily inside an
 // effect so three.js never runs on the server; the WebGL2 check happens before
@@ -127,13 +127,14 @@ export function PlayCanvas({ world: initial, focusTask, focusMe }: Props) {
         mergeTask(i.id, task);
       } else if (i.kind === "handoffs" || i.kind === "approvals") needWorld = true;
       else if (i.kind === "bubble") scene?.bubble(i.personId, i.text);
+      else if (i.kind === "levelup") { scene?.levelUp(i.personId, i.level); needWorld = true; }
     }
     if (needWorld) {
       const fresh = await refetchWorld();
       if (fresh) {
         scene?.setHandoffs(fresh.handoffs);
         scene?.setApprovalsWaiting(fresh.approvalsWaiting);
-        setWorld((w) => ({ ...w, handoffs: fresh.handoffs, approvalsWaiting: fresh.approvalsWaiting, unreadNotifications: fresh.unreadNotifications }));
+        setWorld((w) => ({ ...w, handoffs: fresh.handoffs, approvalsWaiting: fresh.approvalsWaiting, unreadNotifications: fresh.unreadNotifications, me: fresh.me, quests: fresh.quests, pulse: fresh.pulse, leaderboard: fresh.leaderboard }));
       }
     }
   }, [mergeTask, refetchTask, refetchWorld]);
@@ -196,6 +197,8 @@ export function PlayCanvas({ world: initial, focusTask, focusMe }: Props) {
     sceneRef.current?.applyTask(r.task, effect, taskId);
     mergeTask(taskId, r.task);
     if (!r.task || r.task.status === "done" || r.task.status === "cancelled") setSelected(null);
+    // XP and quests are scored just after the row lands; pick them up shortly after
+    window.setTimeout(() => { void refetchWorld().then((fresh) => { if (fresh) setWorld((w) => ({ ...w, me: fresh.me, quests: fresh.quests, pulse: fresh.pulse, leaderboard: fresh.leaderboard })); }); }, 1500);
   };
   const changeStatus = (status: TaskStatus) => {
     if (!selectedTask) return;
@@ -301,7 +304,7 @@ export function PlayCanvas({ world: initial, focusTask, focusMe }: Props) {
       {/* Today tray (T-254) */}
       <div data-testid="play-tray" className={`absolute left-3 top-14 ${panel} w-64 max-sm:left-2 max-sm:top-12 max-sm:w-[calc(100%-1rem)]`}>
         <button type="button" className="flex items-center justify-between gap-2 text-left font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring" onClick={() => setTrayOpen((v) => !v)} aria-expanded={trayOpen}>
-          <span>Today</span>
+          <span>Today <span data-testid="play-level" className="ml-1 rounded bg-accent px-1.5 py-0.5 text-[10px] font-normal text-muted-foreground" title={`${world.me.xp} XP · next level at ${world.me.nextLevelXp}`}>Lv {world.me.level} · {world.me.xp} XP{world.me.todayXp ? ` · +${world.me.todayXp} today` : ""}</span></span>
           <span data-testid="play-tray-summary" className="text-xs text-muted-foreground">
             {overdue.length} overdue · {dueToday.length} due · {world.unreadNotifications} unread{world.approvalsWaiting ? ` · ${world.approvalsWaiting} approvals` : ""}
           </span>
@@ -315,6 +318,32 @@ export function PlayCanvas({ world: initial, focusTask, focusMe }: Props) {
             {world.approvalsWaiting > 0 ? <li><button type="button" className={rowBtn} onFocus={() => sceneRef.current?.focusApprovals()} onClick={() => router.push("/approvals")}>{world.approvalsWaiting} approval{world.approvalsWaiting === 1 ? "" : "s"} waiting</button></li> : null}
             {trayEmpty ? <li className="text-muted-foreground">Nothing urgent. Walk the office.</li> : null}
           </ul>
+        ) : null}
+        {trayOpen && world.quests.length ? (
+          <div data-testid="play-quests" className="flex flex-col gap-0.5 border-t pt-2 text-xs">
+            <span className="font-medium">Quests</span>
+            {world.quests.map((q) => (
+              <button key={q.id} type="button" className={rowBtn} onClick={() => { const id = q.targetIds[0]; if (id && tasksById.has(id)) focusTaskFromTray(id); }}>
+                <span className={q.completedAt ? "line-through text-muted-foreground" : ""}>{q.title}</span>
+                <span className="ml-1 text-muted-foreground">{q.progress}/{q.targetCount}{q.completedAt ? " · +15" : ""}</span>
+              </button>
+            ))}
+          </div>
+        ) : null}
+        {trayOpen && world.pulse ? (
+          <div data-testid="play-pulse" className="flex flex-col gap-0.5 border-t pt-2 text-xs">
+            <span className="font-medium">Team pulse · {divisionsById.get(world.pulse.divisionId)?.name}</span>
+            <span className="text-muted-foreground">{world.pulse.weekXp} XP this week · {world.pulse.onTimeRate == null ? "no completions yet" : `${Math.round(world.pulse.onTimeRate * 100)}% on time`} · {world.pulse.activeMembers} active</span>
+            {world.leaderboard ? (
+              <ol className="mt-1 flex flex-col gap-0.5">
+                {world.leaderboard.slice(0, 5).map((l, i) => <li key={l.userId} className="flex justify-between"><span>{i + 1}. {l.name}</span><span className="text-muted-foreground">Lv {l.level} · {l.xp}</span></li>)}
+                {world.leaderboard.length === 0 ? <li className="text-muted-foreground">Nobody has opted in yet.</li> : null}
+              </ol>
+            ) : null}
+            {world.leaderboard ? (
+              <label className="mt-1 flex items-center gap-1 text-muted-foreground"><input type="checkbox" checked={world.me.leaderboardOptIn} onChange={(e) => { const on = e.target.checked; setWorld((w) => ({ ...w, me: { ...w.me, leaderboardOptIn: on } })); void setLeaderboardOptInAction(on).then(() => refetchWorld()).then((fresh) => { if (fresh) setWorld((w) => ({ ...w, leaderboard: fresh.leaderboard })); }); }} /> Show me on the leaderboard</label>
+            ) : null}
+          </div>
         ) : null}
       </div>
 

@@ -1,6 +1,6 @@
 import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { db } from "@/db";
-import { activityLog, handoffs, taskChecklistItems } from "@/db/schema";
+import { activityLog, handoffs, playProfiles, taskChecklistItems } from "@/db/schema";
 import { listActiveEvents } from "@/lib/events/service";
 import { unreadCount } from "@/lib/notifications";
 import { listDivisions, listUsersWithMemberships } from "@/lib/org/service";
@@ -9,6 +9,8 @@ import { getDependencyBadges } from "@/lib/tasks/dependency-engine";
 import { getTaskScoped, listEventTasks } from "@/lib/tasks/service";
 import type { PlayDivision, PlayEvent, PlayHandoff, PlayPerson, PlayTask, PlayWorld } from "./types";
 import { initialsOf } from "./util";
+import { divisionLeaderboard, divisionPulse, myPlayProfile } from "./xp/admin";
+import { generateQuestsFor } from "./xp/quests";
 import { divisionColor } from "./world/layout";
 
 // EPIC-024 T-242 — the world snapshot. One permission-scoped read that the
@@ -109,7 +111,8 @@ export async function getPlayWorld(actor: Actor): Promise<PlayWorld> {
   );
 
   // ---- org: rooms and characters ------------------------------------------
-  const [divisionRows, users] = await Promise.all([listDivisions(), listUsersWithMemberships()]);
+  const [divisionRows, users, playRows] = await Promise.all([listDivisions(), listUsersWithMemberships(), db.select({ userId: playProfiles.userId, level: playProfiles.level, cosmetics: playProfiles.cosmetics }).from(playProfiles)]);
+  const playByUser = new Map(playRows.map((p) => [p.userId, p]));
   const active = users.filter((u) => u.isActive && u.role !== "external");
   const divisions: PlayDivision[] = divisionRows.map((d) => {
     const members = active.filter((u) => u.memberships.some((m) => m.divisionId === d.id));
@@ -133,6 +136,8 @@ export async function getPlayWorld(actor: Actor): Promise<PlayWorld> {
       avatarUrl: u.avatarPath ? `/api/files/${u.avatarPath}` : null,
       divisionId: primary?.divisionId ?? null,
       isHead: !!headOf,
+      level: playByUser.get(u.id)?.level ?? 0,
+      cosmetics: ((playByUser.get(u.id)?.cosmetics as PlayPerson["cosmetics"] | null) ?? {}),
     };
   });
   const me = people.find((p) => p.id === actor.id);
@@ -164,8 +169,20 @@ export async function getPlayWorld(actor: Actor): Promise<PlayWorld> {
     db.select({ createdAt: activityLog.createdAt }).from(activityLog).orderBy(desc(activityLog.createdAt)).limit(1),
   ]);
 
+  // EPIC-026: my progress, today's quests (generated on first sight), team pulse, leaderboard
+  const myDivision = me?.divisionId ?? null;
+  const [mine, quests, pulse, leaderboard] = await Promise.all([
+    myPlayProfile(actor.id),
+    generateQuestsFor(actor.id, now).catch(() => []),
+    myDivision ? divisionPulse(myDivision) : Promise.resolve(null),
+    myDivision ? divisionLeaderboard(myDivision) : Promise.resolve(null),
+  ]);
+
   return {
-    me: { id: actor.id, divisionId: me?.divisionId ?? null },
+    me: { id: actor.id, divisionId: myDivision, xp: mine.xp, level: mine.level, nextLevelXp: mine.nextLevelXp, todayXp: mine.today, leaderboardOptIn: mine.leaderboardOptIn },
+    quests,
+    pulse: pulse ? { divisionId: pulse.divisionId, weekXp: pulse.weekXp, onTimeRate: pulse.onTimeRate, activeMembers: pulse.activeMembers } : null,
+    leaderboard,
     divisions,
     people,
     tasks,

@@ -1,6 +1,6 @@
 # EPIC-026: Backstage Play — gamification (XP, quests, recognition)
 
-status: backlog
+status: ready-for-qa
 environment: dev
 phase: 5
 priority: P1
@@ -49,7 +49,7 @@ status, visibility or anyone's permissions.
 
 ### Schema
 
-- [ ] **T-260** Reviewed migration adding `play_profiles` (user id PK, level, xp,
+- [x] **T-260** Reviewed migration adding `play_profiles` (user id PK, level, xp,
       cosmetics JSON, leaderboard opt-in, season id), `play_xp_ledger` (id, user id,
       activity id, rule, points, task/handoff/approval id, event id, division id,
       created at; **unique (activity id, rule)**), `play_badges` (catalogue: key, name,
@@ -61,7 +61,7 @@ status, visibility or anyone's permissions.
 
 ### XP rules engine
 
-- [ ] **T-261** `src/lib/play/xp/rules.ts` (table from the PRD: on-time +10, late +3,
+- [x] **T-261** `src/lib/play/xp/rules.ts` (table from the PRD: on-time +10, late +3,
       unblock +5×N max 30, handoff ≤ 24 h +5, approval ≤ 24 h +5, checklist +1 max 10/d,
       mention reply ≤ 4 h +2 max 10/d, quest +15; daily cap 100; level = 100 × level²
       cumulative) and `scoreActivity(activity, ctx)` pure scorer with guards (task age
@@ -73,7 +73,7 @@ status, visibility or anyone's permissions.
 
 ### Daily quests
 
-- [ ] **T-262** Generator at 06:00 WIB per active user from real data: "clear N overdue",
+- [x] **T-262** Generator at 06:00 WIB per active user from real data: "clear N overdue",
       "finish a task others wait on", "decide N approvals/handoffs", "update stale
       in-progress tasks (no activity 3 d)"; max 3 quests/day; completion detected from
       ledger entries; lobby notice board in Play + a strip on My Tasks (classic UI).
@@ -82,7 +82,7 @@ status, visibility or anyone's permissions.
 
 ### Levels, badges, cosmetics
 
-- [ ] **T-263** Level curve and level-up moment (in-world confetti via `ParticlePool`,
+- [x] **T-263** Level curve and level-up moment (in-world confetti via `ParticlePool`,
       speech bubble); badge catalogue (First Handoff, Unblocker ×5, Zero-Overdue Week,
       Show-Day Hero, Approval Sprinter, Season Finisher) awarded by ledger queries;
       cosmetic unlocks per level (hat, desk plant, monitor skin, chair colour) stored in
@@ -91,7 +91,7 @@ status, visibility or anyone's permissions.
 
 ### Team pulse, leaderboard & recap
 
-- [ ] **T-264** Division "team pulse" panel (aggregate XP this week, on-time rate, open
+- [x] **T-264** Division "team pulse" panel (aggregate XP this week, on-time rate, open
       waiters, streak of zero-overdue days) visible to members and heads; leaderboard
       component shown only when the division's head opted in (`play_profiles`/division
       setting); weekly recap (Monday 08:00 WIB) via existing notifications + optional
@@ -100,7 +100,7 @@ status, visibility or anyone's permissions.
 
 ### Owner controls
 
-- [ ] **T-265** Admin → Play settings: enable/disable Play (from T-240), rule weights and
+- [x] **T-265** Admin → Play settings: enable/disable Play (from T-240), rule weights and
       caps (validated with zod, stored in `app_settings`), leaderboard policy
       (off / head opt-in / on), season start/reset (archives ledger totals into the season,
       keeps badges), and a "flagged activity" report (T-266). Changes apply without
@@ -108,7 +108,7 @@ status, visibility or anyone's permissions.
 
 ### Anti-gaming guards
 
-- [ ] **T-266** Guards as tested rules: reopen→close within 7 d scores 0; task created
+- [x] **T-266** Guards as tested rules: reopen→close within 7 d scores 0; task created
       and completed within 5 min by the same actor scores 0 and is flagged; bulk status
       flips (> 10 completions within 10 min) beyond the daily cap are flagged; ledger
       unique constraint makes replays idempotent; flagged rows surface in the Owner
@@ -148,6 +148,56 @@ status, visibility or anyone's permissions.
 
 ## Automation Log
 
+- 2026-09-07 Owner ("lanjutkan lagi progressnya" after the test deploy) → started. **T-260 shipped**:
+  `src/db/schema/play.ts` (play_profiles, play_xp_ledger unique(activity, rule), play_badges,
+  play_badge_awards, play_quests unique(user, day, kind), play_seasons), migration
+  `0047_play-gamification.sql`, applied to the TEST database only (port 5440). Production DB
+  untouched — the Owner runs `pnpm db:migrate` there at deploy time.
+- 2026-09-07 **T-261 shipped**: `src/lib/play/xp/rules.ts` is the PRD table as data
+  (`DEFAULT_RULES`) plus a pure `scoreActivity(facts, cfg)`; `service.ts` gathers facts from the
+  DB, writes the ledger (`onConflictDoNothing` on activity+rule), refreshes xp/level, evaluates
+  badges, progresses quests. Hook: `logActivity` now `.returning()`s the row and fires scoring
+  without awaiting it. `recompute(userId)` replays the user's log; `nightlyDriftCheck` runs 02:00
+  WIB. 20 unit tests incl. a 400-row property test (replay == incremental, never above the daily
+  cap). Finding: `task_dependencies` has no timestamp, so "waiter existed ≥ 1 h" uses the waiting
+  task's age; `approval_steps` has no creation stamp, so "asked at" is the approval's creation.
+  Two log rows the app did not write before were added so their rules can fire:
+  `task.checklist_done` (on tick) and `comment.add` (no body, only mentions) — the latter also
+  gives EPIC-025 its comment bubbles.
+- 2026-09-07 **T-262 shipped**: `quests.ts` generates ≤ 3 quests/day from the same
+  permission-scoped lists the boards use (clear_overdue, unblock, decide, refresh_stale),
+  idempotent per user+day+kind; generated at 06:00 WIB and on first Play load; completion is
+  detected from scored rows and writes `play.quest_complete` (+15 through the normal path).
+  Shown in the Play tray, on My Tasks (strip) and the profile.
+- 2026-09-07 **T-263 shipped**: level = ⌊√(xp/100)⌋; `play.level_up` activity row → Play stream →
+  confetti + wave + bubble; cosmetics by level (cap L1, desk fern L2, wide monitor L3 *not
+  rendered*, red chair L4 *not rendered*, crown L5) — hat and fern are drawn, the instanced
+  monitor/chair variants are not (instanced kinds are static; deferred). Badges: first_handoff,
+  unblocker_5, on_time_7, show_day_hero, approval_sprinter, level_5 (catalogue upserted lazily).
+- 2026-09-07 **T-264 shipped**: division pulse (week XP, on-time rate, active members) in the
+  tray; leaderboard only when policy allows (`play_leaderboard` off | head_opt_in | on, plus
+  `play_leaderboard_<division>` for heads) AND the person opted in (`play_profiles.leaderboard_opt_in`,
+  checkbox in the tray); weekly recap Monday 08:00 WIB as an in-app notification
+  (`play_recap` type added to the text-typed notifications). WhatsApp mirror deferred (Owner).
+- 2026-09-07 **T-265 shipped**: Settings → Integrations → "Play — XP rules & season": points and
+  caps (validated by `mergeRules`, stored in `app_settings.play_rules`, applied on the next scored
+  activity), leaderboard policy, season reset (archives xp/level into `play_seasons.archive`,
+  zeroes ledger points before the reset, keeps badges), flagged-activity report (last 50).
+- 2026-09-07 **T-266 shipped**: guards live in the rule table and are unit-tested: reopen→close
+  within 7 d, self-created task done within 5 min, > 10 completions in 10 min, trivial task
+  (< 30 min old and no checklist/description) → 0 XP, flagged, visible in the Owner report.
+- 2026-09-07 Verified on the test DB (dev server): completing a substantive task from the Play
+  panel → ledger `task_done_on_time:10` within 2 s, profile 10 XP, tray chip "+10 today", admin
+  panel renders, profile section renders.
+- 2026-09-07 Verified quests on the test DB: an overdue task assigned to me produced
+  "Clear 1 overdue task" on first Play load and on the My Tasks strip; finishing it from the panel
+  completed the quest. Bug found and fixed in the same pass: the quest/level-up/badge rows were
+  inserted straight into `activity_log`, bypassing the scoring hook — they now go through
+  `logActivity`. The tripwire proved itself: `recompute` reported drift +15 (the unscored quest
+  row) and 0 on the second run. Ledger after: on_time 10, late 3, quest 15.
+- 2026-09-07 Status → ready-for-qa. Open for human QA: (1) run `pnpm db:migrate` on production
+  before deploying this branch, (2) decide the leaderboard policy (default off), (3) WhatsApp
+  recap mirror yes/no, (4) monitor/chair cosmetics are unlocked but not drawn (instanced kinds).
 - 2026-09-07 Epic created. Decisions recorded in `PRD-GAME.md`: no real money/prizes/HR
   consequences; leaderboard off by default; ledger derived from `activity_log` so the
   score can always be recomputed.

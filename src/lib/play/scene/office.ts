@@ -16,6 +16,7 @@ import { layout, type DeskSlot, type OfficeLayout, type Room } from "../world/la
 import { mapTask, personClip, type TaskVisual } from "../world/mapping";
 import { IsoCamera } from "./camera";
 import { CharacterKit, type Character, type ClipName } from "./characters";
+import { cosmeticsForLevel } from "../xp/badges";
 import { boardTexture, bubbleTexture, countdownLabel, drawBoard, signTexture } from "./textures";
 
 // EPIC-024/025 — the office scene. Everything drawn here comes from `layout()`
@@ -178,6 +179,56 @@ export class OfficeScene {
     this.scene.add(char.group);
     this.pickables.push(char.proxy);
     this.characters.set(p.id, char);
+    this.applyCosmetics(p.id);
+  }
+
+  // ---- cosmetics (EPIC-026 T-263): purely visual, unlocked by level -----------------
+  private readonly cosmeticMeshes = new Map<string, THREE.Object3D[]>();
+  applyCosmetics(personId: string): void {
+    const person = this.world.people.find((x) => x.id === personId);
+    const char = this.characters.get(personId);
+    const desk = this.deskOf.get(personId);
+    if (!person || !char) return;
+    (this.cosmeticMeshes.get(personId) ?? []).forEach((m) => { m.parent?.remove(m); (m as THREE.Mesh).geometry?.dispose(); });
+    const out: THREE.Object3D[] = [];
+    const S = this.r.shared, c = person.cosmetics ?? {};
+    if (c.hat === "cap") {
+      const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.22, 0.12, 12), materialFactory(S, 0xe62e2e, "skin"));
+      cap.position.set(0, 1.72, 0.02);
+      const peak = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.03, 0.18), materialFactory(S, 0xe62e2e, "skin"));
+      peak.position.set(0, 1.68, 0.2);
+      char.group.add(cap, peak); out.push(cap, peak);
+    } else if (c.hat === "crown") {
+      const crown = new THREE.Mesh(new THREE.TorusGeometry(0.2, 0.05, 6, 10), materialFactory(S, 0xf5c518, "metal", { emissive: 0x4a3a00 }));
+      crown.position.set(0, 1.78, 0); crown.rotation.x = Math.PI / 2;
+      char.group.add(crown); out.push(crown);
+    }
+    if (c.plant === "fern" && desk) {
+      const fern = new THREE.Mesh(mergeParts([
+        { g: new THREE.CylinderGeometry(0.1, 0.08, 0.18, 8), c: 0x8a5a3c, m: partMatrix(0, 0.09, 0) },
+        { g: new THREE.SphereGeometry(0.18, 8, 6), c: 0x4fa35a, m: partMatrix(0, 0.3, 0) },
+      ]), materialFactory(S, 0xffffff, "foliage"));
+      const f = desk.slot.facing;
+      fern.position.set(desk.slot.x + Math.cos(f) * 0.7, 0.82, desk.slot.z - Math.sin(f) * 0.7);
+      this.scene.add(fern); out.push(fern);
+    }
+    this.cosmeticMeshes.set(personId, out);
+  }
+
+  /** Level-up moment: confetti + bubble + a wave (EPIC-026 T-263). */
+  levelUp(personId: string, level: number): void {
+    const p = this.personAt(personId);
+    const person = this.world.people.find((x) => x.id === personId);
+    if (!p) return;
+    this.bubble(personId, `Level ${level}!`);
+    if (person) { person.level = level; person.cosmetics = cosmeticsForLevel(level); this.applyCosmetics(personId); }
+    if (this.reducedMotion) return;
+    this.gesture(personId, "wave", 2.5);
+    const cols = [[0.9, 0.2, 0.2], [0.95, 0.75, 0.1], [0.2, 0.55, 0.95], [0.3, 0.8, 0.45], [1, 1, 1]];
+    for (let i = 0; i < 48; i++) {
+      const c = cols[i % cols.length], a = Math.random() * Math.PI * 2, sp = 1.5 + Math.random() * 2;
+      this.particles.emit(p.x, 1.9, p.z, Math.cos(a) * sp, 2.5 + Math.random() * 2.5, Math.sin(a) * sp, 0.12, 1.6 + Math.random() * 0.6, c[0], c[1], c[2], 0.2, 1);
+    }
   }
 
   private spawnCourier(c: CourierRef): void {

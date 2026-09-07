@@ -269,3 +269,52 @@ export async function setPlayEnabledAction(
     };
   }
 }
+
+// ---- Backstage Play — Owner controls (EPIC-026 T-265) -------------------------
+// Every one of these re-asserts org.manage inside src/lib/play/xp/admin.ts.
+export async function savePlayRulesAction(input: unknown): Promise<{ error?: string } | void> {
+  const actor = await sessionActor();
+  if (!actor) return { error: "Not signed in." };
+  try {
+    const { savePlayRules } = await import("@/lib/play/xp/admin");
+    await savePlayRules(actor, input);
+    revalidatePath("/settings");
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : "Could not save." };
+  }
+}
+export async function resetPlayRulesAction(): Promise<{ error?: string } | void> {
+  const actor = await sessionActor();
+  if (!actor) return { error: "Not signed in." };
+  try {
+    const { resetPlayRules } = await import("@/lib/play/xp/admin");
+    await resetPlayRules(actor);
+    revalidatePath("/settings");
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : "Could not reset." };
+  }
+}
+export async function setPlayLeaderboardPolicyAction(policy: string): Promise<{ error?: string } | void> {
+  const actor = await sessionActor();
+  if (!actor) return { error: "Not signed in." };
+  if (policy !== "off" && policy !== "head_opt_in" && policy !== "on") return { error: "Unknown policy." };
+  try {
+    const { setLeaderboardPolicy } = await import("@/lib/play/xp/admin");
+    await setLeaderboardPolicy(actor, policy);
+    revalidatePath("/settings");
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : "Could not change that." };
+  }
+}
+export async function resetPlaySeasonAction(nextName: string): Promise<{ error?: string; archived?: number } | void> {
+  const actor = await sessionActor();
+  if (!actor) return { error: "Not signed in." };
+  try {
+    const { resetSeason } = await import("@/lib/play/xp/admin");
+    const r = await resetSeason(actor, String(nextName ?? "").slice(0, 60));
+    revalidatePath("/settings");
+    return { archived: r.archived };
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : "Could not reset the season." };
+  }
+}

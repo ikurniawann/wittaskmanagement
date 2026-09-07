@@ -20,6 +20,8 @@ export type NotificationType =
   | "priority_urgent"
   | "handoff_request"
   | "handoff_decided"
+  // Backstage Play weekly recap (EPIC-026 T-264) — in-app only
+  | "play_recap"
   | "approval_requested"
   | "approval_decided"
   | "submission_received"

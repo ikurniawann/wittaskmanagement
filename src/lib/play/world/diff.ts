@@ -18,7 +18,8 @@ export type Intent =
   | { kind: "task"; id: string; effect: "restack" | "complete" | "spawn" }
   | { kind: "handoffs" }
   | { kind: "approvals" }
-  | { kind: "bubble"; personId: string; text: string };
+  | { kind: "bubble"; personId: string; text: string }
+  | { kind: "levelup"; personId: string; level: number };
 
 export function entityOf(entity: string): { type: string; id: string } {
   const i = entity.indexOf(":");
@@ -37,6 +38,8 @@ export function applyDiff(row: ActivityRow): Intent[] {
   const out: Intent[] = [];
   const bubble = (text: string) => { if (row.actorId) out.push({ kind: "bubble", personId: row.actorId, text }); };
 
+  if (type === "task" && row.action === "comment.add") { bubble("Commented"); return out; }
+  if (type === "task" && row.action === "task.checklist_done") { out.push({ kind: "task", id, effect: "restack" }); return out; }
   if (type === "task" && id) {
     if (row.action === "task.status") {
       const to = row.detail?.to;
@@ -66,7 +69,13 @@ export function applyDiff(row: ActivityRow): Intent[] {
     if (text) bubble(text);
     return out;
   }
-  return out; // auth.*, user.*, play.*, setting:* … nothing to draw
+  if (type === "play" && row.actorId) {
+    if (row.action === "play.level_up") out.push({ kind: "levelup", personId: row.actorId, level: Number(row.detail?.level ?? 0) });
+    else if (row.action === "play.badge") bubble(`Badge: ${String(row.detail?.badge ?? "").replace(/_/g, " ")}`);
+    return out;
+  }
+  if (type === "quest" && row.action === "play.quest_complete") { bubble("Quest done +15"); return out; }
+  return out; // auth.*, user.*, setting:* … nothing to draw
 }
 
 /** Fold a batch into the minimal set (one refetch per task, one per list). */
@@ -74,6 +83,7 @@ export function coalesce(intents: Intent[]): Intent[] {
   const tasks = new Map<string, Intent>();
   let handoffs = false, approvals = false;
   const bubbles: Intent[] = [];
+  const out0: Intent[] = [];
   for (const i of intents) {
     if (i.kind === "task") {
       const prev = tasks.get(i.id);
@@ -83,7 +93,7 @@ export function coalesce(intents: Intent[]): Intent[] {
     else if (i.kind === "approvals") approvals = true;
     else bubbles.push(i);
   }
-  const out: Intent[] = [...tasks.values()];
+  const out: Intent[] = [...tasks.values(), ...out0];
   if (handoffs) out.push({ kind: "handoffs" });
   if (approvals) out.push({ kind: "approvals" });
   return out.concat(bubbles.slice(-6)); // never more than a handful of bubbles per batch

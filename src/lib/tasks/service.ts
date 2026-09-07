@@ -615,6 +615,16 @@ export async function toggleChecklistItem(actor: Actor, itemId: string) {
     .update(taskChecklistItems)
     .set({ done: !item.done })
     .where(eq(taskChecklistItems.id, itemId));
+  // Backstage Play (EPIC-026): a ticked item is a scorable event; unticking is not.
+  if (!item.done) {
+    await logActivity({
+      actorId: actor.id,
+      action: "task.checklist_done",
+      entity: `task:${item.taskId}`,
+      detail: { itemId },
+      eventId: task.eventId,
+    });
+  }
 }
 
 // ---- labels ---------------------------------------------------------------
@@ -877,6 +887,17 @@ export async function addComment(
       attachmentName: attachment?.name ?? null,
     })
     .returning();
+
+  // Backstage Play (EPIC-025/026): comments now leave an activity row — the
+  // office draws a speech bubble from it and the XP ledger scores mention
+  // replies. The body is NOT copied into the log; only who/where/mentions.
+  await logActivity({
+    actorId: actor.id,
+    action: "comment.add",
+    entity: `task:${taskId}`,
+    detail: { commentId: comment.id, mentions: validMentions.map((m) => m.id) },
+    eventId: task.eventId,
+  });
 
   await notifyMany(
     validMentions.map((m) => m.id).filter((id) => id !== actor.id),

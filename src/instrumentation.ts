@@ -71,6 +71,51 @@ export async function register() {
     },
     { timezone: "Asia/Jakarta" },
   );
+  // Backstage Play (EPIC-026): quests at 06:00 WIB, recap Monday 08:00 WIB,
+  // and the nightly XP recompute that proves the ledger still equals the log.
+  cron.schedule(
+    "0 6 * * *",
+    async () => {
+      try {
+        const { isPlayEnabled } = await import("@/lib/play/settings");
+        if (!(await isPlayEnabled())) return;
+        const { generateAllQuests } = await import("@/lib/play/xp/quests");
+        console.log(`[cron] play quests generated: ${await generateAllQuests()}`);
+      } catch (error) {
+        console.error("[cron] play quests failed:", error);
+      }
+    },
+    { timezone: "Asia/Jakarta" },
+  );
+  cron.schedule(
+    "0 8 * * 1",
+    async () => {
+      try {
+        const { isPlayEnabled } = await import("@/lib/play/settings");
+        if (!(await isPlayEnabled())) return;
+        const { sendWeeklyRecaps } = await import("@/lib/play/xp/recap");
+        console.log(`[cron] play recap sent to ${await sendWeeklyRecaps()} users`);
+      } catch (error) {
+        console.error("[cron] play recap failed:", error);
+      }
+    },
+    { timezone: "Asia/Jakarta" },
+  );
+  cron.schedule(
+    "0 2 * * *",
+    async () => {
+      try {
+        const { isPlayEnabled } = await import("@/lib/play/settings");
+        if (!(await isPlayEnabled())) return;
+        const { nightlyDriftCheck } = await import("@/lib/play/xp/service");
+        const r = await nightlyDriftCheck();
+        console.log(`[cron] play XP recompute: ${r.users} users, ${r.drifted} drifted`);
+      } catch (error) {
+        console.error("[cron] play recompute failed:", error);
+      }
+    },
+    { timezone: "Asia/Jakarta" },
+  );
   cron.schedule(
     "0 7 * * 1",
     async () => {

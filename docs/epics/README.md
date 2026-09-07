@@ -36,7 +36,7 @@
 | [EPIC-023](EPIC-023-agent-api.md) | Phase 4 | Agent API — external agents over WhatsApp | P1 | ready-for-qa |
 | [EPIC-024](EPIC-024-play-foundation.md) | Phase 5 | Backstage Play — foundation (3D office generated from data, read-only) | P1 | ready-for-qa |
 | [EPIC-025](EPIC-025-play-live-actions.md) | Phase 5 | Backstage Play — live world & in-world actions | P1 | ready-for-qa |
-| [EPIC-026](EPIC-026-play-gamification.md) | Phase 5 | Backstage Play — gamification (XP, quests, recognition) | P1 | backlog |
+| [EPIC-026](EPIC-026-play-gamification.md) | Phase 5 | Backstage Play — gamification (XP, quests, recognition) | P1 | ready-for-qa |
 
 **Definition of MVP:** completion of **EPIC-000 → EPIC-003** (Phase 0 + Phase 1 — a division can run its event work end-to-end).
 
