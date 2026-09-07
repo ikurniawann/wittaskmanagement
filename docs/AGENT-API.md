@@ -4,7 +4,7 @@ API untuk agent eksternal (OpenClaw / Hermes / n8n / skrip apa pun) agar bisa
 **membaca, menulis, dan meng-update** RVC Backstage atas nama orang yang
 sedang berbicara dengan agent — misalnya lewat WhatsApp.
 
-- **Base URL**: `https://rvc.reddie.id/api/agent`
+- **Base URL**: `https://ingat.reddie.id/api/agent`
 - **Format**: JSON, UTF-8. Semua respons dibungkus `{ "ok": true, "data": … }`
   atau `{ "ok": false, "error": "…" }`.
 - **Shipped**: EPIC-023, 2026-08-18. Diuji end-to-end terhadap server live.
@@ -59,7 +59,7 @@ tombol **Revoke** mematikannya seketika.
 Panggilan pertama yang harus dilakukan agent (health-check + tahu hak akses).
 
 ```bash
-curl https://rvc.reddie.id/api/agent/me \
+curl https://ingat.reddie.id/api/agent/me \
   -H "Authorization: Bearer rvca_XXXX" \
   -H "X-On-Behalf-Of: 081809078014"
 ```
@@ -125,7 +125,7 @@ Status yang valid: `backlog · todo · in_progress · in_review · blocked · do
 ### `POST /tasks` — buat task
 
 ```bash
-curl -X POST https://rvc.reddie.id/api/agent/tasks \
+curl -X POST https://ingat.reddie.id/api/agent/tasks \
   -H "Authorization: Bearer rvca_XXXX" \
   -H "X-On-Behalf-Of: 081809078014" \
   -H "Content-Type: application/json" \
@@ -154,7 +154,7 @@ Field yang bisa diubah: `status`, `priority`, `title`, `dueDate`
 (`null` = hapus due date). Kirim hanya yang berubah:
 
 ```bash
-curl -X PATCH https://rvc.reddie.id/api/agent/tasks/{id} \
+curl -X PATCH https://ingat.reddie.id/api/agent/tasks/{id} \
   -H "Authorization: Bearer rvca_XXXX" \
   -H "X-On-Behalf-Of: 0812…" \
   -H "Content-Type: application/json" \
@@ -221,7 +221,7 @@ Opsional: `&replaceFileId=…` untuk menimpa sebagai versi baru, header
 `X-File-Type` untuk MIME.
 
 ```bash
-curl -X PUT "https://rvc.reddie.id/api/agent/dataroom/files?folderId=…&name=rider.pdf" \
+curl -X PUT "https://ingat.reddie.id/api/agent/dataroom/files?folderId=…&name=rider.pdf" \
   -H "Authorization: Bearer rvca_XXXX" -H "X-On-Behalf-Of: 0812…" \
   -H "X-File-Type: application/pdf" --data-binary @rider.pdf
 ```
@@ -356,7 +356,7 @@ Contoh handler (Node, apa pun framework WA-nya):
 
 ```js
 async function callRvc(method, path, senderPhone, body) {
-  const res = await fetch(`https://rvc.reddie.id/api/agent${path}`, {
+  const res = await fetch(`https://ingat.reddie.id/api/agent${path}`, {
     method,
     headers: {
       authorization: `Bearer ${process.env.RVC_AGENT_KEY}`,
