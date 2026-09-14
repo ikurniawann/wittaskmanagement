@@ -39,7 +39,7 @@ export async function POST(request: Request) {
     action?: string;
     to?: string;
   };
-  const { connect, disconnect, getStatus, sendText, isConnected } = await import(
+  const { connect, disconnect, getStatus, deliverText, isConnected } = await import(
     "@/lib/whatsapp/session"
   );
 
@@ -74,7 +74,9 @@ export async function POST(request: Request) {
       if (!to) {
         return NextResponse.json({ error: "Enter a number." }, { status: 400 });
       }
-      const sent = await sendText(
+      // waits for WhatsApp's verdict so a dropped message (error 463 on a
+      // cold contact) is reported instead of toasted as sent (2026-09-14)
+      const result = await deliverText(
         to,
         "Test message from Backstage — your WhatsApp gateway is working.",
       );
@@ -82,13 +84,13 @@ export async function POST(request: Request) {
         actorId: actor!.id,
         action: "whatsapp.test",
         entity: "org:whatsapp",
-        detail: { delivered: sent },
+        detail: { delivered: result.sent, code: result.code ?? null },
       });
-      return sent
+      return result.sent
         ? NextResponse.json({ ok: true })
         : NextResponse.json(
-            { error: "Could not send — check the number format." },
-            { status: 400 },
+            { error: result.reason ?? "Could not send — check the number format." },
+            { status: result.code ? 502 : 400 },
           );
     }
     default:

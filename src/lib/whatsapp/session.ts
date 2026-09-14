@@ -1,7 +1,18 @@
 import { mkdir, rm } from "node:fs/promises";
 import path from "node:path";
 import { env } from "@/lib/env";
+import { describeAckError, shouldRetryAfter463, waitForAck, type AckEmitter } from "./delivery";
 import { toWhatsAppJid } from "./normalize";
+import {
+  isTcTokenExpired,
+  mergedTcTokenIndexWrite,
+  resolveIssuanceJid,
+  resolveTcTokenJid,
+  storeTcTokensFromIqResult,
+  type BinaryNode,
+  type TcTokenEntry,
+  type TcTokenKeys,
+} from "./tc-token";
 
 // Baileys WhatsApp gateway (EPIC-015). Baileys is an UNOFFICIAL WhatsApp Web
 // client: it holds one long-lived socket per linked device. Two consequences
@@ -194,27 +205,131 @@ export async function disconnect(): Promise<void> {
   await rm(sessionDir(), { recursive: true, force: true }).catch(() => {});
 }
 
+// The slice of the Baileys socket the sender touches. Typed here rather than
+// imported so the module still loads when the dependency is absent.
+interface GatewaySocket {
+  ev: AckEmitter;
+  sendMessage: (jid: string, content: { text: string }) => Promise<{ key?: { id?: string | null } } | undefined>;
+  issuePrivacyTokens: (jids: string[], timestamp?: number) => Promise<BinaryNode>;
+  authState: { keys: TcTokenKeys };
+  signalRepository: {
+    lidMapping: {
+      getLIDForPN: (pn: string) => Promise<string | null>;
+      getPNForLID: (lid: string) => Promise<string | null>;
+    };
+  };
+  serverProps?: { lidTrustedTokenIssueToLid?: boolean };
+}
+
+export interface DeliveryResult {
+  sent: boolean;
+  /** why it did not go through — readable, safe to show an admin */
+  reason?: string;
+  /** WhatsApp's ack error code, when that is what stopped it */
+  code?: string;
+}
+
+/** how long to wait for WhatsApp to reject a message before assuming it went */
+const ACK_WINDOW_MS = 4_000;
+
 /**
- * Sends a text message. Returns false (never throws) when the gateway is
- * offline or the number is unusable, so callers stay unaffected.
+ * Makes sure a privacy token (tctoken) for the contact is stored before the
+ * first message, the way WA Web issues one when a chat is opened. Without it
+ * the first message to a cold contact is dropped with error 463 (Owner
+ * 2026-09-14). Returns whether a usable token is stored afterwards. Fails
+ * soft: the send still happens, Baileys' own recovery then kicks in.
  */
-export async function sendText(to: string, text: string): Promise<boolean> {
-  if (!isConnected()) return false;
+async function ensureTcToken(socket: GatewaySocket, jid: string): Promise<boolean> {
+  try {
+    const { lidMapping } = socket.signalRepository;
+    const getLIDForPN = lidMapping.getLIDForPN.bind(lidMapping);
+    const getPNForLID = lidMapping.getPNForLID.bind(lidMapping);
+    const storageJid = await resolveTcTokenJid(jid, getLIDForPN);
+    const usable = async () => {
+      const entry = (await socket.authState.keys.get("tctoken", [storageJid]))[storageJid];
+      return Boolean(entry?.token?.length) && !isTcTokenExpired(entry?.timestamp);
+    };
+    if (await usable()) return true;
+
+    const issueJid = await resolveIssuanceJid(
+      jid,
+      Boolean(socket.serverProps?.lidTrustedTokenIssueToLid),
+      getLIDForPN,
+      getPNForLID,
+    );
+    const issuedAt = Math.floor(Date.now() / 1000);
+    const result = await socket.issuePrivacyTokens([issueJid], issuedAt);
+    await storeTcTokensFromIqResult({ result, fallbackJid: storageJid, keys: socket.authState.keys, getLIDForPN });
+    // record that we issued one, so Baileys' post-send issuance does not repeat it
+    const current: TcTokenEntry | null | undefined = (await socket.authState.keys.get("tctoken", [storageJid]))[storageJid];
+    const indexWrite = await mergedTcTokenIndexWrite(socket.authState.keys, [storageJid]);
+    await socket.authState.keys.set({
+      tctoken: {
+        [storageJid]: { token: new Uint8Array(0), ...current, senderTimestamp: issuedAt },
+        ...indexWrite,
+      },
+    });
+    const ok = await usable();
+    console.log(`[whatsapp] tctoken for ${jid}: ${ok ? "issued" : "not granted"}`);
+    return ok;
+  } catch (error) {
+    console.warn(`[whatsapp] tctoken step failed for ${jid}:`, error instanceof Error ? error.message : error);
+    return false;
+  }
+}
+
+/**
+ * Sends a text and reports what WhatsApp did with it. Never throws. A cold
+ * contact gets a privacy token first; a 463 on a bare first send earns one
+ * retry with the token, a 463 despite a token is reported as-is (the number
+ * is restricted; retrying would deepen it).
+ */
+export async function deliverText(to: string, text: string): Promise<DeliveryResult> {
+  if (!isConnected()) return { sent: false, reason: "Gateway is not connected." };
   const jid = toWhatsAppJid(to, process.env.WHATSAPP_COUNTRY_CODE || "62");
   if (!jid) {
     console.warn(`[whatsapp] unusable number, skipped: ${to}`);
-    return false;
+    return { sent: false, reason: "That number cannot be used on WhatsApp." };
   }
+  const socket = state.socket as unknown as GatewaySocket;
+
+  const attempt = async (tokenPresent: boolean): Promise<DeliveryResult | { retryable: true }> => {
+    const msg = await socket.sendMessage(jid, { text });
+    const id = msg?.key?.id;
+    if (!id) return { sent: true };
+    const ack = await waitForAck(socket.ev, id, ACK_WINDOW_MS);
+    if (ack.outcome !== "error") return { sent: true };
+    console.warn(`[whatsapp] ${jid} rejected message ${id} with error ${ack.code}`);
+    if (ack.code === "463") {
+      // Baileys' own 463 recovery issues a token in the background — give it a moment
+      await new Promise((r) => setTimeout(r, 1_500));
+      if (shouldRetryAfter463(tokenPresent, await ensureTcToken(socket, jid))) return { retryable: true };
+    }
+    return { sent: false, code: ack.code, reason: describeAckError(ack.code, state.me) };
+  };
+
   try {
-    const socket = state.socket as {
-      sendMessage: (jid: string, content: { text: string }) => Promise<unknown>;
-    };
-    await socket.sendMessage(jid, { text });
-    return true;
+    const tokenPresent = await ensureTcToken(socket, jid);
+    const first = await attempt(tokenPresent);
+    if (!("retryable" in first)) return first;
+    console.log(`[whatsapp] retrying ${jid} once, now with a privacy token`);
+    const second = await attempt(true);
+    return "retryable" in second
+      ? { sent: false, code: "463", reason: describeAckError("463", state.me) }
+      : second;
   } catch (error) {
     console.error(`[whatsapp] send failed to ${jid}:`, error);
-    return false;
+    return { sent: false, reason: error instanceof Error ? error.message : "Send failed." };
   }
+}
+
+/**
+ * Sends a text message. Returns false (never throws) when the gateway is
+ * offline, the number is unusable, or WhatsApp rejected it, so callers stay
+ * unaffected. Use deliverText when the reason matters.
+ */
+export async function sendText(to: string, text: string): Promise<boolean> {
+  return (await deliverText(to, text)).sent;
 }
 
 /**
