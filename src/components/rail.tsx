@@ -166,13 +166,30 @@ export function RailProjectLink({
 }
 
 /** Workspace card at the foot of the rail; its menu is supplied by the server. */
+/** Fixed round box so a photo or initials sits dead-centre at any size. */
+export function AvatarTile({ children, className }: { children: ReactNode; className?: string }) {
+  return (
+    <span
+      className={cn(
+        "flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-card [&_img]:size-full [&_img]:object-cover [&_span]:size-full [&_span]:rounded-none [&_span]:border-0",
+        className,
+      )}
+    >
+      {children}
+    </span>
+  );
+}
+
 export function RailWorkspace({
-  short,
+  avatar,
+  kicker,
   name,
   expanded,
   menu,
 }: {
-  short: string;
+  /** the signed-in person's avatar (photo or initials) */
+  avatar: ReactNode;
+  kicker: string;
   name: string;
   expanded: boolean;
   menu: ReactNode;
@@ -209,13 +226,13 @@ export function RailWorkspace({
           expanded ? "w-full gap-3 p-2.5" : "size-11 justify-center border-transparent bg-transparent",
         )}
       >
-        <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-card text-[11px] font-black uppercase tracking-tight text-ink">
-          {short.slice(0, 3)}
-        </span>
+        <AvatarTile className={cn(expanded ? "size-9 text-[11px]" : "size-11 text-xs ring-2 ring-white/15")}>
+          {avatar}
+        </AvatarTile>
         {expanded ? (
           <>
             <span className="flex min-w-0 flex-1 flex-col leading-tight">
-              <span className="text-[0.66rem] font-semibold text-on-ink-muted">Workspace</span>
+              <span className="truncate text-[0.66rem] font-semibold text-on-ink-muted">{kicker}</span>
               <span className="truncate text-[0.78rem] font-bold text-white">{name}</span>
             </span>
             <ChevronDown className={cn("size-4 text-on-ink-muted transition-transform", open && "rotate-180")} />
@@ -253,6 +270,8 @@ export function Rail({
   projects,
   createHref,
   createLabel,
+  avatar,
+  userName,
   workspaceMenu,
 }: {
   short: string;
@@ -261,6 +280,8 @@ export function Rail({
   projects: RailProject[];
   createHref?: string;
   createLabel?: string;
+  avatar: ReactNode;
+  userName: string;
   workspaceMenu: ReactNode;
 }) {
   const expanded = useRailExpanded();
@@ -328,7 +349,7 @@ export function Rail({
       </nav>
 
       <div className={cn("mt-3 shrink-0", expanded ? "w-full" : "flex w-full justify-center")}>
-        <RailWorkspace short={short} name={`${short} ${product}`} expanded={expanded} menu={workspaceMenu} />
+        <RailWorkspace avatar={avatar} kicker={`${short} ${product}`} name={userName} expanded={expanded} menu={workspaceMenu} />
       </div>
 
       <button

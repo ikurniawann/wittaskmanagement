@@ -8,7 +8,7 @@ import { Logo } from "@/components/logo";
 import { MobileNav } from "@/components/mobile-nav";
 import { type NavItem } from "@/components/nav-link";
 import { NotificationsBell } from "@/components/notifications-bell";
-import { Rail, railMenuRowClass, type RailProject } from "@/components/rail";
+import { AvatarTile, Rail, railMenuRowClass, type RailProject } from "@/components/rail";
 import { UserAvatar } from "@/components/task-meta";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { buttonVariants } from "@/components/ui/button";
@@ -102,6 +102,9 @@ export async function AppShell({ children }: { children: ReactNode }) {
   const createHref = canCreate ? "/events/new" : undefined;
   const createLabel = "New project";
 
+  const userName = session?.user?.name ?? "?";
+  const avatarNode = <UserAvatar name={userName} src={avatarPath} className="size-full" />;
+
   const signOutForm = (
     <form
       action={async () => {
@@ -120,8 +123,11 @@ export async function AppShell({ children }: { children: ReactNode }) {
   const workspaceMenu = (
     <>
       {session?.user ? (
-        <Link href="/profile" className={cn(railMenuRowClass, "h-auto py-2")}>
-          <UserAvatar name={session.user.name ?? "?"} src={avatarPath} className="size-7 text-[10px]" />
+        <Link
+          href="/profile"
+          className="mb-1 flex flex-row items-center gap-3 rounded-xl px-2.5 py-2 transition-colors hover:bg-white/10"
+        >
+          <AvatarTile className="size-10 text-xs">{avatarNode}</AvatarTile>
           <span className="flex min-w-0 flex-col leading-tight">
             <span className="truncate text-sm font-semibold text-white">{session.user.name}</span>
             <span className="truncate text-[10px] uppercase tracking-wider text-on-ink-muted">
@@ -149,6 +155,8 @@ export async function AppShell({ children }: { children: ReactNode }) {
       projects={projects}
       createHref={createHref}
       createLabel={createLabel}
+      avatar={avatarNode}
+      userName={userName}
       workspaceMenu={workspaceMenu}
     />
   );
