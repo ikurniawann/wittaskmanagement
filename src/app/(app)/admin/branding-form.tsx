@@ -12,11 +12,13 @@ export function BrandingForm({
   orgName,
   orgShortName,
   productName,
+  tagline,
   assistantName,
 }: {
   orgName: string;
   orgShortName: string;
   productName: string;
+  tagline: string;
   assistantName: string;
 }) {
   const [state, formAction, pending] = useActionState<{ error?: string }, FormData>(
@@ -70,6 +72,20 @@ export function BrandingForm({
             defaultValue={productName}
             placeholder="Backstage"
           />
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="br-tagline" className="text-xs">
+            Tagline
+          </Label>
+          <Input
+            id="br-tagline"
+            name="tagline"
+            defaultValue={tagline}
+            placeholder="Task & Reminder"
+          />
+          <p className="text-[11px] text-muted-foreground">
+            Second line under the product name in the menu.
+          </p>
         </div>
         <div className="flex flex-col gap-1.5 sm:col-span-3">
           <Label htmlFor="br-assistant" className="text-xs">

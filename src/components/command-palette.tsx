@@ -50,9 +50,15 @@ const GROUPS: Array<{
 
 export function CommandPalette({
   variant = "pill",
+  expanded = true,
+  hotkey = true,
 }: {
-  /** `pill` = the header search field; `icon` = round button for phones */
-  variant?: "pill" | "icon";
+  /** `pill` = light search field; `icon` = round button (phones); `rail` = field inside the dark rail */
+  variant?: "pill" | "icon" | "rail";
+  /** rail only: field with placeholder when true, icon tile when collapsed */
+  expanded?: boolean;
+  /** exactly one mounted instance should own ⌘K, or two dialogs open */
+  hotkey?: boolean;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -77,6 +83,7 @@ export function CommandPalette({
   );
 
   useEffect(() => {
+    if (!hotkey) return;
     const onKey = (event: KeyboardEvent) => {
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
         event.preventDefault();
@@ -85,7 +92,7 @@ export function CommandPalette({
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, []);
+  }, [hotkey]);
 
   const onOpenChange = useCallback((next: boolean) => {
     setOpen(next);
@@ -146,7 +153,22 @@ export function CommandPalette({
 
   return (
     <>
-      {variant === "icon" ? (
+      {variant === "rail" ? (
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          aria-label="Search (Ctrl+K)"
+          title={expanded ? undefined : "Search"}
+          className={
+            expanded
+              ? "flex h-10 w-full items-center gap-2.5 rounded-[12px] bg-white/10 px-3 text-sm text-on-ink-muted transition-colors hover:bg-white/15 hover:text-white"
+              : "flex size-11 items-center justify-center rounded-[12px] text-on-ink-muted transition-colors hover:bg-white/10 hover:text-white"
+          }
+        >
+          <Search className={expanded ? "size-4 shrink-0" : "size-5"} />
+          {expanded ? <span className="flex-1 truncate text-left">Search…</span> : null}
+        </button>
+      ) : variant === "icon" ? (
         <button
           type="button"
           onClick={() => setOpen(true)}

@@ -3,7 +3,7 @@
 import { Menu, X } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useState, type ReactNode } from "react";
-import { RailItem, RailProjectLink, type RailProject } from "@/components/rail";
+import { BrandHead, RailItem, RailProjectLink, type RailProject } from "@/components/rail";
 import { type NavItem } from "@/components/nav-link";
 import { isFullscreenRoute } from "@/components/app-frame";
 import { cn } from "@/lib/utils";
@@ -18,6 +18,7 @@ export function MobileNav({
   projects,
   orgShortName,
   productName,
+  tagline,
   variant = "header",
   footer,
 }: {
@@ -25,6 +26,7 @@ export function MobileNav({
   projects: RailProject[];
   orgShortName: string;
   productName: string;
+  tagline: string;
   /** `header` = round white icon button (shown < md, and on fullscreen routes); `bar` = bottom-bar slot */
   variant?: "header" | "bar";
   /** rendered at the foot of the drawer (profile row, sign out) */
@@ -67,10 +69,8 @@ export function MobileNav({
         className="w-72 rounded-r-[18px] border-0 bg-ink p-0 text-on-ink"
       >
         <div className="flex h-14 shrink-0 items-center justify-between px-4">
-          <SheetTitle className="text-sm font-bold tracking-tight text-white">
-            {orgShortName}
-            <span className="text-accent">.</span>{" "}
-            <span className="font-medium text-on-ink-muted">{productName}</span>
+          <SheetTitle className="min-w-0" title={`${orgShortName} ${productName}`}>
+            <BrandHead product={productName} tagline={tagline} />
           </SheetTitle>
           <button
             type="button"

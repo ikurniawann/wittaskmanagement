@@ -5,7 +5,6 @@ import {
   ChevronRight,
   ChevronsLeft,
   ChevronsRight,
-  Plus,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -16,6 +15,7 @@ import {
   useSyncExternalStore,
   type ReactNode,
 } from "react";
+import { CommandPalette } from "@/components/command-palette";
 import { EVENT_SUBPAGES, ICONS, type NavItem } from "@/components/nav-link";
 import {
   getRailExpanded,
@@ -263,23 +263,51 @@ export function RailWorkspace({
 export const railMenuRowClass =
   "flex h-10 w-full items-center gap-2.5 rounded-[10px] px-3 text-sm font-medium text-on-ink-muted transition-colors hover:bg-white/10 hover:text-white [&_svg]:size-4";
 
+/** Logo · divider · product name over tagline (the reference head). */
+export function BrandHead({
+  product,
+  tagline,
+  compact,
+  className,
+}: {
+  product: string;
+  tagline: string;
+  /** logo only */
+  compact?: boolean;
+  className?: string;
+}) {
+  return (
+    <span className={cn("flex min-w-0 items-center", compact ? "justify-center" : "gap-3", className)}>
+      {/* eslint-disable-next-line @next/next/no-img-element -- static asset, fixed size */}
+      <img src="/logowit.png" alt="WIT" className={cn("w-auto shrink-0", compact ? "h-4" : "h-6")} />
+      {compact ? null : (
+        <>
+          <span aria-hidden className="h-8 w-px shrink-0 bg-white/15" />
+          <span className="flex min-w-0 flex-col leading-tight">
+            <span className="truncate text-[0.8125rem] font-bold text-white">{product}</span>
+            <span className="truncate text-[0.7rem] font-medium text-on-ink-muted">{tagline}</span>
+          </span>
+        </>
+      )}
+    </span>
+  );
+}
+
 export function Rail({
   short,
   product,
+  tagline,
   items,
   projects,
-  createHref,
-  createLabel,
   avatar,
   userName,
   workspaceMenu,
 }: {
   short: string;
   product: string;
+  tagline: string;
   items: NavItem[];
   projects: RailProject[];
-  createHref?: string;
-  createLabel?: string;
   avatar: ReactNode;
   userName: string;
   workspaceMenu: ReactNode;
@@ -295,37 +323,16 @@ export function Rail({
     >
       <Link
         href="/"
-        className={cn(
-          "flex h-11 shrink-0 items-center rounded-[12px] bg-white/5",
-          expanded ? "w-full gap-3 px-3" : "size-11 justify-center",
-        )}
         title={`${short} ${product}`}
+        className={cn("flex shrink-0 items-center", expanded ? "h-12 w-full px-1" : "size-11 justify-center")}
       >
-        <span className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-accent text-[11px] font-black text-white">
-          {short.slice(0, 1)}
-        </span>
-        {expanded ? (
-          <span className="truncate text-sm font-bold tracking-tight">
-            {short}
-            <span className="text-accent">.</span>{" "}
-            <span className="font-medium text-on-ink-muted">{product}</span>
-          </span>
-        ) : null}
+        <BrandHead product={product} tagline={tagline} compact={!expanded} />
       </Link>
 
-      {createHref ? (
-        <Link
-          href={createHref}
-          title={createLabel}
-          className={cn(
-            "mt-4 flex h-11 shrink-0 items-center rounded-full bg-accent text-white shadow-glow transition hover:-translate-y-px hover:bg-accent-strong",
-            expanded ? "w-full justify-center gap-2 px-4 text-sm font-semibold" : "size-11 justify-center",
-          )}
-        >
-          <Plus className="size-5" />
-          {expanded ? createLabel : null}
-        </Link>
-      ) : null}
+      {/* the search lives in the rail, like the reference (Owner 2026-09-17) */}
+      <div className={cn("mt-4 shrink-0", expanded ? "w-full" : "flex w-full justify-center")}>
+        <CommandPalette variant="rail" expanded={expanded} />
+      </div>
 
       <nav
         className={cn(

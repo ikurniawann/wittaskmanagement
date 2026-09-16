@@ -20,8 +20,8 @@ export function BottomBar({
   items: NavItem[];
   createHref?: string;
   createLabel?: string;
-  /** the drawer trigger, rendered as the last slot */
-  menu: ReactNode;
+  /** optional last slot (a drawer trigger); the header burger covers phones already */
+  menu?: ReactNode;
 }) {
   const pathname = usePathname();
   const [a, b, c, d] = items;
@@ -70,7 +70,7 @@ export function BottomBar({
       )}
       {slot(c)}
       {slot(d)}
-      {menu}
+      {menu ?? null}
     </nav>
   );
 }

@@ -4,7 +4,6 @@ import type { ReactNode } from "react";
 import { AppFrame } from "@/components/app-frame";
 import { BottomBar } from "@/components/bottom-bar";
 import { CommandPalette } from "@/components/command-palette";
-import { Logo } from "@/components/logo";
 import { MobileNav } from "@/components/mobile-nav";
 import { type NavItem } from "@/components/nav-link";
 import { NotificationsBell } from "@/components/notifications-bell";
@@ -151,10 +150,9 @@ export async function AppShell({ children }: { children: ReactNode }) {
     <Rail
       short={branding.orgShortName}
       product={branding.productName}
+      tagline={branding.tagline}
       items={items}
       projects={projects}
-      createHref={createHref}
-      createLabel={createLabel}
       avatar={avatarNode}
       userName={userName}
       workspaceMenu={workspaceMenu}
@@ -168,6 +166,7 @@ export async function AppShell({ children }: { children: ReactNode }) {
       projects={projects}
       orgShortName={branding.orgShortName}
       productName={branding.productName}
+      tagline={branding.tagline}
       footer={workspaceMenu}
     />
   );
@@ -176,15 +175,16 @@ export async function AppShell({ children }: { children: ReactNode }) {
     <header className="flex h-14 shrink-0 items-center gap-2 sm:gap-3 print:hidden">
       {/* the drawer button shows on phones, and on desktop for fullscreen routes */}
       {drawer("header")}
-      <Logo short={branding.orgShortName} product={branding.productName} className="text-[13px] md:hidden" />
+      {/* eslint-disable-next-line @next/next/no-img-element -- static asset */}
+      <img src="/logowit.png" alt={`${branding.orgShortName} ${branding.productName}`} className="h-5 w-auto md:hidden" />
       {session?.user ? (
         <>
-          <div className="ml-auto hidden w-full max-w-sm md:mr-auto md:ml-6 md:block">
-            <CommandPalette variant="pill" />
-          </div>
+          {/* phones have no rail, so the search rides the header there; the
+              rail's instance owns ⌘K on larger screens */}
           <div className="ml-auto md:hidden">
-            <CommandPalette variant="icon" />
+            <CommandPalette variant="icon" hotkey={false} />
           </div>
+          <span className="ml-auto hidden md:block" />
           {createHref ? (
             <Link
               href={createHref}
@@ -201,9 +201,7 @@ export async function AppShell({ children }: { children: ReactNode }) {
 
   // phone bar: the four most-used destinations; everything else is in the drawer
   const barItems = items.filter((i) => ["/my-tasks", "/events", "/timeline", "/dashboard"].includes(i.href));
-  const bottomBar = (
-    <BottomBar items={barItems} createHref={createHref} createLabel={createLabel} menu={drawer("bar")} />
-  );
+  const bottomBar = <BottomBar items={barItems} createHref={createHref} createLabel={createLabel} />;
 
   return (
     <AppFrame sidebar={sidebar} header={header} bottomBar={bottomBar}>

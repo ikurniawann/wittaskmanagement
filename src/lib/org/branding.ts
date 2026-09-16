@@ -16,6 +16,8 @@ export interface Branding {
   orgShortName: string;
   /** what the product itself is called after the org name */
   productName: string;
+  /** second line under the product name in the rail head (Owner 2026-09-17) */
+  tagline: string;
   /**
    * What the AI assistant is called in the sidebar, page title and its own
    * introduction. Configurable rather than hardcoded (Owner 2026-08-10):
@@ -29,6 +31,7 @@ export const DEFAULT_BRANDING: Branding = {
   orgName: "Your Organisation",
   orgShortName: "ORG",
   productName: "Backstage",
+  tagline: "Task & Reminder",
   assistantName: "AI Assistant",
 };
 
@@ -47,6 +50,7 @@ export async function getBranding(): Promise<Branding> {
       process.env.ORG_SHORT_NAME?.trim() || DEFAULT_BRANDING.orgShortName,
     productName:
       process.env.PRODUCT_NAME?.trim() || DEFAULT_BRANDING.productName,
+    tagline: process.env.PRODUCT_TAGLINE?.trim() || DEFAULT_BRANDING.tagline,
     assistantName:
       process.env.ASSISTANT_NAME?.trim() || DEFAULT_BRANDING.assistantName,
   };
@@ -60,6 +64,7 @@ export async function getBranding(): Promise<Branding> {
           "org_name",
           "org_short_name",
           "product_name",
+          "product_tagline",
           "assistant_name",
         ]),
       );
@@ -68,6 +73,7 @@ export async function getBranding(): Promise<Branding> {
       orgName: str(byKey.get("org_name"), envDefaults.orgName),
       orgShortName: str(byKey.get("org_short_name"), envDefaults.orgShortName),
       productName: str(byKey.get("product_name"), envDefaults.productName),
+      tagline: str(byKey.get("product_tagline"), envDefaults.tagline),
       assistantName: str(
         byKey.get("assistant_name"),
         envDefaults.assistantName,
@@ -96,6 +102,8 @@ export async function updateBranding(
     entries.push(["org_short_name", input.orgShortName.trim()]);
   if (input.productName !== undefined)
     entries.push(["product_name", input.productName.trim()]);
+  if (input.tagline !== undefined)
+    entries.push(["product_tagline", input.tagline.trim()]);
   if (input.assistantName !== undefined)
     entries.push(["assistant_name", input.assistantName.trim()]);
 

@@ -86,6 +86,7 @@ export default async function AdminPage() {
         orgName={branding.orgName}
         orgShortName={branding.orgShortName}
         productName={branding.productName}
+        tagline={branding.tagline}
         assistantName={branding.assistantName}
       />
 
