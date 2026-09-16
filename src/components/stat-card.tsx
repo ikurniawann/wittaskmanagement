@@ -37,8 +37,8 @@ export function StatCard({
   return (
     <div className={cn("flex items-start gap-3 rounded-card bg-card p-5 shadow-card", className)}>
       <div className="min-w-0 flex-1">
-        <p className="text-[13px] font-semibold text-body/80">{label}</p>
-        <p className="mt-1.5 flex items-start gap-1 truncate text-[28px] font-extrabold leading-[1.15] tracking-[-0.5px] tabular-nums">
+        <p className="text-[0.8125rem] font-semibold text-body/80">{label}</p>
+        <p className="mt-1.5 flex items-start gap-1 truncate text-[1.75rem] font-extrabold leading-[1.15] tracking-[-0.5px] tabular-nums">
           {value}
           {unit ? <span className="pt-1.5 text-sm font-semibold text-muted-foreground">{unit}</span> : null}
         </p>
@@ -46,7 +46,7 @@ export function StatCard({
       </div>
       <div
         className={cn(
-          "flex size-[42px] shrink-0 items-center justify-center rounded-[13px] [&_svg]:size-[18px]",
+          "flex size-[2.625rem] shrink-0 items-center justify-center rounded-[0.8125rem] [&_svg]:size-[1.125rem]",
           TILE[tone],
         )}
       >
@@ -76,8 +76,8 @@ export function SplitStats({
     >
       {cells.map((c) => (
         <div key={c.label} className="px-2 py-3 text-center">
-          <span className="block text-[10.5px] font-medium text-muted-foreground">{c.label}</span>
-          <span className="block text-[15px] font-extrabold tabular-nums">{c.value}</span>
+          <span className="block text-[0.66rem] font-medium text-muted-foreground">{c.label}</span>
+          <span className="block text-[0.9375rem] font-extrabold tabular-nums">{c.value}</span>
         </div>
       ))}
     </div>

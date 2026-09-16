@@ -233,7 +233,7 @@ export default async function DashboardPage() {
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex min-w-0 items-center gap-3">
-                  <span className="flex size-10 shrink-0 items-center justify-center rounded-[13px] bg-ink text-xs font-black uppercase text-on-ink">
+                  <span className="flex size-10 shrink-0 items-center justify-center rounded-[0.8125rem] bg-ink text-xs font-black uppercase text-on-ink">
                     {event.name.slice(0, 2)}
                   </span>
                   <div className="min-w-0">

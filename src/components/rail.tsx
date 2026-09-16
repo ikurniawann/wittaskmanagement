@@ -114,7 +114,7 @@ export function RailProjectLink({
         <Link
           href={href}
           onClick={onNavigate}
-          className="flex min-w-0 flex-1 items-center gap-2.5 px-3 py-2 text-[13px] font-medium"
+          className="flex min-w-0 flex-1 items-center gap-2.5 px-3 py-2 text-[0.8125rem] font-medium"
         >
           <span aria-hidden className={cn("size-2.5 shrink-0 rounded-[4px]", project.swatch)} />
           <span className="truncate">{project.name}</span>
@@ -197,7 +197,7 @@ export function RailWorkspace({
   }, [open]);
 
   return (
-    <div ref={ref} className="relative w-full">
+    <div ref={ref} className={cn("relative", expanded ? "w-full" : "flex w-full justify-center")}>
       <button
         type="button"
         aria-haspopup="menu"
@@ -215,8 +215,8 @@ export function RailWorkspace({
         {expanded ? (
           <>
             <span className="flex min-w-0 flex-1 flex-col leading-tight">
-              <span className="text-[10.5px] font-semibold text-on-ink-muted">Workspace</span>
-              <span className="truncate text-[12.5px] font-bold text-white">{name}</span>
+              <span className="text-[0.66rem] font-semibold text-on-ink-muted">Workspace</span>
+              <span className="truncate text-[0.78rem] font-bold text-white">{name}</span>
             </span>
             <ChevronDown className={cn("size-4 text-on-ink-muted transition-transform", open && "rotate-180")} />
           </>
@@ -229,8 +229,10 @@ export function RailWorkspace({
             if ((e.target as HTMLElement).closest("a,button")) setOpen(false);
           }}
           className={cn(
-            "absolute bottom-full z-50 mb-2 w-56 rounded-2xl border border-white/10 bg-ink-2 p-1.5 text-on-ink shadow-float animate-in fade-in-0 zoom-in-95",
-            expanded ? "left-0" : "left-0",
+            "absolute z-50 w-56 rounded-2xl border border-white/10 bg-ink-2 p-1.5 text-on-ink shadow-float animate-in fade-in-0 zoom-in-95",
+            // expanded: above the card; collapsed: beside the rail, so a 224px
+            // menu never hangs off the left edge of the screen
+            expanded ? "bottom-full left-0 mb-2" : "bottom-0 left-full ml-3",
           )}
         >
           {menu}
@@ -267,7 +269,7 @@ export function Rail({
     <aside
       className={cn(
         "flex h-full flex-col rounded-[28px] bg-ink py-4 text-on-ink shadow-float transition-[width] duration-200",
-        expanded ? "w-60 px-3" : "w-[76px] items-center",
+        expanded ? "w-60 px-3" : "w-[4.75rem] items-center",
       )}
     >
       <Link
@@ -325,7 +327,7 @@ export function Rail({
         ) : null}
       </nav>
 
-      <div className="mt-3 w-full shrink-0">
+      <div className={cn("mt-3 shrink-0", expanded ? "w-full" : "flex w-full justify-center")}>
         <RailWorkspace short={short} name={`${short} ${product}`} expanded={expanded} menu={workspaceMenu} />
       </div>
 

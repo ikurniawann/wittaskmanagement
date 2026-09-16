@@ -106,13 +106,13 @@ export default async function EventsPage({
           }
         />
       ) : (
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {events.map((event) => (
             <div key={event.id} className="flex flex-col gap-2">
             <Link
               href={`/events/${event.id}`}
               className={cn(
-                "group flex flex-col overflow-hidden rounded-md border elev elev-hover hover:border-foreground/40",
+                "group flex flex-col overflow-hidden rounded-card bg-card shadow-card elev-hover",
                 showArchived && "opacity-70 hover:opacity-100",
               )}
             >
@@ -130,9 +130,9 @@ export default async function EventsPage({
                   </div>
                 )}
               </div>
-              <div className="flex flex-col gap-3 p-4">
+              <div className="flex flex-col gap-2 p-4">
                 <div className="flex items-start justify-between gap-3">
-                  <h2 className="flex min-w-0 items-center gap-2 font-semibold uppercase leading-tight tracking-tight">
+                  <h2 className="flex min-w-0 items-center gap-2 text-sm font-semibold leading-tight tracking-tight">
                     <span
                       aria-hidden
                       className={cn(

@@ -256,6 +256,13 @@
   html {
     @apply font-sans;
     -webkit-font-smoothing: antialiased;
+    /* Owner 2026-09-16: the desktop app reads 20% smaller ("zoom out 20%").
+       Every Tailwind size is rem-based, so this scales type, spacing and
+       radii together; breakpoints are unaffected (rem in media queries
+       resolves against the initial 16px). Phones keep 100%. */
+    @media (min-width: 768px) {
+      font-size: 80%;
+    }
     text-rendering: optimizeLegibility;
     font-feature-settings: "ss01", "cv11";
   }
