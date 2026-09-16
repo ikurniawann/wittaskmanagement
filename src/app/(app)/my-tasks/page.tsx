@@ -98,12 +98,12 @@ function TaskRows({
     );
   }
   return (
-    <ul className="flex flex-col divide-y rounded-md border bg-card elev">
+    <ul className="flex flex-col divide-y rounded-card bg-card shadow-card">
       {rows.map(({ task, eventName }) => (
         <li key={task.id}>
           <Link
             href={`/tasks/${task.id}`}
-            className="flex items-center gap-3 px-4 py-2.5 text-sm transition-colors hover:bg-accent/50"
+            className="flex items-center gap-3 px-4 py-2.5 text-sm transition-colors hover:bg-surface-2"
           >
             <PriorityIcon priority={task.priority} />
             <span className="min-w-0 flex-1 truncate font-medium">{task.title}</span>
@@ -143,7 +143,7 @@ function ActivityList({
     );
   }
   return (
-    <ul className="flex flex-col divide-y rounded-md border bg-card elev">
+    <ul className="flex flex-col divide-y rounded-card bg-card shadow-card">
       {items.map((entry) => (
         <li key={entry.id} className="flex flex-col gap-0.5 px-4 py-2.5">
           <span className="flex flex-wrap items-center gap-1.5 text-sm">
@@ -253,7 +253,7 @@ export default async function MyTasksPage({
                       source={card.source}
                       title={card.label}
                       expected={card.value}
-                      className="flex items-center gap-3 rounded-md border bg-card px-4 py-4"
+                      className="flex items-center gap-3 rounded-card bg-card shadow-card px-4 py-4"
                     >
                       <span className="flex size-9 items-center justify-center rounded-md border text-muted-foreground">
                         <card.icon className="size-4" />
@@ -284,7 +284,7 @@ export default async function MyTasksPage({
                       filter={{ status: w.status }}
                       title={`Assigned · ${w.label}`}
                       expected={w.count}
-                      className="flex flex-col gap-1 rounded-md border bg-card px-3 py-2.5"
+                      className="flex flex-col gap-1 rounded-card bg-card shadow-card px-3 py-2.5"
                     >
                       <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
                         <StatusDot status={w.status as never} />
@@ -304,7 +304,7 @@ export default async function MyTasksPage({
                   <h2 className="text-sm font-semibold">
                     Open tasks by priority
                   </h2>
-                  <div className="flex flex-col gap-2.5 rounded-md border bg-card p-4">
+                  <div className="flex flex-col gap-2.5 rounded-card bg-card shadow-card p-4">
                     {hasOpen ? (
                       work.byPriority.map((p) => (
                         <WorkDrilldown
@@ -313,7 +313,7 @@ export default async function MyTasksPage({
                           filter={{ priority: p.priority }}
                           title={`Open · ${p.priority} priority`}
                           expected={p.count}
-                          className="flex w-full items-center gap-3 rounded-md px-1 py-0.5 hover:bg-accent/40"
+                          className="flex w-full items-center gap-3 rounded-md px-1 py-0.5 hover:bg-surface-2"
                         >
                           <span className="w-16 text-xs capitalize text-muted-foreground">
                             {p.priority}
@@ -340,7 +340,7 @@ export default async function MyTasksPage({
                   <h2 className="text-sm font-semibold">
                     Open tasks by state
                   </h2>
-                  <div className="flex flex-col gap-2.5 rounded-md border bg-card p-4">
+                  <div className="flex flex-col gap-2.5 rounded-card bg-card shadow-card p-4">
                     {hasOpen ? (
                       openWorkload.map((w) => (
                         <WorkDrilldown
@@ -349,7 +349,7 @@ export default async function MyTasksPage({
                           filter={{ status: w.status }}
                           title={`Open · ${w.label}`}
                           expected={w.count}
-                          className="flex w-full items-center gap-3 rounded-md px-1 py-0.5 hover:bg-accent/40"
+                          className="flex w-full items-center gap-3 rounded-md px-1 py-0.5 hover:bg-surface-2"
                         >
                           <span className="w-20 text-xs text-muted-foreground">
                             {w.label}
@@ -433,7 +433,7 @@ export default async function MyTasksPage({
 
         {/* profile panel */}
         <aside className="flex w-full shrink-0 flex-col gap-5 lg:w-72">
-          <div className="flex flex-col gap-4 rounded-md border bg-card p-4">
+          <div className="flex flex-col gap-4 rounded-card bg-card shadow-card p-4">
             <div className="flex items-center gap-3">
               <UserAvatar name={work.profile.name} className="size-12 text-base" />
               <div className="flex min-w-0 flex-col">
@@ -469,7 +469,7 @@ export default async function MyTasksPage({
           </div>
 
           {work.divisions.length > 0 ? (
-            <div className="flex flex-col gap-2 rounded-md border bg-card p-4">
+            <div className="flex flex-col gap-2 rounded-card bg-card shadow-card p-4">
               <h3 className="text-xs font-semibold text-muted-foreground">
                 My divisions
               </h3>
@@ -484,7 +484,7 @@ export default async function MyTasksPage({
             </div>
           ) : null}
 
-          <div className="flex flex-col gap-2 rounded-md border bg-card p-4">
+          <div className="flex flex-col gap-2 rounded-card bg-card shadow-card p-4">
             <h3 className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
               <CalendarRange className="size-3.5" /> Working on
             </h3>

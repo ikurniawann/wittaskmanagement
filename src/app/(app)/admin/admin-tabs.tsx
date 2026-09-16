@@ -192,7 +192,7 @@ function EditUserTrigger({ user, actorRole }: { user: AdminUser; actorRole: stri
         type="button"
         aria-label={`Edit ${user.name}`}
         onClick={() => setOpen(true)}
-        className="ml-auto flex size-9 shrink-0 items-center justify-center rounded-md sm:size-7 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+        className="ml-auto flex size-9 shrink-0 items-center justify-center rounded-md sm:size-7 text-muted-foreground transition-colors hover:bg-surface-2 hover:text-foreground"
       >
         <Pencil className="size-3.5" />
       </button>
@@ -238,7 +238,7 @@ function EditUserDialog({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
       <form
         action={formAction}
-        className="flex w-full max-w-sm flex-col gap-4 rounded-lg border bg-card p-5 shadow-lg"
+        className="flex w-full max-w-sm flex-col gap-4 rounded-card bg-card shadow-card p-5 shadow-lg"
       >
         <input type="hidden" name="userId" value={user.id} />
         <h2 className="text-sm font-semibold">Edit {user.name}</h2>
@@ -400,7 +400,7 @@ function UsersTable({
   const divisionName = new Map(divisions.map((d) => [d.id, d.name]));
 
   return (
-    <div className="overflow-x-auto rounded-md border bg-card">
+    <div className="overflow-x-auto rounded-card bg-card shadow-card">
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b text-left text-xs uppercase tracking-wider text-muted-foreground">
@@ -417,7 +417,7 @@ function UsersTable({
             <tr
               key={user.id}
               className={cn(
-                "border-b transition-colors last:border-0 hover:bg-accent/30",
+                "border-b transition-colors last:border-0 hover:bg-surface-2",
                 !user.isActive && "opacity-50",
               )}
             >

@@ -89,7 +89,7 @@ export function SummaryShareDialog({
   // DRAWER and is clipped at its edge (Owner bug report 2026-08-27).
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="flex max-h-[85svh] w-full max-w-lg flex-col gap-4 overflow-y-auto rounded-lg border bg-card p-5 shadow-lg">
+      <div className="flex max-h-[85svh] w-full max-w-lg flex-col gap-4 overflow-y-auto rounded-card bg-card shadow-card p-5 shadow-lg">
         <div className="flex flex-col gap-0.5">
           <h2 className="text-sm font-semibold">
             Share {kind === "task" ? "task" : "project"} progress
@@ -101,7 +101,7 @@ export function SummaryShareDialog({
         </div>
 
         {state.url ? (
-          <div className="flex flex-col gap-2 rounded-md border bg-accent/30 p-3">
+          <div className="flex flex-col gap-2 rounded-md border bg-surface-2 p-3">
             <span className="text-[10px] uppercase tracking-widest text-muted-foreground">
               The link is shown once
             </span>

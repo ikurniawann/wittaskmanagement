@@ -1,95 +1,104 @@
 "use client";
 
-import { Menu } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
-import { EventNavLink, NavLink, type NavItem } from "@/components/nav-link";
-import { Button } from "@/components/ui/button";
+import { useState, type ReactNode } from "react";
+import { RailItem, RailProjectLink, type RailProject } from "@/components/rail";
+import { type NavItem } from "@/components/nav-link";
 import { isFullscreenRoute } from "@/components/app-frame";
 import { cn } from "@/lib/utils";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 
+// The full navigation as a dark drawer (WIT UI style, 2026-09-16). Opened from
+// the phone bottom bar's Menu slot, from the header on fullscreen routes
+// (where the rail is hidden), and it reuses the rail's own tiles so the two
+// never drift apart.
 export function MobileNav({
   items,
-  events,
+  projects,
   orgShortName,
   productName,
+  variant = "header",
+  footer,
 }: {
   items: NavItem[];
-  events: Array<{
-    id: string;
-    name: string;
-    health: "on_track" | "at_risk" | "critical";
-    swatch: string;
-  }>;
+  projects: RailProject[];
   orgShortName: string;
   productName: string;
+  /** `header` = round white icon button (shown < md, and on fullscreen routes); `bar` = bottom-bar slot */
+  variant?: "header" | "bar";
+  /** rendered at the foot of the drawer (profile row, sign out) */
+  footer?: ReactNode;
 }) {
   const [open, setOpen] = useState(false);
-  // fullscreen routes hide the main sidebar (see AppFrame) — the hamburger
-  // then serves desktop too, so navigation stays one click away
   const pathname = usePathname();
   const fullscreen = isFullscreenRoute(pathname);
+  const close = () => setOpen(false);
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger
         render={
-          <Button
-            variant="ghost"
-            size="icon"
-            className={cn(!fullscreen && "md:hidden")}
-            aria-label="Menu"
-          >
-            <Menu className="size-4" />
-          </Button>
+          variant === "bar" ? (
+            <button
+              type="button"
+              aria-label="Menu"
+              className="flex size-11 items-center justify-center rounded-2xl text-on-ink-muted transition-colors hover:bg-white/10 hover:text-white"
+            >
+              <Menu className="size-5" />
+            </button>
+          ) : (
+            <button
+              type="button"
+              aria-label="Menu"
+              className={cn(
+                "flex size-11 items-center justify-center rounded-full bg-card text-foreground shadow-card active:scale-95",
+                !fullscreen && "md:hidden",
+              )}
+            >
+              <Menu className="size-5" />
+            </button>
+          )
         }
       />
-      <SheetContent side="left" className="w-64 p-0">
-        <SheetHeader className="shrink-0 border-b px-4 py-3">
-          <SheetTitle className="text-left text-sm font-semibold uppercase tracking-[0.2em]">
-            {orgShortName} <span className="text-muted-foreground">{productName}</span>
+      <SheetContent
+        side="left"
+        showCloseButton={false}
+        className="w-72 rounded-r-[28px] border-0 bg-ink p-0 text-on-ink"
+      >
+        <div className="flex h-14 shrink-0 items-center justify-between px-4">
+          <SheetTitle className="text-sm font-bold tracking-tight text-white">
+            {orgShortName}
+            <span className="text-accent">.</span>{" "}
+            <span className="font-medium text-on-ink-muted">{productName}</span>
           </SheetTitle>
-        </SheetHeader>
-        {/* The panel is a fixed-height flex column (h-full), so this list has
-            to own the scrolling: without min-h-0 a flex child refuses to
-            shrink below its content and the overflow simply spills out of the
-            panel — with the page behind it scroll-locked, the menu reads as
-            frozen (Owner 2026-08-18). overscroll-contain stops a flick at the
-            end of the list from scrolling the page underneath. */}
-        <div
-          className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto overscroll-contain p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
-          onClick={(e) => {
-            if ((e.target as HTMLElement).closest("a")) setOpen(false);
-          }}
-        >
-          <nav className="flex flex-col gap-0.5">
+          <button
+            type="button"
+            aria-label="Close menu"
+            onClick={close}
+            className="flex size-9 items-center justify-center rounded-xl text-on-ink-muted hover:bg-white/10 hover:text-white"
+          >
+            <X className="size-4" />
+          </button>
+        </div>
+        {/* min-h-0 so the list owns the scrolling inside the fixed-height panel */}
+        <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto overscroll-contain px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+          <nav className="flex flex-col gap-1">
             {items.map((item) => (
-              <NavLink key={item.href} item={item} />
+              <RailItem key={item.href} item={item} expanded onNavigate={close} />
             ))}
           </nav>
-          {events.length > 0 ? (
+          {projects.length > 0 ? (
             <div className="flex flex-col gap-1">
-              <span className="px-2.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+              <span className="px-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-on-ink-muted">
                 Projects
               </span>
-              {events.map((event) => (
-                <EventNavLink
-                  key={event.id}
-                  href={`/events/${event.id}`}
-                  name={event.name}
-                  health={event.health}
-                  swatch={event.swatch}
-                />
+              {projects.map((p) => (
+                <RailProjectLink key={p.id} project={p} onNavigate={close} />
               ))}
             </div>
           ) : null}
+          {footer ? <div className="mt-auto flex flex-col gap-1 border-t border-white/10 pt-3">{footer}</div> : null}
         </div>
       </SheetContent>
     </Sheet>

@@ -240,7 +240,7 @@ export function ListControls({
       {divisionName ? (
         <Link
           href={query({ division: undefined })}
-          className="inline-flex items-center gap-1 rounded-full border bg-accent/50 px-2.5 py-1 text-xs hover:border-foreground/40"
+          className="inline-flex items-center gap-1 rounded-full border bg-surface-2 px-2.5 py-1 text-xs hover:border-foreground/40"
           title="Clear division filter"
         >
           {divisionName} <span className="text-muted-foreground">×</span>
@@ -249,7 +249,7 @@ export function ListControls({
       {params.priority ? (
         <Link
           href={query({ priority: undefined })}
-          className="inline-flex items-center gap-1 rounded-full border bg-accent/50 px-2.5 py-1 text-xs capitalize hover:border-foreground/40"
+          className="inline-flex items-center gap-1 rounded-full border bg-surface-2 px-2.5 py-1 text-xs capitalize hover:border-foreground/40"
           title="Clear priority filter"
         >
           <PriorityIcon priority={params.priority as "low" | "medium" | "high" | "urgent"} />

@@ -68,7 +68,7 @@ export function PreferencesForm({
 
   return (
     <div className="flex max-w-xl flex-col gap-6">
-      <div className="flex flex-col divide-y rounded-md border bg-card elev">
+      <div className="flex flex-col divide-y rounded-card bg-card shadow-card">
         <Row
           title="Email notifications"
           hint="Assignments, mentions, due dates, approvals — as they happen"
@@ -95,7 +95,7 @@ export function PreferencesForm({
         </div>
       </div>
 
-      <div className="flex flex-col divide-y rounded-md border bg-card elev">
+      <div className="flex flex-col divide-y rounded-card bg-card shadow-card">
         <Row
           title="Daily digest"
           hint="One morning email (07:00 WIB): overdue, due today, approvals waiting"

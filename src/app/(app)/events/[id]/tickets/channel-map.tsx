@@ -94,7 +94,7 @@ export function ChannelMap({
   );
 
   return (
-    <div className="flex flex-col gap-2 rounded-md border bg-card p-3">
+    <div className="flex flex-col gap-2 rounded-card bg-card shadow-card p-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <span className="text-xs font-medium">
           {LABEL[provider]}:{" "}
@@ -171,8 +171,8 @@ export function ChannelMap({
                   disabled={pending}
                   onClick={() => choose(option)}
                   className={cn(
-                    "rounded px-2.5 py-1.5 text-left text-sm transition-colors hover:bg-accent",
-                    option.id === mappedId && "bg-accent/50 font-medium",
+                    "rounded px-2.5 py-1.5 text-left text-sm transition-colors hover:bg-surface-2",
+                    option.id === mappedId && "bg-surface-2 font-medium",
                   )}
                 >
                   {option.name}

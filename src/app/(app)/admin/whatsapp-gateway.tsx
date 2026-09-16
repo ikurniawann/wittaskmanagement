@@ -93,7 +93,7 @@ export function WhatsAppGateway() {
   };
 
   return (
-    <div className="flex flex-col gap-4 rounded-md border bg-card p-4 elev">
+    <div className="flex flex-col gap-4 rounded-card bg-card shadow-card p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex flex-col gap-1">
           <h2 className="flex items-center gap-2 text-sm font-semibold">

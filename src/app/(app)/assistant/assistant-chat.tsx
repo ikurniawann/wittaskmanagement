@@ -327,7 +327,7 @@ export function AssistantChat({
                   key={suggestion}
                   type="button"
                   onClick={() => void send(suggestion)}
-                  className="rounded-md border bg-card px-3 py-2.5 text-left text-xs text-muted-foreground elev-hover hover:text-foreground"
+                  className="rounded-card bg-card shadow-card px-3 py-2.5 text-left text-xs text-muted-foreground-hover hover:text-foreground"
                 >
                   {suggestion}
                 </button>
@@ -456,7 +456,7 @@ export function AssistantChat({
                   : "Attach a file — PDF, Word, Excel, CSV, text or image"
               }
               aria-label="Attach a file"
-              className="flex size-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-accent/40 hover:text-foreground disabled:opacity-40"
+              className="flex size-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-surface-2 hover:text-foreground disabled:opacity-40"
             >
               <Paperclip className="size-4" />
             </button>

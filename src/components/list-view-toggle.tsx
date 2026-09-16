@@ -41,7 +41,7 @@ export function ListViewToggle({
           className={cn(
             "flex size-9 items-center justify-center rounded transition-colors sm:size-7",
             active === option.key
-              ? "bg-accent text-foreground"
+              ? "bg-surface-2 text-foreground"
               : "text-muted-foreground hover:text-foreground",
           )}
         >

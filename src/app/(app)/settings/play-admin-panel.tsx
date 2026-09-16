@@ -44,7 +44,7 @@ export function PlayAdminPanel({ view }: { view: PlayAdminView }) {
           Weights apply to the next scored activity; the ledger is recomputed nightly from the activity log.
         </p>
       </div>
-      <div className="grid gap-4 rounded-md border bg-card p-4 sm:grid-cols-2">
+      <div className="grid gap-4 rounded-card bg-card shadow-card p-4 sm:grid-cols-2">
         <div className="flex flex-col gap-1">
           <span className="text-xs font-medium">Points</span>
           {field("Task done on time", points.task_done_on_time, (n) => setPoints({ ...points, task_done_on_time: n }))}
@@ -63,13 +63,13 @@ export function PlayAdminPanel({ view }: { view: PlayAdminView }) {
           {field("Mention replies / day", caps.mentionDaily, (n) => setCaps({ ...caps, mentionDaily: n }))}
           {field("Unblock max per task", caps.unblockMax, (n) => setCaps({ ...caps, unblockMax: n }))}
           <div className="mt-2 flex gap-2">
-            <button type="button" disabled={pending} className="rounded border px-2 py-1 text-xs hover:bg-accent disabled:opacity-50" onClick={() => run(() => savePlayRulesAction({ points, caps }), "Rules saved.")}>Save rules</button>
-            <button type="button" disabled={pending} className="rounded border px-2 py-1 text-xs hover:bg-accent disabled:opacity-50" onClick={() => run(async () => { const r = await resetPlayRulesAction(); if (!r) { setPoints({ 
+            <button type="button" disabled={pending} className="rounded border px-2 py-1 text-xs hover:bg-surface-2 disabled:opacity-50" onClick={() => run(() => savePlayRulesAction({ points, caps }), "Rules saved.")}>Save rules</button>
+            <button type="button" disabled={pending} className="rounded border px-2 py-1 text-xs hover:bg-surface-2 disabled:opacity-50" onClick={() => run(async () => { const r = await resetPlayRulesAction(); if (!r) { setPoints({ 
               task_done_on_time: 10, task_done_late: 3, unblock: 5, handoff_fast: 5, approval_fast: 5, checklist: 1, mention_reply: 2, quest: 15 }); setCaps({ daily: 100, checklistDaily: 10, mentionDaily: 10, unblockMax: 30 }); } return r; }, "Defaults restored.")}>Defaults</button>
           </div>
         </div>
       </div>
-      <div className="grid gap-4 rounded-md border bg-card p-4 sm:grid-cols-2">
+      <div className="grid gap-4 rounded-card bg-card shadow-card p-4 sm:grid-cols-2">
         <label className="flex flex-col gap-1 text-xs">
           <span className="font-medium">Leaderboard policy</span>
           <select value={policy} onChange={(e) => { const p = e.target.value as typeof policy; setPolicy(p); run(() => setPlayLeaderboardPolicyAction(p), "Policy saved."); }} className="rounded border bg-background px-2 py-1">
@@ -83,12 +83,12 @@ export function PlayAdminPanel({ view }: { view: PlayAdminView }) {
           <span className="font-medium">Season {view.season ? `· ${view.season.name} since ${view.season.startsAt.slice(0, 10)}` : "· none started"}</span>
           <div className="flex gap-1">
             <input value={seasonName} onChange={(e) => setSeasonName(e.target.value)} placeholder="Next season name" className="min-w-0 flex-1 rounded border bg-background px-2 py-1" />
-            <button type="button" disabled={pending} className="rounded border px-2 py-1 hover:bg-accent disabled:opacity-50" onClick={() => { if (window.confirm("Archive everyone's XP and start a new season? Badges stay.")) run(() => resetPlaySeasonAction(seasonName), "Season reset."); }}>Reset season</button>
+            <button type="button" disabled={pending} className="rounded border px-2 py-1 hover:bg-surface-2 disabled:opacity-50" onClick={() => { if (window.confirm("Archive everyone's XP and start a new season? Badges stay.")) run(() => resetPlaySeasonAction(seasonName), "Season reset."); }}>Reset season</button>
           </div>
           <span className="text-muted-foreground">Archives every profile&apos;s XP and level, zeroes the counters, keeps badges.</span>
         </div>
       </div>
-      <div className="flex flex-col gap-1 rounded-md border bg-card p-4 text-xs">
+      <div className="flex flex-col gap-1 rounded-card bg-card shadow-card p-4 text-xs">
         <span className="font-medium">Flagged activity (scored 0)</span>
         {view.flagged.length === 0 ? <span className="text-muted-foreground">Nothing flagged.</span> : (
           <ul className="flex max-h-56 flex-col gap-0.5 overflow-y-auto">

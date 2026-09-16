@@ -52,7 +52,7 @@ export default async function DataroomActivityPage({
           Nothing recorded yet.
         </p>
       ) : (
-        <div className="overflow-x-auto rounded-md border bg-card">
+        <div className="overflow-x-auto rounded-card bg-card shadow-card">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b text-left text-xs uppercase tracking-wider text-muted-foreground">
@@ -66,7 +66,7 @@ export default async function DataroomActivityPage({
               {rows.map((row) => (
                 <tr
                   key={row.id}
-                  className="border-b transition-colors last:border-0 hover:bg-accent/30"
+                  className="border-b transition-colors last:border-0 hover:bg-surface-2"
                 >
                   <td className="px-4 py-2.5">
                     {row.actorName ? (

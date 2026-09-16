@@ -72,7 +72,7 @@ export function NewFolderDialog({
           e.preventDefault();
           if (name.trim()) submit();
         }}
-        className="flex w-full max-w-md flex-col gap-4 rounded-lg border bg-card p-5 shadow-lg"
+        className="flex w-full max-w-md flex-col gap-4 rounded-card bg-card shadow-card p-5 shadow-lg"
       >
         <div className="flex flex-col gap-1">
           <h2 className="flex items-center gap-2 text-sm font-semibold">

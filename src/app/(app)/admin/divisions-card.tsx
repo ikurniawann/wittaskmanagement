@@ -81,7 +81,7 @@ function Row({ division }: { division: DivisionRow }) {
               type="button"
               aria-label={`Rename ${division.name}`}
               onClick={() => setEditing(true)}
-              className="flex size-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground sm:size-7"
+              className="flex size-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-surface-2 hover:text-foreground sm:size-7"
             >
               <Pencil className="size-3.5" />
             </button>
@@ -122,7 +122,7 @@ export function DivisionsCard({ divisions }: { divisions: DivisionRow[] }) {
   );
 
   return (
-    <div className="flex flex-col gap-3 rounded-md border bg-card p-4 elev">
+    <div className="flex flex-col gap-3 rounded-card bg-card shadow-card p-4">
       <div className="flex items-center justify-between">
         <div className="flex flex-col gap-0.5">
           <h2 className="flex items-center gap-2 text-sm font-semibold">

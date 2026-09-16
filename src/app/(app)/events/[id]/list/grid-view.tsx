@@ -109,7 +109,7 @@ export function GridView({
   };
 
   return (
-    <div className="overflow-x-auto rounded-md border bg-card">
+    <div className="overflow-x-auto rounded-card bg-card shadow-card">
       <table className="w-full min-w-[880px] text-sm">
         <thead>
           <tr className="border-b text-left text-xs uppercase tracking-wider text-muted-foreground">
@@ -124,7 +124,7 @@ export function GridView({
         </thead>
         <tbody>
           {tasks.map((task) => (
-            <tr key={task.id} className="border-b transition-colors last:border-0 hover:bg-accent/20">
+            <tr key={task.id} className="border-b transition-colors last:border-0 hover:bg-surface-2">
               {/* title — editable in place, opens the task from the arrow */}
               <td className="px-3 py-1.5">
                 <div className="flex items-center gap-2">
@@ -203,7 +203,7 @@ export function GridView({
                       setOpenCell(null);
                       run(setLeadCellAction, { taskId: task.id, userId: "" });
                     }}
-                    className="flex items-center gap-2 rounded px-2 py-1.5 text-left text-xs text-muted-foreground hover:bg-accent"
+                    className="flex items-center gap-2 rounded px-2 py-1.5 text-left text-xs text-muted-foreground hover:bg-surface-2"
                   >
                     <X className="size-3.5" /> No lead
                   </button>
@@ -215,7 +215,7 @@ export function GridView({
                         setOpenCell(null);
                         run(setLeadCellAction, { taskId: task.id, userId: person.id });
                       }}
-                      className="flex items-center gap-2 rounded px-2 py-1.5 text-left text-sm hover:bg-accent"
+                      className="flex items-center gap-2 rounded px-2 py-1.5 text-left text-sm hover:bg-surface-2"
                     >
                       <UserAvatar name={person.name} className="size-5 text-[9px]" />
                       <span className="truncate">{person.name}</span>
@@ -305,8 +305,8 @@ export function GridView({
                           run(setPriorityAction, { taskId: task.id, priority: p });
                       }}
                       className={cn(
-                        "flex items-center gap-2 rounded px-2 py-1.5 text-left text-sm hover:bg-accent",
-                        p === task.priority && "bg-accent/50",
+                        "flex items-center gap-2 rounded px-2 py-1.5 text-left text-sm hover:bg-surface-2",
+                        p === task.priority && "bg-surface-2",
                       )}
                     >
                       <PriorityIcon priority={p} withLabel />
@@ -345,8 +345,8 @@ export function GridView({
                           run(setStatusAction, { taskId: task.id, status: s });
                       }}
                       className={cn(
-                        "flex items-center gap-2 rounded px-2 py-1.5 text-left text-sm hover:bg-accent",
-                        s === task.status && "bg-accent/50",
+                        "flex items-center gap-2 rounded px-2 py-1.5 text-left text-sm hover:bg-surface-2",
+                        s === task.status && "bg-surface-2",
                       )}
                     >
                       <StatusDot status={s} className="size-2" />

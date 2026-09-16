@@ -97,7 +97,7 @@ function QuotaCell({ row }: { row: StorageRow }) {
 
 export function StorageTable({ rows }: { rows: StorageRow[] }) {
   return (
-    <div className="overflow-x-auto rounded-md border bg-card">
+    <div className="overflow-x-auto rounded-card bg-card shadow-card">
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b text-left text-xs uppercase tracking-wider text-muted-foreground">
@@ -108,7 +108,7 @@ export function StorageTable({ rows }: { rows: StorageRow[] }) {
         </thead>
         <tbody>
           {rows.map((row) => (
-            <tr key={row.eventId} className="border-b transition-colors last:border-0 hover:bg-accent/30">
+            <tr key={row.eventId} className="border-b transition-colors last:border-0 hover:bg-surface-2">
               <td className="px-4 py-3 font-medium">{row.eventName}</td>
               <td className="px-4 py-3">
                 <div className="flex min-w-40 flex-col gap-1">

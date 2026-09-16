@@ -91,7 +91,7 @@ export function CommentForm({
                 type="button"
                 onClick={() => pick(m)}
                 className={cn(
-                  "w-full rounded-sm px-2 py-1.5 text-left text-xs hover:bg-accent",
+                  "w-full rounded-sm px-2 py-1.5 text-left text-xs hover:bg-surface-2",
                   m.id === "all" && "font-semibold",
                 )}
               >

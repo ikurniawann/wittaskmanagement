@@ -77,7 +77,7 @@ export function StatusDropGroup({
       }}
       className={cn(
         "flex flex-col gap-2 rounded-lg border border-transparent transition-colors",
-        over && "border-dashed border-foreground/40 bg-accent/20",
+        over && "border-dashed border-foreground/40 bg-surface-2",
         pending && "opacity-70",
       )}
     >

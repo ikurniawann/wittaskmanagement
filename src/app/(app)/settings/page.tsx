@@ -105,7 +105,7 @@ export default async function SettingsPage({
               className={cn(
                 "rounded px-3 py-1 transition-colors",
                 tab === key
-                  ? "bg-accent font-medium"
+                  ? "bg-surface-2 font-medium"
                   : "text-muted-foreground hover:text-foreground",
               )}
             >

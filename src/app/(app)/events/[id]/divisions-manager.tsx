@@ -47,7 +47,7 @@ export function DivisionsManager({
   return (
     <form
       action={formAction}
-      className="flex w-full flex-col gap-3 rounded-md border bg-card p-4"
+      className="flex w-full flex-col gap-3 rounded-card bg-card shadow-card p-4"
     >
       <input type="hidden" name="eventId" value={eventId} />
       {[...selected].map((id) => (

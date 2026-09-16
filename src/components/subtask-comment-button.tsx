@@ -48,7 +48,7 @@ export function SubtaskCommentButton({
           "relative inline-flex shrink-0 items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] tabular-nums transition-colors",
           count > 0
             ? "text-foreground"
-            : "text-muted-foreground hover:bg-accent hover:text-foreground",
+            : "text-muted-foreground hover:bg-surface-2 hover:text-foreground",
           className,
         )}
       >

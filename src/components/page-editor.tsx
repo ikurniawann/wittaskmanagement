@@ -81,8 +81,8 @@ function ToolButton({
       className={cn(
         "flex size-9 items-center justify-center rounded-md transition-colors sm:size-7",
         active
-          ? "bg-accent text-foreground"
-          : "text-muted-foreground hover:bg-accent/60 hover:text-foreground",
+          ? "bg-surface-2 text-foreground"
+          : "text-muted-foreground hover:bg-surface-2 hover:text-foreground",
       )}
     >
       {children}
@@ -117,7 +117,7 @@ function BlockPicker({ editor }: { editor: Editor }) {
         type="button"
         onMouseDown={(e) => e.preventDefault()}
         onClick={() => setOpen((o) => !o)}
-        className="flex h-7 items-center gap-1.5 rounded-md border px-2.5 text-xs text-foreground hover:bg-accent/60"
+        className="flex h-7 items-center gap-1.5 rounded-md border px-2.5 text-xs text-foreground hover:bg-surface-2"
       >
         {current}
         <ChevronDown className="size-3 text-muted-foreground" />
@@ -131,7 +131,7 @@ function BlockPicker({ editor }: { editor: Editor }) {
               onMouseDown={(e) => e.preventDefault()}
               onClick={() => apply(block.key)}
               className={cn(
-                "rounded px-2 py-1.5 text-left text-xs hover:bg-accent",
+                "rounded px-2 py-1.5 text-left text-xs hover:bg-surface-2",
                 current === block.label && "font-semibold",
               )}
             >
@@ -154,7 +154,7 @@ function ColorPicker({ editor }: { editor: Editor }) {
         aria-label="Text color"
         onMouseDown={(e) => e.preventDefault()}
         onClick={() => setOpen((o) => !o)}
-        className="flex h-7 items-center rounded-md border px-2 text-xs hover:bg-accent/60"
+        className="flex h-7 items-center rounded-md border px-2 text-xs hover:bg-surface-2"
         style={{
           color: (editor.getAttributes("textStyle").color as string) ?? undefined,
         }}

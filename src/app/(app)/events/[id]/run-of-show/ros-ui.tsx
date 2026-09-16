@@ -144,7 +144,7 @@ export function RosEditor({
 
   return (
     <div className="flex flex-col gap-5">
-      <div className="overflow-x-auto rounded-md border bg-card print:rounded-none print:border-0 print:bg-transparent">
+      <div className="overflow-x-auto rounded-card bg-card shadow-card print:rounded-none print:border-0 print:bg-transparent">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b text-left text-xs uppercase tracking-wider text-muted-foreground">
@@ -214,7 +214,7 @@ export function RosEditor({
           <form
             action={formAction}
             className={cn(
-              "flex flex-col gap-4 rounded-md border bg-card p-4 print:hidden",
+              "flex flex-col gap-4 rounded-card bg-card shadow-card p-4 print:hidden",
             )}
           >
             <input type="hidden" name="eventId" value={eventId} />

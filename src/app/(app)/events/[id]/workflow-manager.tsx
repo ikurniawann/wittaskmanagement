@@ -36,7 +36,7 @@ export function WorkflowManager({
   }
 
   return (
-    <div className="flex w-full flex-col gap-3 rounded-md border bg-card p-4">
+    <div className="flex w-full flex-col gap-3 rounded-card bg-card shadow-card p-4">
       <span className="text-xs font-semibold">
         Workflow phases
       </span>
@@ -77,7 +77,7 @@ export function WorkflowManager({
                   onClick={() => setEditing(phase.id)}
                   title="Rename"
                   className={cn(
-                    "flex-1 rounded-sm px-2 py-1 text-left text-sm hover:bg-accent",
+                    "flex-1 rounded-sm px-2 py-1 text-left text-sm hover:bg-surface-2",
                     phase.id === currentId && "font-semibold",
                   )}
                 >

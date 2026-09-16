@@ -74,7 +74,7 @@ export function IntegrationsPanel({ rows }: { rows: IntegrationRow[] }) {
           again without deleting anything it has already synced.
         </p>
       </div>
-      <ul className="flex flex-col divide-y rounded-md border bg-card">
+      <ul className="flex flex-col divide-y rounded-card bg-card shadow-card">
         {rows.map((row) => (
           <Row key={row.key} row={row} />
         ))}

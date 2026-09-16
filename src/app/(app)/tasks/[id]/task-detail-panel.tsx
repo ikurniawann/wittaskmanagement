@@ -318,7 +318,7 @@ export async function TaskDetailPanel({ taskId }: { taskId: string }) {
                         aria-label={`Delete ${item.title}`}
                         // a bare "×" is a few pixels of target; pad it out to a
                         // finger without moving the row (negative margin)
-                        className="-my-2 flex size-9 shrink-0 items-center justify-center rounded-md text-base text-muted-foreground transition-colors hover:bg-accent hover:text-destructive sm:size-7 sm:text-xs"
+                        className="-my-2 flex size-9 shrink-0 items-center justify-center rounded-md text-base text-muted-foreground transition-colors hover:bg-surface-2 hover:text-destructive sm:size-7 sm:text-xs"
                       >
                         ×
                       </button>

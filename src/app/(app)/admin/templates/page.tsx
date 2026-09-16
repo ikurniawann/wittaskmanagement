@@ -81,7 +81,7 @@ export default async function TemplatesPage({
             divisions={divisions.map((d) => ({ id: d.id, name: d.name }))}
           />
 
-          <div className="overflow-x-auto rounded-md border bg-card">
+          <div className="overflow-x-auto rounded-card bg-card shadow-card">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b text-left text-xs uppercase tracking-wider text-muted-foreground">

@@ -41,7 +41,7 @@ export function PriorityPicker({
             "rounded-md border text-xs transition-colors",
             compact ? "px-2 py-1" : "px-2.5 py-1.5",
             value === ""
-              ? "bg-accent font-medium"
+              ? "bg-surface-2 font-medium"
               : "text-muted-foreground hover:text-foreground",
           )}
         >
@@ -58,7 +58,7 @@ export function PriorityPicker({
             "flex items-center gap-1 rounded-md border text-xs capitalize transition-colors",
             compact ? "px-2 py-1" : "px-2.5 py-1.5",
             value === option
-              ? cn("bg-accent font-medium", SELECTED_RING[option])
+              ? cn("bg-surface-2 font-medium", SELECTED_RING[option])
               : "text-muted-foreground hover:text-foreground",
           )}
         >

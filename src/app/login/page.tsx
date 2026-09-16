@@ -26,7 +26,7 @@ export default async function LoginPage() {
             className="mx-auto h-10 w-auto"
           />
           <Logo short={branding.orgShortName} product={branding.productName} className="text-sm" />
-          <div className="flex flex-col gap-4 rounded-lg border bg-card p-5">
+          <div className="flex flex-col gap-4 rounded-card bg-card p-6 shadow-card">
             <div className="flex items-center gap-3">
               <UserAvatar
                 name={session.user.name ?? "?"}
@@ -76,8 +76,8 @@ export default async function LoginPage() {
             className="mx-auto h-10 w-auto"
           />
           <Logo short={branding.orgShortName} product={branding.productName} className="text-sm" />
-          <h1 className="text-2xl font-semibold tracking-tight">
-            Sign in
+          <h1 className="text-3xl font-bold tracking-tight">
+            Sign in<span className="text-accent">.</span>
           </h1>
           <p className="text-sm text-muted-foreground">
             Staff access. External collaborators receive a magic link by email.

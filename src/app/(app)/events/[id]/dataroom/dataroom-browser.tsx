@@ -347,8 +347,8 @@ export function DataroomBrowser({
           className={cn(
             "group flex items-center gap-1 rounded-md py-1.5 pr-1 text-sm transition-colors",
             folder.id === openFolderId
-              ? "bg-accent font-medium"
-              : "text-muted-foreground hover:bg-accent/40 hover:text-foreground",
+              ? "bg-surface-2 font-medium"
+              : "text-muted-foreground hover:bg-surface-2 hover:text-foreground",
             dropTarget === folder.id && "ring-2 ring-foreground/40",
           )}
         >
@@ -460,7 +460,7 @@ export function DataroomBrowser({
         }}
         className={cn(
           "flex min-h-[60svh] flex-col gap-3 rounded-lg border border-transparent p-1 transition-colors",
-          dropTarget === "pane" && "border-dashed border-foreground/40 bg-accent/20",
+          dropTarget === "pane" && "border-dashed border-foreground/40 bg-surface-2",
         )}
       >
         <div className="flex flex-wrap items-center justify-between gap-2 px-1">
@@ -527,7 +527,7 @@ export function DataroomBrowser({
                   className={cn(
                     "flex size-7 cursor-pointer items-center justify-center rounded transition-colors",
                     view === option.key
-                      ? "bg-accent text-foreground"
+                      ? "bg-surface-2 text-foreground"
                       : "text-muted-foreground hover:text-foreground",
                   )}
                 >
@@ -616,7 +616,7 @@ export function DataroomBrowser({
                 onContextMenu={(e) => folderMenu.openAt(e, folder)}
                 title={LEVEL_LABEL[folder.visibility]}
                 className={cn(
-                  "flex cursor-pointer flex-col items-center gap-2 rounded-md border bg-card p-4 transition-colors hover:border-foreground/40",
+                  "flex cursor-pointer flex-col items-center gap-2 rounded-card bg-card shadow-card p-4 transition-colors hover:border-foreground/40",
                   dropTarget === folder.id && "ring-2 ring-foreground/40",
                 )}
               >
@@ -654,7 +654,7 @@ export function DataroomBrowser({
                 }}
                 onContextMenu={(e) => fileMenu.openAt(e, file)}
                 onClick={() => openFile(file)}
-                className="group relative flex cursor-pointer flex-col items-center gap-2 rounded-md border bg-card p-4 transition-colors hover:border-foreground/40"
+                className="group relative flex cursor-pointer flex-col items-center gap-2 rounded-card bg-card shadow-card p-4 transition-colors hover:border-foreground/40"
               >
                 <span className="text-muted-foreground">
                   {fileTypeIcon(file.name, "size-8")}
@@ -670,7 +670,7 @@ export function DataroomBrowser({
                     e.stopPropagation();
                     fileMenu.openNear(e.currentTarget, file);
                   }}
-                  className="absolute right-1.5 top-1.5 flex size-6 items-center justify-center rounded-md text-muted-foreground opacity-0 transition-opacity hover:bg-accent hover:text-foreground focus-visible:opacity-100 group-hover:opacity-100"
+                  className="absolute right-1.5 top-1.5 flex size-6 items-center justify-center rounded-md text-muted-foreground opacity-0 transition-opacity hover:bg-surface-2 hover:text-foreground focus-visible:opacity-100 group-hover:opacity-100"
                 >
                   <MoreVertical className="size-3.5" />
                 </button>
@@ -679,7 +679,7 @@ export function DataroomBrowser({
           </div>
         ) : (
           /* ---- list view ---- */
-          <div className="overflow-x-auto rounded-md border bg-card">
+          <div className="overflow-x-auto rounded-card bg-card shadow-card">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b text-left text-xs uppercase tracking-wider text-muted-foreground">
@@ -708,7 +708,7 @@ export function DataroomBrowser({
                     onContextMenu={(e) => folderMenu.openAt(e, folder)}
                     onClick={() => openFolderTile(folder)}
                     className={cn(
-                      "cursor-pointer border-b transition-colors last:border-0 hover:bg-accent/30",
+                      "cursor-pointer border-b transition-colors last:border-0 hover:bg-surface-2",
                       dropTarget === folder.id && "ring-2 ring-inset ring-foreground/40",
                     )}
                   >
@@ -743,7 +743,7 @@ export function DataroomBrowser({
                           e.stopPropagation();
                           folderMenu.openNear(e.currentTarget, folder);
                         }}
-                        className="flex size-9 sm:size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                        className="flex size-9 sm:size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-surface-2 hover:text-foreground"
                       >
                         <MoreVertical className="size-4" />
                       </button>
@@ -763,7 +763,7 @@ export function DataroomBrowser({
                     }}
                     onContextMenu={(e) => fileMenu.openAt(e, file)}
                     onClick={() => openFile(file)}
-                    className="cursor-pointer border-b transition-colors last:border-0 hover:bg-accent/30"
+                    className="cursor-pointer border-b transition-colors last:border-0 hover:bg-surface-2"
                   >
                     <td className="px-4 py-2.5">
                       <a
@@ -799,7 +799,7 @@ export function DataroomBrowser({
                           e.stopPropagation();
                           fileMenu.openNear(e.currentTarget, file);
                         }}
-                        className="flex size-9 sm:size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                        className="flex size-9 sm:size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-surface-2 hover:text-foreground"
                       >
                         <MoreVertical className="size-4" />
                       </button>
@@ -889,7 +889,7 @@ function RenameDialog({
           e.preventDefault();
           if (value.trim()) onConfirm(value.trim());
         }}
-        className="flex w-full max-w-sm flex-col gap-3 rounded-lg border bg-card p-4 shadow-lg"
+        className="flex w-full max-w-sm flex-col gap-3 rounded-card bg-card shadow-card p-4 shadow-lg"
       >
         <h2 className="text-sm font-semibold">
           Rename {current.kind === "file" ? "file" : "folder"}

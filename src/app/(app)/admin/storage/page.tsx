@@ -42,7 +42,7 @@ export default async function StoragePage() {
         </p>
       </div>
 
-      <div className="flex flex-wrap items-end justify-between gap-4 rounded-md border bg-card p-4">
+      <div className="flex flex-wrap items-end justify-between gap-4 rounded-card bg-card shadow-card p-4">
         <DefaultQuotaForm defaultGb={Math.round((fallback / GIB) * 10) / 10} />
         <div className="flex flex-col gap-0.5 text-right">
           <span className="text-xs text-muted-foreground">Free on the storage disk</span>

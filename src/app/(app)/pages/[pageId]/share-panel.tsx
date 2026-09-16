@@ -42,7 +42,7 @@ function ChipPick({
               "rounded-full border px-2.5 py-1 text-xs transition-all duration-150 active:scale-[0.97]",
               active
                 ? "border-foreground bg-foreground text-background"
-                : "hover:border-foreground/40 hover:bg-accent/40",
+                : "hover:border-foreground/40 hover:bg-surface-2",
             )}
           >
             {option.label}
@@ -89,7 +89,7 @@ export function SharePanel({
   ];
 
   return (
-    <div className="flex flex-col gap-3 rounded-md border bg-card p-4 elev">
+    <div className="flex flex-col gap-3 rounded-card bg-card shadow-card p-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-col gap-0.5">
           <h2 className="text-sm font-semibold">Sharing</h2>

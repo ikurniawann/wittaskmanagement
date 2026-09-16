@@ -127,7 +127,7 @@ export default async function TimelinePage({
           }
         />
       ) : (
-        <ul className="flex flex-col divide-y rounded-lg border bg-card">
+        <ul className="flex flex-col divide-y rounded-card bg-card shadow-card">
           {posts.map((post) => (
             <Post key={post.id} post={post} />
           ))}

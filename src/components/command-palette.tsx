@@ -48,7 +48,12 @@ const GROUPS: Array<{
   { key: "people", label: "People", icon: <UserRound className="size-3.5" /> },
 ];
 
-export function CommandPalette() {
+export function CommandPalette({
+  variant = "pill",
+}: {
+  /** `pill` = the header search field; `icon` = round button for phones */
+  variant?: "pill" | "icon";
+}) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -141,18 +146,29 @@ export function CommandPalette() {
 
   return (
     <>
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className="inline-flex h-8 items-center gap-2 rounded-md border px-2.5 text-xs text-muted-foreground transition-colors hover:border-foreground/40 hover:text-foreground"
-        aria-label="Search (Ctrl+K)"
-      >
-        <Search className="size-3.5" />
-        <span className="hidden sm:inline">Search</span>
-        <kbd className="hidden rounded-sm border bg-muted px-1 font-mono text-[10px] sm:inline">
-          ⌘K
-        </kbd>
-      </button>
+      {variant === "icon" ? (
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="flex size-11 items-center justify-center rounded-full bg-card text-foreground shadow-card active:scale-95"
+          aria-label="Search (Ctrl+K)"
+        >
+          <Search className="size-5" />
+        </button>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="flex h-11 w-full items-center gap-2.5 rounded-full bg-card px-4 text-sm text-muted-foreground shadow-card transition-colors hover:text-foreground"
+          aria-label="Search (Ctrl+K)"
+        >
+          <Search className="size-4 shrink-0" />
+          <span className="flex-1 truncate text-left">Search projects, tasks, people…</span>
+          <kbd className="hidden rounded-md bg-surface px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground lg:inline">
+            ⌘K
+          </kbd>
+        </button>
+      )}
 
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="top-24 translate-y-0 gap-0 overflow-hidden p-0 sm:max-w-xl">
@@ -206,9 +222,9 @@ export function CommandPalette() {
                           onClick={() => go(hit)}
                           onMouseMove={() => setActive(i)}
                           className={cn(
-                            "flex w-full items-baseline gap-2 rounded-md px-3 py-2 text-left text-sm",
+                            "flex w-full items-baseline gap-2 rounded-xl px-3 py-2 text-left text-sm",
                             i === active && clickable
-                              ? "bg-accent text-accent-foreground"
+                              ? "bg-surface-2 text-foreground"
                               : "text-foreground",
                             !clickable && "cursor-default opacity-80",
                           )}

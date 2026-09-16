@@ -36,7 +36,7 @@ export function InviteForm({
           <Button onClick={() => setOpen(true)}>Invite a guest ↗</Button>
         </div>
         {state.magicLink ? (
-          <p className="rounded-md border bg-card px-3 py-2 text-xs">
+          <p className="rounded-card bg-card shadow-card px-3 py-2 text-xs">
             Invite sent by email. Dev link:{" "}
             <span className="break-all font-mono">{state.magicLink}</span>
           </p>
@@ -48,7 +48,7 @@ export function InviteForm({
   return (
     <form
       action={formAction}
-      className="flex flex-col gap-4 rounded-lg border bg-card p-4"
+      className="flex flex-col gap-4 rounded-card bg-card shadow-card p-4"
     >
       <input type="hidden" name="eventId" value={eventId} />
       <div className="grid gap-4 sm:grid-cols-2">
@@ -126,13 +126,13 @@ export function InviteList({
 }) {
   if (invites.length === 0) {
     return (
-      <p className="rounded-md border bg-card px-4 py-6 text-sm text-muted-foreground">
+      <p className="rounded-card bg-card shadow-card px-4 py-6 text-sm text-muted-foreground">
         No guests invited yet.
       </p>
     );
   }
   return (
-    <ul className="flex flex-col divide-y rounded-md border bg-card elev">
+    <ul className="flex flex-col divide-y rounded-card bg-card shadow-card">
       {invites.map((invite) => (
         <li
           key={invite.id}
@@ -209,7 +209,7 @@ export function SubmissionReviewList({
 
   if (submissions.length === 0) {
     return (
-      <p className="rounded-md border bg-card px-4 py-6 text-sm text-muted-foreground">
+      <p className="rounded-card bg-card shadow-card px-4 py-6 text-sm text-muted-foreground">
         No submissions yet.
       </p>
     );
@@ -226,7 +226,7 @@ export function SubmissionReviewList({
         return (
           <li
             key={submission.id}
-            className="flex flex-col gap-3 rounded-lg border bg-card p-4"
+            className="flex flex-col gap-3 rounded-card bg-card shadow-card p-4"
           >
             <button
               type="button"

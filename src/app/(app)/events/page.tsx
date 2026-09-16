@@ -62,7 +62,7 @@ export default async function EventsPage({
                 "rounded px-2.5 py-1 transition-colors",
                 showArchived
                   ? "text-muted-foreground hover:text-foreground"
-                  : "bg-accent font-medium",
+                  : "bg-surface-2 font-medium",
               )}
             >
               Active
@@ -72,7 +72,7 @@ export default async function EventsPage({
               className={cn(
                 "flex items-center gap-1.5 rounded px-2.5 py-1 transition-colors",
                 showArchived
-                  ? "bg-accent font-medium"
+                  ? "bg-surface-2 font-medium"
                   : "text-muted-foreground hover:text-foreground",
               )}
             >

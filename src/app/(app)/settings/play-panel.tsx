@@ -36,7 +36,7 @@ export function PlayPanel({ enabled }: { enabled: boolean }) {
           It shows each person exactly what the boards already let them see.
         </p>
       </div>
-      <ul className="flex flex-col divide-y rounded-md border bg-card">
+      <ul className="flex flex-col divide-y rounded-card bg-card shadow-card">
         <li className="flex items-start gap-4 px-4 py-3.5">
           <div className="flex min-w-0 flex-1 flex-col gap-0.5">
             <span className="flex items-center gap-2 text-sm font-medium">

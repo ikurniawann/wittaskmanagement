@@ -21,7 +21,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 
-const ICONS: Record<string, LucideIcon> = {
+export const ICONS: Record<string, LucideIcon> = {
   "my-tasks": ListChecks,
   events: CalendarRange,
   calendar: Calendar,
@@ -56,8 +56,8 @@ export function NavLink({ item }: { item: NavItem }) {
       className={cn(
         "flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm transition-colors",
         active
-          ? "bg-accent font-medium text-foreground"
-          : "text-muted-foreground hover:bg-accent/60 hover:text-foreground",
+          ? "bg-surface-2 font-medium text-foreground"
+          : "text-muted-foreground hover:bg-surface-2 hover:text-foreground",
       )}
     >
       <span className="relative">
@@ -118,8 +118,8 @@ export function EventNavLink({
         className={cn(
           "flex items-center gap-2 rounded-md pr-1 transition-colors",
           active
-            ? "bg-accent font-medium text-foreground"
-            : "text-muted-foreground hover:bg-accent/60 hover:text-foreground",
+            ? "bg-surface-2 font-medium text-foreground"
+            : "text-muted-foreground hover:bg-surface-2 hover:text-foreground",
         )}
       >
         <Link
@@ -177,8 +177,8 @@ export function EventNavLink({
                 className={cn(
                   "truncate rounded-md px-2 py-1 text-[11px] uppercase tracking-wider transition-colors",
                   subActive
-                    ? "bg-accent font-semibold text-foreground"
-                    : "text-muted-foreground hover:bg-accent/60 hover:text-foreground",
+                    ? "bg-surface-2 font-semibold text-foreground"
+                    : "text-muted-foreground hover:bg-surface-2 hover:text-foreground",
                 )}
               >
                 {sub.label}

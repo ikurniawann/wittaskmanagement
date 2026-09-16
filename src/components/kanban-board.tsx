@@ -84,7 +84,7 @@ export function KanbanBoard({ tasks }: { tasks: KanbanTask[] }) {
             onDrop={() => drop(column)}
             className={cn(
               "flex min-h-72 w-64 shrink-0 flex-col gap-2 rounded-lg bg-muted/40 p-2 transition-colors",
-              overColumn === column && "bg-accent ring-1 ring-foreground/20",
+              overColumn === column && "bg-surface-2 ring-1 ring-foreground/20",
             )}
           >
             <div className="flex items-center gap-2 px-1.5 py-1">
@@ -108,7 +108,7 @@ export function KanbanBoard({ tasks }: { tasks: KanbanTask[] }) {
                     onDragStart={() => setDragId(task.id)}
                     onDragEnd={() => setDragId(null)}
                     className={cn(
-                      "group flex cursor-grab flex-col gap-2 rounded-md border bg-card p-3 elev elev-hover hover:border-foreground/25 active:cursor-grabbing",
+                      "group flex cursor-grab flex-col gap-2 rounded-card bg-card shadow-card p-3-hover hover:border-foreground/25 active:cursor-grabbing",
                       dragId === task.id && "rotate-1 opacity-60",
                     )}
                   >

@@ -239,12 +239,12 @@ export default async function TaskListPage({
                 No tasks.
               </p>
             ) : (
-              <ul className="flex flex-col divide-y rounded-md border bg-card elev">
+              <ul className="flex flex-col divide-y rounded-card bg-card shadow-card">
                 {items.map((task) => (
                   <TaskDragRow key={task.id} taskId={task.id}>
                     <Link
                       href={`/tasks/${task.id}`}
-                      className="flex flex-wrap items-center gap-3 px-4 py-2.5 text-sm transition-colors hover:bg-accent/50"
+                      className="flex flex-wrap items-center gap-3 px-4 py-2.5 text-sm transition-colors hover:bg-surface-2"
                     >
                       <PriorityIcon priority={task.priority} />
                       <span className="min-w-0 flex-1 truncate font-medium">

@@ -100,7 +100,7 @@ function InternalDepPicker({ taskId }: { taskId: string }) {
   }
 
   return (
-    <div className="flex flex-col gap-2 rounded-md border bg-card p-3">
+    <div className="flex flex-col gap-2 rounded-card bg-card shadow-card p-3">
       <div className="flex items-center gap-2">
         <Search className="size-3.5 shrink-0 text-muted-foreground" />
         <input
@@ -129,7 +129,7 @@ function InternalDepPicker({ taskId }: { taskId: string }) {
               key={hit.id}
               type="button"
               onClick={() => setPicked(hit)}
-              className="flex items-baseline gap-2 rounded-md px-2 py-1.5 text-left text-sm hover:bg-accent"
+              className="flex items-baseline gap-2 rounded-md px-2 py-1.5 text-left text-sm hover:bg-surface-2"
             >
               <span className="min-w-0 flex-1 truncate">{hit.title}</span>
               <span className="max-w-[45%] truncate text-xs text-muted-foreground">
@@ -173,7 +173,7 @@ function ExternalDepForm({ taskId }: { taskId: string }) {
     );
   }
   return (
-    <form action={formAction} className="flex flex-col gap-2 rounded-md border bg-card p-3">
+    <form action={formAction} className="flex flex-col gap-2 rounded-card bg-card shadow-card p-3">
       <input type="hidden" name="taskId" value={taskId} />
       <Input name="label" placeholder="Waiting for… (e.g. Crowd permit issued)" autoFocus />
       <Input name="party" placeholder="From whom? (e.g. Polres Jakarta Pusat)" />

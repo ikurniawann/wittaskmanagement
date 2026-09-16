@@ -225,7 +225,7 @@ export default async function EventGanttPage({
               <li key={t.id}>
                 <Link
                   href={`/tasks/${t.id}`}
-                  className="inline-flex items-center gap-1.5 rounded-sm border px-2.5 py-1 text-xs hover:bg-accent/50"
+                  className="inline-flex items-center gap-1.5 rounded-sm border px-2.5 py-1 text-xs hover:bg-surface-2"
                 >
                   <StatusDot status={t.status} />
                   {t.title}
@@ -243,7 +243,7 @@ export default async function EventGanttPage({
           <h2 className="text-xs font-semibold text-muted-foreground">
             Cross-event dependencies ({crossEventDeps.length})
           </h2>
-          <ul className="flex flex-col divide-y rounded-md border bg-card elev">
+          <ul className="flex flex-col divide-y rounded-card bg-card shadow-card">
             {crossEventDeps.map((dep) => (
               <li
                 key={`${dep.localTaskId}-${dep.remoteTaskId}`}
@@ -265,7 +265,7 @@ export default async function EventGanttPage({
                 >
                   {dep.remoteTitle}
                 </Link>
-                <span className="ml-auto rounded-full border bg-accent/40 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-foreground/80">
+                <span className="ml-auto rounded-full border bg-surface-2 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-foreground/80">
                   {dep.remoteEventName}
                 </span>
               </li>

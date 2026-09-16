@@ -56,8 +56,8 @@ function ConversationRow({
       className={cn(
         "group/row flex flex-col rounded-md",
         active
-          ? "bg-accent text-foreground"
-          : "text-muted-foreground hover:bg-accent/60 hover:text-foreground",
+          ? "bg-surface-2 text-foreground"
+          : "text-muted-foreground hover:bg-surface-2 hover:text-foreground",
       )}
     >
       <div className="flex items-center gap-1 pr-1">

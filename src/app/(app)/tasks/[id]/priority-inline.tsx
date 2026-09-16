@@ -66,7 +66,7 @@ export function PriorityInline({
         aria-label="Change priority"
         className={cn(
           "flex cursor-pointer items-center gap-1 rounded-md border border-transparent px-1.5 py-0.5 transition-colors",
-          "hover:border-border hover:bg-accent/40",
+          "hover:border-border hover:bg-surface-2",
           pending && "opacity-60",
         )}
       >
@@ -85,8 +85,8 @@ export function PriorityInline({
               type="button"
               onClick={() => choose(option)}
               className={cn(
-                "flex items-center gap-2 rounded px-2.5 py-1.5 text-left text-sm transition-colors hover:bg-accent",
-                option === priority && "bg-accent/50",
+                "flex items-center gap-2 rounded px-2.5 py-1.5 text-left text-sm transition-colors hover:bg-surface-2",
+                option === priority && "bg-surface-2",
               )}
             >
               <PriorityIcon priority={option} withLabel />

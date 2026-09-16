@@ -28,7 +28,7 @@ export function BrandingForm({
   return (
     <form
       action={formAction}
-      className="flex flex-col gap-4 rounded-md border bg-card p-4 elev"
+      className="flex flex-col gap-4 rounded-card bg-card shadow-card p-4"
     >
       <div className="flex flex-col gap-1">
         <h2 className="text-sm font-semibold">Organisation branding</h2>

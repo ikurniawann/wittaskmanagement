@@ -110,7 +110,7 @@ export function CalendarGrid({
                       ? "border-foreground bg-foreground text-background hover:bg-foreground/85"
                       : entry.overdue
                         ? "border-destructive bg-destructive/15 text-destructive hover:bg-destructive/25"
-                        : "border-border bg-card text-foreground hover:bg-accent",
+                        : "border-border bg-card text-foreground hover:bg-surface-2",
                     entry.done && "text-muted-foreground line-through",
                     // squared-off edge = the bar continues past this week
                     segment.clippedLeft && "ml-0 rounded-l-none border-l-0",

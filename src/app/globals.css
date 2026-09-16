@@ -31,9 +31,9 @@
   --color-priority-low: var(--priority-low);
   /* jet-black hero surface — pinned dark in BOTH themes (dashboard cards) */
   --color-surface-jet: var(--surface-jet);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-display), var(--font-geist-sans);
+  --font-heading: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -70,120 +70,180 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+  --radius-card: 1.5rem;
+  --radius-hero: 1.75rem;
+  /* elevation ladder of the WIT UI style (2026-09-16): cards float on the
+     canvas, nothing carries a border except inputs and table rows */
+  --shadow-card: 0 1px 2px rgb(16 17 18 / 0.03), 0 8px 24px -12px rgb(16 17 18 / 0.12);
+  --shadow-float: 0 12px 40px -12px rgb(16 17 18 / 0.25);
+  --shadow-glow: 0 8px 20px -8px color-mix(in srgb, var(--accent) 60%, transparent);
+}
+
+/* Semantic tokens of the WIT UI style (Owner 2026-09-16, ~/Desktop/uiwit).
+   Plain @theme (not inline) so .dark can re-point the variables. One accent,
+   one dark ink surface, everything else a neutral ladder. */
+@theme {
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-on-ink: var(--on-ink);
+  --color-on-ink-muted: var(--on-ink-muted);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-silver: var(--silver);
+  --color-body: var(--body);
+  --color-accent-strong: var(--accent-strong);
+  --color-accent-soft: var(--accent-soft);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-danger: var(--accent);
+  --color-danger-soft: var(--accent-soft);
 }
 
 :root {
-  /* Warm neutrals (design refresh 2026-08-12). These were chroma 0 — not
-     "greyish" but literally colourless, which is what made every surface read
-     as a default rather than a choice. A whisper of warmth (0.003–0.006 at
-     hue 75) is below conscious notice and above feeling. */
-  --background: oklch(0.995 0.003 75);
-  --foreground: oklch(0.145 0 0);
-  /* cards are never stark white — soft grey keeps surfaces distinct */
-  --card: oklch(0.974 0.005 75);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.968 0.006 75);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.966 0.007 75);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.918 0.006 75);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  /* Loosened from 0.375rem (2026-08-12): tight corners plus hairline borders
-     plus flat fills is exactly the recipe for "stiff". Still architectural,
-     just no longer sharp-edged. */
-  --radius: 0.625rem;
-  /* elevation (design overhaul 2026-08-07): cards float above the page with
-     a soft two-layer shadow instead of relying on borders alone */
-  --shadow-elev: 0 1px 2px oklch(0 0 0 / 7%), 0 4px 14px oklch(0 0 0 / 5%);
-  --shadow-elev-hover: 0 2px 4px oklch(0 0 0 / 9%), 0 10px 24px oklch(0 0 0 / 8%);
-  /* functional colors — light theme */
-  /* The one deliberate hue in an otherwise monochrome chrome (Owner
-     2026-08-27): a folder reads as a folder at a glance, the way it does in
-     Finder. Same 250 hue family as --status-todo so it belongs to the
-     palette rather than arriving from macOS wholesale. */
-  --folder: oklch(0.62 0.15 250);
-  --status-backlog: oklch(0.55 0 0);
-  --status-todo: oklch(0.55 0.13 250);
-  --status-in-progress: oklch(0.68 0.14 80);
-  --status-in-review: oklch(0.58 0.16 300);
-  --status-blocked: oklch(0.55 0.19 25);
-  --status-done: oklch(0.58 0.14 150);
-  --priority-urgent: oklch(0.55 0.19 25);
-  --priority-high: oklch(0.65 0.16 55);
-  --priority-medium: oklch(0.68 0.14 80);
-  --priority-low: oklch(0.55 0 0);
-  /* deeper than the dark page background — reads black everywhere */
-  --surface-jet: oklch(0.11 0 0);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  /* WIT UI style palette (2026-09-16): soft grey canvas, white cards, ink for
+     emphasis, red accent for the one thing that matters on a screen. */
+  --ink: #101112;
+  --ink-2: #1b1c1e;
+  --ink-3: #26282b;
+  --on-ink: #ffffff;
+  --on-ink-muted: #8b8b8b;
+  --surface: #f1f0f1;
+  --surface-2: #f5f4f6;
+  --silver: #c0c0c0;
+  --body: #333333;
+  --accent-strong: #c81f27;
+  --accent-soft: #fdeaeb;
+  --info: #2f6fed;
+  --info-soft: #e8effd;
+  --success: #059669;
+  --success-soft: #d1fae5;
+  --warning: #d97706;
+  --warning-soft: #fef3c7;
+
+  /* shadcn aliases, mapped onto the ladder so untouched pages follow */
+  --background: var(--surface);
+  --foreground: var(--ink);
+  --card: #ffffff;
+  --card-foreground: var(--ink);
+  --popover: #ffffff;
+  --popover-foreground: var(--ink);
+  --primary: var(--ink);
+  --primary-foreground: #ffffff;
+  --secondary: var(--surface);
+  --secondary-foreground: var(--ink);
+  --muted: var(--surface-2);
+  --muted-foreground: #8b8b8b;
+  /* the ONE highlight colour: primary CTA, active nav, urgent */
+  --accent: #e5262e;
+  --accent-foreground: #ffffff;
+  --destructive: #e5262e;
+  --border: #e6e5e7;
+  --input: #e6e5e7;
+  --ring: #e5262e;
+  --chart-1: #101112;
+  --chart-2: #8b8b8b;
+  --chart-3: #c0c0c0;
+  --chart-4: #e5262e;
+  --chart-5: #2f6fed;
+  /* 16px base: rounded-md ≈ 13px (rows, chips inside cards), rounded-lg 16px
+     (inputs, nested panels), rounded-xl 22px; cards use rounded-card (24). */
+  --radius: 1rem;
+  --shadow-elev: var(--shadow-card);
+  --shadow-elev-hover: 0 2px 4px rgb(16 17 18 / 0.05), 0 14px 32px -12px rgb(16 17 18 / 0.2);
+  /* functional colors — status + priority coding on dots, icons and chips */
+  --folder: #2f6fed;
+  --status-backlog: #8b8b8b;
+  --status-todo: #2f6fed;
+  --status-in-progress: #d97706;
+  --status-in-review: #7c3aed;
+  --status-blocked: #e5262e;
+  --status-done: #059669;
+  --priority-urgent: #e5262e;
+  --priority-high: #ea580c;
+  --priority-medium: #d97706;
+  --priority-low: #8b8b8b;
+  --surface-jet: var(--ink);
+  --sidebar: var(--ink);
+  --sidebar-foreground: #ffffff;
+  --sidebar-primary: #e5262e;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: rgb(255 255 255 / 10%);
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: rgb(255 255 255 / 10%);
+  --sidebar-ring: #e5262e;
 }
 
 .dark {
-  /* near-black backstage floor; cards lift one step, never glow */
-  --background: oklch(0.135 0.004 75);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.202 0.006 75);
-  --shadow-elev: 0 1px 2px oklch(0 0 0 / 55%), 0 6px 18px oklch(0 0 0 / 35%);
-  --shadow-elev-hover: 0 2px 4px oklch(0 0 0 / 60%), 0 12px 28px oklch(0 0 0 / 45%);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.185 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.272 0.007 75);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  /* functional colors — dark theme (slightly brighter for contrast) */
-  --folder: oklch(0.72 0.14 250);
-  --status-backlog: oklch(0.65 0 0);
-  --status-todo: oklch(0.68 0.13 250);
-  --status-in-progress: oklch(0.78 0.14 85);
-  --status-in-review: oklch(0.7 0.15 300);
-  --status-blocked: oklch(0.68 0.18 25);
-  --status-done: oklch(0.72 0.14 150);
-  --priority-urgent: oklch(0.68 0.18 25);
-  --priority-high: oklch(0.74 0.15 55);
-  --priority-medium: oklch(0.78 0.14 85);
-  --priority-low: oklch(0.65 0 0);
-  --sidebar: oklch(0.16 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.922 0 0); /* monochrome — no accent hues in chrome */
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  /* the same ladder, inverted: canvas near-black, cards one step up, the
+     rail (ink) one step above the canvas so it still floats */
+  --ink: #1b1c1e;
+  --ink-2: #26282b;
+  --ink-3: #303235;
+  --on-ink: #ffffff;
+  --on-ink-muted: #9a9a9a;
+  --surface: #0b0c0d;
+  --surface-2: #161718;
+  --silver: #4a4b4e;
+  --body: #d4d4d4;
+  --accent-strong: #f04a51;
+  --accent-soft: rgb(229 38 46 / 16%);
+  --info: #5b8def;
+  --info-soft: rgb(47 111 237 / 18%);
+  --success: #34d399;
+  --success-soft: rgb(5 150 105 / 20%);
+  --warning: #fbbf24;
+  --warning-soft: rgb(217 119 6 / 20%);
+
+  --background: var(--surface);
+  --foreground: #f5f5f5;
+  --card: #161718;
+  --card-foreground: #f5f5f5;
+  --popover: #1b1c1e;
+  --popover-foreground: #f5f5f5;
+  --primary: #f5f5f5;
+  --primary-foreground: #101112;
+  --secondary: #26282b;
+  --secondary-foreground: #f5f5f5;
+  --muted: #1f2022;
+  --muted-foreground: #9a9a9a;
+  --accent: #ef3b42;
+  --accent-foreground: #ffffff;
+  --destructive: #ef3b42;
+  --border: rgb(255 255 255 / 10%);
+  --input: rgb(255 255 255 / 14%);
+  --ring: #ef3b42;
+  --chart-1: #f5f5f5;
+  --chart-2: #9a9a9a;
+  --chart-3: #4a4b4e;
+  --chart-4: #ef3b42;
+  --chart-5: #5b8def;
+  --shadow-elev: 0 1px 2px rgb(0 0 0 / 55%), 0 8px 24px -12px rgb(0 0 0 / 50%);
+  --shadow-elev-hover: 0 2px 4px rgb(0 0 0 / 60%), 0 14px 32px -12px rgb(0 0 0 / 60%);
+  --folder: #5b8def;
+  --status-backlog: #9a9a9a;
+  --status-todo: #5b8def;
+  --status-in-progress: #fbbf24;
+  --status-in-review: #a78bfa;
+  --status-blocked: #ef3b42;
+  --status-done: #34d399;
+  --priority-urgent: #ef3b42;
+  --priority-high: #fb923c;
+  --priority-medium: #fbbf24;
+  --priority-low: #9a9a9a;
+  --surface-jet: #101112;
+  --sidebar: var(--ink);
+  --sidebar-foreground: #ffffff;
+  --sidebar-primary: #ef3b42;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: rgb(255 255 255 / 10%);
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: rgb(255 255 255 / 10%);
+  --sidebar-ring: #ef3b42;
 }
 
 @layer base {
@@ -195,15 +255,20 @@
   }
   html {
     @apply font-sans;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    font-feature-settings: "ss01", "cv11";
   }
-  /* The display face reaches every page from here, so no component needs a
-     class for it. Slightly tighter tracking: Bricolage sets wide by default
-     and headings sat loose next to Geist body text. */
+  /* One sans face for everything (WIT UI style); headings only tighten */
   h1,
   h2,
   h3 {
     font-family: var(--font-heading);
-    letter-spacing: -0.018em;
+    letter-spacing: -0.02em;
+  }
+  ::selection {
+    background: var(--accent);
+    color: #fff;
   }
 }
 
@@ -223,6 +288,16 @@
   .elev-hover:hover {
     box-shadow: var(--shadow-elev-hover);
     transform: translateY(-1px);
+  }
+  /* the only decorative light allowed: a faint accent glow on the canvas */
+  .ambient-glow {
+    background:
+      radial-gradient(60% 60% at 80% 0%, color-mix(in srgb, var(--accent) 9%, transparent), transparent 70%),
+      radial-gradient(40% 40% at 100% 30%, color-mix(in srgb, var(--accent) 6%, transparent), transparent 70%),
+      radial-gradient(35% 35% at 60% 10%, rgb(255 190 200 / 12%), transparent 70%);
+  }
+  .safe-b {
+    padding-bottom: env(safe-area-inset-bottom);
   }
 
   /* Entrance for page sections (2026-08-12). Small on purpose: 6px and

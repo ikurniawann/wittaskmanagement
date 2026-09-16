@@ -2,8 +2,8 @@ import type { LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
-// Standard empty state (design overhaul 2026-08-07, package C): an
-// invitation, not an apology — icon, one-line hint, and one clear action.
+// Standard empty state: an invitation, not an apology — round icon tile, one
+// line of hint, one clear action (WIT UI style, 2026-09-16: no dashed box).
 export function EmptyState({
   icon: Icon,
   title,
@@ -20,15 +20,15 @@ export function EmptyState({
   return (
     <div
       className={cn(
-        "flex flex-col items-center gap-2 rounded-md border border-dashed px-6 py-12 text-center",
+        "flex flex-col items-center justify-center gap-2 rounded-card bg-card px-6 py-12 text-center shadow-card",
         className,
       )}
     >
-      <span className="flex size-10 items-center justify-center rounded-full bg-muted text-muted-foreground">
-        <Icon className="size-5" />
+      <span className="flex size-12 items-center justify-center rounded-full bg-surface text-muted-foreground [&_svg]:size-6">
+        <Icon />
       </span>
-      <p className="text-sm font-medium">{title}</p>
-      {hint ? <p className="max-w-sm text-xs text-muted-foreground">{hint}</p> : null}
+      <p className="text-sm font-semibold">{title}</p>
+      {hint ? <p className="max-w-xs text-sm text-muted-foreground">{hint}</p> : null}
       {action ? <div className="pt-2">{action}</div> : null}
     </div>
   );

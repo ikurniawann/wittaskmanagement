@@ -88,7 +88,7 @@ export function ContextMenu({
           }}
           className={cn(
             "flex items-center gap-2 rounded px-2.5 py-1.5 text-left text-sm transition-colors",
-            "hover:bg-accent focus-visible:bg-accent focus-visible:outline-none",
+            "hover:bg-surface-2 focus-visible:bg-surface-2 focus-visible:outline-none",
             "disabled:pointer-events-none disabled:opacity-40",
             item.danger && "text-destructive hover:bg-destructive/10",
             item.danger && index > 0 && "mt-1 border-t border-border pt-2",

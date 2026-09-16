@@ -71,7 +71,7 @@ export function EditTaskForm({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
       <form
         action={submit}
-        className="flex max-h-[85svh] w-full max-w-lg flex-col gap-4 overflow-y-auto rounded-lg border bg-card p-5 shadow-lg"
+        className="flex max-h-[85svh] w-full max-w-lg flex-col gap-4 overflow-y-auto rounded-card bg-card shadow-card p-5 shadow-lg"
       >
         <input type="hidden" name="taskId" value={task.id} />
         <h2 className="text-sm font-semibold">Edit task</h2>

@@ -111,7 +111,7 @@ export function WorkDrilldown({
                       // close this popup first: the task opens as its own
                       // full-screen dialog, and two stacked would be a mess
                       onClick={() => setOpen(false)}
-                      className="flex items-center gap-3 rounded-md px-3 py-2.5 text-sm transition-colors hover:bg-accent/50"
+                      className="flex items-center gap-3 rounded-md px-3 py-2.5 text-sm transition-colors hover:bg-surface-2"
                     >
                       <PriorityIcon priority={t.priority} />
                       <span className="min-w-0 flex-1 truncate font-medium">{t.title}</span>

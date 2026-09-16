@@ -120,7 +120,7 @@ export function SaveToPage({
                 "flex items-center gap-2 rounded-md border px-2.5 py-1.5 text-left text-xs transition-colors",
                 targetId === page.id
                   ? "border-foreground/40 bg-background font-medium"
-                  : "border-transparent hover:bg-accent/40",
+                  : "border-transparent hover:bg-surface-2",
               )}
             >
               <FileText className="size-3.5 shrink-0 text-muted-foreground" />

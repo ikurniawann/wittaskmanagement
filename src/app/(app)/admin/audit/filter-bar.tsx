@@ -81,7 +81,7 @@ export function AuditFilterBar({
   );
 
   return (
-    <form method="GET" className="flex flex-col gap-3 rounded-md border bg-card p-3">
+    <form method="GET" className="flex flex-col gap-3 rounded-card bg-card shadow-card p-3">
       <input type="hidden" name="actor" value={actor} />
       <input type="hidden" name="event" value={eventId} />
       <input type="hidden" name="entity" value={entity} />

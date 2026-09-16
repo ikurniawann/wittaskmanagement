@@ -72,7 +72,7 @@ export default async function ApprovalsPage() {
               <li key={approval.id}>
                 <Link
                   href={`/approvals/${approval.id}`}
-                  className="flex flex-wrap items-center gap-3 px-4 py-3 text-sm transition-colors hover:bg-accent/50"
+                  className="flex flex-wrap items-center gap-3 px-4 py-3 text-sm transition-colors hover:bg-surface-2"
                 >
                   <span className="rounded-sm border px-1.5 py-0.5 text-[10px] uppercase tracking-wider text-muted-foreground">
                     {TYPE_LABELS[approval.type]}
@@ -112,7 +112,7 @@ export default async function ApprovalsPage() {
                 <li key={approval.id}>
                   <Link
                     href={`/approvals/${approval.id}`}
-                    className="flex flex-wrap items-center gap-3 px-4 py-3 text-sm transition-colors hover:bg-accent/50"
+                    className="flex flex-wrap items-center gap-3 px-4 py-3 text-sm transition-colors hover:bg-surface-2"
                   >
                     <span className="rounded-sm border px-1.5 py-0.5 text-[10px] uppercase tracking-wider text-muted-foreground">
                       {TYPE_LABELS[approval.type]}

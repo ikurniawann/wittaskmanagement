@@ -72,7 +72,7 @@ export function MegatixPanel({
       : null;
 
   return (
-    <section className="flex flex-col gap-4 rounded-md border bg-card p-5">
+    <section className="flex flex-col gap-4 rounded-card bg-card shadow-card p-5">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="flex items-center gap-2 text-sm font-semibold">
           <Ticket className="size-4" /> Megatix ticketing

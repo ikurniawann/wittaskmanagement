@@ -91,7 +91,7 @@ export function ShareDialog({
   };
 
   return (
-    <div className="flex flex-col gap-4 rounded-md border bg-card p-4">
+    <div className="flex flex-col gap-4 rounded-card bg-card shadow-card p-4">
       <div className="flex items-start justify-between gap-3">
         <div className="flex flex-col gap-0.5">
           <h3 className="flex items-center gap-2 text-sm font-semibold">

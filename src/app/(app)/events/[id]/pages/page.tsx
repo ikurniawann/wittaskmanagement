@@ -52,12 +52,12 @@ export default async function EventPagesPage({
           first one.
         </p>
       ) : (
-        <ul className="flex flex-col divide-y rounded-md border bg-card elev">
+        <ul className="flex flex-col divide-y rounded-card bg-card shadow-card">
           {pages.map((page) => (
             <li key={page.id}>
               <Link
                 href={`/events/${id}/pages/${page.id}`}
-                className="flex items-center gap-3 px-4 py-3 text-sm transition-colors hover:bg-accent/50"
+                className="flex items-center gap-3 px-4 py-3 text-sm transition-colors hover:bg-surface-2"
               >
                 <FileText className="size-4 shrink-0 text-muted-foreground" />
                 <span className="min-w-0 flex-1 truncate font-medium">

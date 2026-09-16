@@ -20,9 +20,9 @@ import { claimTaskAction, commentTaskAction, decideHandoffAction, recordPlaySess
 
 type Props = { world: PlayWorld; focusTask: string | null; focusMe: boolean };
 
-const btn = "rounded bg-background/85 px-2 py-1 text-xs backdrop-blur hover:bg-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring";
-const panel = "flex flex-col gap-2 rounded-md border bg-card p-3 text-sm shadow-lg";
-const rowBtn = "w-full truncate rounded px-1 py-0.5 text-left hover:bg-accent focus-visible:bg-accent";
+const btn = "rounded bg-background/85 px-2 py-1 text-xs backdrop-blur hover:bg-surface-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring";
+const panel = "flex flex-col gap-2 rounded-card bg-card shadow-card p-3 text-sm shadow-lg";
+const rowBtn = "w-full truncate rounded px-1 py-0.5 text-left hover:bg-surface-2 focus-visible:bg-surface-2";
 
 const qualityListeners = new Set<() => void>();
 function subscribeQuality(cb: () => void): () => void {
@@ -356,7 +356,7 @@ export function PlayCanvas({ world: initial, focusTask, focusMe }: Props) {
       {/* Today tray (T-254) */}
       <div data-testid="play-tray" className={`absolute left-3 top-14 ${panel} w-64 transition-opacity duration-500 max-sm:left-2 max-sm:top-12 max-sm:w-[calc(100%-1rem)] ${hud}`}>
         <button type="button" className="flex items-center justify-between gap-2 text-left font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring" onClick={() => setTrayOpen((v) => !v)} aria-expanded={trayOpen}>
-          <span>Today <span data-testid="play-level" className="ml-1 rounded bg-accent px-1.5 py-0.5 text-[10px] font-normal text-muted-foreground" title={`${world.me.xp} XP · next level at ${world.me.nextLevelXp}`}>Lv {world.me.level} · {world.me.xp} XP{world.me.todayXp ? ` · +${world.me.todayXp} today` : ""}</span></span>
+          <span>Today <span data-testid="play-level" className="ml-1 rounded bg-surface-2 px-1.5 py-0.5 text-[10px] font-normal text-muted-foreground" title={`${world.me.xp} XP · next level at ${world.me.nextLevelXp}`}>Lv {world.me.level} · {world.me.xp} XP{world.me.todayXp ? ` · +${world.me.todayXp} today` : ""}</span></span>
           <span data-testid="play-tray-summary" className="text-xs text-muted-foreground">
             {overdue.length} overdue · {dueToday.length} due · {world.unreadNotifications} unread{world.approvalsWaiting ? ` · ${world.approvalsWaiting} approvals` : ""}
           </span>
@@ -412,17 +412,17 @@ export function PlayCanvas({ world: initial, focusTask, focusMe }: Props) {
           <div className="flex flex-wrap gap-1">
             {TASK_STATUS_ORDER.map((s) => (
               <button key={s} type="button" disabled={pending || s === selectedTask.status} onClick={() => changeStatus(s)}
-                className={`rounded border px-2 py-0.5 text-xs disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring ${s === selectedTask.status ? "bg-accent" : "hover:bg-accent"}`}>
+                className={`rounded border px-2 py-0.5 text-xs disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring ${s === selectedTask.status ? "bg-surface-2" : "hover:bg-surface-2"}`}>
                 {dot(s)}{STATUS_LABELS[s]}
               </button>
             ))}
           </div>
           <div className="flex gap-1">
             <input value={comment} onChange={(e) => setComment(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") sendComment(); }} placeholder="Comment…" aria-label="Comment" className="min-w-0 flex-1 rounded border bg-background px-2 py-1 text-xs" />
-            <button type="button" className="rounded border px-2 py-1 text-xs hover:bg-accent disabled:opacity-50" disabled={pending || !comment.trim()} onClick={sendComment}>Send</button>
+            <button type="button" className="rounded border px-2 py-1 text-xs hover:bg-surface-2 disabled:opacity-50" disabled={pending || !comment.trim()} onClick={sendComment}>Send</button>
           </div>
           <div className="flex items-center justify-between gap-2 text-xs">
-            {!selectedTask.assigneeIds.includes(me) ? <button type="button" className="rounded border px-2 py-1 hover:bg-accent disabled:opacity-50" disabled={pending} onClick={claim}>Claim</button> : <span className="text-muted-foreground">Assigned to you</span>}
+            {!selectedTask.assigneeIds.includes(me) ? <button type="button" className="rounded border px-2 py-1 hover:bg-surface-2 disabled:opacity-50" disabled={pending} onClick={claim}>Claim</button> : <span className="text-muted-foreground">Assigned to you</span>}
             <Link href={`/tasks/${selectedTask.id}`} className="underline underline-offset-4">Open full task</Link>
           </div>
           {error ? <span role="alert" className="text-[11px] text-destructive">{error}</span> : null}
@@ -445,7 +445,7 @@ export function PlayCanvas({ world: initial, focusTask, focusMe }: Props) {
               <ul className="flex max-h-48 flex-col gap-1 overflow-y-auto">
                 {theirs.slice(0, 12).map((t) => (
                   <li key={t.id}>
-                    <button type="button" onClick={() => focusTaskFromTray(t.id)} className="flex w-full items-center gap-2 rounded px-1 py-0.5 text-left hover:bg-accent focus-visible:bg-accent">
+                    <button type="button" onClick={() => focusTaskFromTray(t.id)} className="flex w-full items-center gap-2 rounded px-1 py-0.5 text-left hover:bg-surface-2 focus-visible:bg-surface-2">
                       {dot(t.status)}
                       <span className="truncate">{t.title}</span>
                       {t.waiters > 0 ? <span className="ml-auto shrink-0 text-[10px] text-muted-foreground">{t.waiters} waiting</span> : null}
@@ -469,8 +469,8 @@ export function PlayCanvas({ world: initial, focusTask, focusMe }: Props) {
             <button type="button" className="text-xs text-muted-foreground hover:text-foreground" onClick={() => setSelected(null)} aria-label="Close">✕</button>
           </div>
           <div className="flex flex-wrap gap-1 text-xs">
-            <button type="button" className="rounded border px-2 py-1 hover:bg-accent disabled:opacity-50" disabled={pending} onClick={() => decide(true)}>Accept</button>
-            <button type="button" className="rounded border px-2 py-1 hover:bg-accent disabled:opacity-50" disabled={pending} onClick={() => decide(false)}>Decline</button>
+            <button type="button" className="rounded border px-2 py-1 hover:bg-surface-2 disabled:opacity-50" disabled={pending} onClick={() => decide(true)}>Accept</button>
+            <button type="button" className="rounded border px-2 py-1 hover:bg-surface-2 disabled:opacity-50" disabled={pending} onClick={() => decide(false)}>Decline</button>
             <span className="self-center text-muted-foreground">Only the receiving division&apos;s head can decide.</span>
           </div>
           {error ? <span role="alert" className="text-[11px] text-destructive">{error}</span> : null}

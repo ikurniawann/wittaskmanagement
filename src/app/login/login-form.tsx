@@ -34,6 +34,7 @@ export function LoginForm() {
           type="email"
           autoComplete="email"
           placeholder="you@example.com"
+          className="h-12"
           required
           value={email}
           onChange={(e) => setEmail(e.target.value)}
@@ -47,6 +48,7 @@ export function LoginForm() {
           name="password"
           type="password"
           autoComplete="current-password"
+          className="h-12"
           required
         />
       </div>
@@ -55,7 +57,7 @@ export function LoginForm() {
           {state.error}
         </p>
       ) : null}
-      <Button type="submit" disabled={pending} className="mt-2">
+      <Button type="submit" variant="primary" size="lg" disabled={pending} className="mt-2 w-full">
         {pending ? "Signing in…" : "Sign in"}
       </Button>
     </form>

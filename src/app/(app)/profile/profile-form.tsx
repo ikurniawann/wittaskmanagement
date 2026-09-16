@@ -53,7 +53,7 @@ export function ProfileForm({
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-4 rounded-md border bg-card p-4 elev">
+      <div className="flex flex-col gap-4 rounded-card bg-card shadow-card p-4">
         <h2 className="flex items-center gap-2 text-sm font-semibold">
           <UserRound className="size-4 text-muted-foreground" /> Profile
         </h2>
@@ -91,7 +91,7 @@ export function ProfileForm({
         <form
           ref={passwordForm}
           action={savePassword}
-          className="flex flex-col gap-4 rounded-md border bg-card p-4 elev"
+          className="flex flex-col gap-4 rounded-card bg-card shadow-card p-4"
         >
           <h2 className="flex items-center gap-2 text-sm font-semibold">
             <KeyRound className="size-4 text-muted-foreground" /> Change password

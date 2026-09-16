@@ -63,7 +63,7 @@ export function AddItemForm({
   return (
     <form
       action={formAction}
-      className="flex flex-col gap-3 rounded-md border bg-card p-4"
+      className="flex flex-col gap-3 rounded-card bg-card shadow-card p-4"
     >
       <input type="hidden" name="templateId" value={templateId} />
       <input type="hidden" name="divisionId" value={division} />

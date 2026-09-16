@@ -256,7 +256,7 @@ export default async function TicketsPage({
               className={cn(
                 "rounded px-3 py-1 transition-colors",
                 tab === key
-                  ? "bg-accent font-medium"
+                  ? "bg-surface-2 font-medium"
                   : "text-muted-foreground hover:text-foreground",
               )}
             >
@@ -319,7 +319,7 @@ export default async function TicketsPage({
                   <div
                     key={cell.label}
                     title={cell.hint}
-                    className="flex flex-col gap-1 rounded-md border bg-card p-4"
+                    className="flex flex-col gap-1 rounded-card bg-card shadow-card p-4"
                   >
                     <span className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
                       {cell.label}
@@ -340,7 +340,7 @@ export default async function TicketsPage({
               ) : null}
 
               {/* the split behind the total — still a summary, one line each */}
-              <div className="overflow-x-auto rounded-md border bg-card">
+              <div className="overflow-x-auto rounded-card bg-card shadow-card">
                 <table className="w-full min-w-[520px] text-sm">
                   <thead>
                     <tr className="border-b text-left text-xs uppercase tracking-wider text-muted-foreground">
@@ -536,7 +536,7 @@ export default async function TicketsPage({
                       <div
                         key={cell.label}
                         title={"hint" in cell ? cell.hint : undefined}
-                        className="flex flex-col gap-1 rounded-md border bg-card p-4"
+                        className="flex flex-col gap-1 rounded-card bg-card shadow-card p-4"
                       >
                         <span className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
                           {cell.label}
@@ -567,7 +567,7 @@ export default async function TicketsPage({
                       </span>
                     </h2>
                   </div>
-                  <div className="overflow-x-auto rounded-md border bg-card">
+                  <div className="overflow-x-auto rounded-card bg-card shadow-card">
                     <table className="w-full min-w-[900px] text-sm">
                       <thead>
                         <tr className="border-b text-left text-xs uppercase tracking-wider text-muted-foreground">
@@ -658,7 +658,7 @@ export default async function TicketsPage({
       {tab === "manual" && canRecord ? (
         <form
           action={recordAction}
-          className="flex flex-wrap items-end gap-3 rounded-md border bg-card p-4"
+          className="flex flex-wrap items-end gap-3 rounded-card bg-card shadow-card p-4"
         >
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="ts-day" className="text-xs">
@@ -718,7 +718,7 @@ export default async function TicketsPage({
           <h2 className="text-sm font-semibold">
             Daily sales
           </h2>
-          <div className="flex items-end gap-1.5 overflow-x-auto rounded-md border bg-card p-4">
+          <div className="flex items-end gap-1.5 overflow-x-auto rounded-card bg-card shadow-card p-4">
             {snapshots.map((s) => (
               <div
                 key={s.id}

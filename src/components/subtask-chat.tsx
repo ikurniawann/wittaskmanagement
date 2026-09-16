@@ -128,7 +128,7 @@ export function SubtaskChat({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-md px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            className="rounded-md px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-surface-2 hover:text-foreground"
           >
             Close
           </button>

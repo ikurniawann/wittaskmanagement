@@ -49,7 +49,7 @@ export function AssigneePicker({
             className={cn(
               "flex items-center gap-1.5 rounded-full border py-1 pl-1 pr-2.5 text-xs transition-colors",
               active
-                ? "border-foreground bg-accent font-medium"
+                ? "border-foreground bg-surface-2 font-medium"
                 : "text-muted-foreground hover:text-foreground",
             )}
           >
@@ -96,7 +96,7 @@ export function LeadSelect({
             className={cn(
               "flex items-center gap-1.5 rounded-full border py-1 pl-1 pr-2.5 text-xs transition-colors",
               active
-                ? "border-foreground bg-accent font-medium"
+                ? "border-foreground bg-surface-2 font-medium"
                 : "text-muted-foreground hover:text-foreground",
             )}
           >

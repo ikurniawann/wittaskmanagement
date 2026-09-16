@@ -11,7 +11,7 @@ export async function PlayProgress({ userId, compact = false }: { userId: string
   if (compact) {
     if (quests.length === 0) return null;
     return (
-      <div className="flex flex-wrap items-center gap-2 rounded-md border bg-card px-3 py-2 text-xs">
+      <div className="flex flex-wrap items-center gap-2 rounded-card bg-card shadow-card px-3 py-2 text-xs">
         <span className="font-medium">Today&apos;s quests</span>
         {quests.map((q) => (
           <span key={q.id} className={`rounded border px-2 py-0.5 ${q.completedAt ? "line-through text-muted-foreground" : ""}`}>{q.title} · {q.progress}/{q.targetCount}</span>
@@ -22,13 +22,13 @@ export async function PlayProgress({ userId, compact = false }: { userId: string
   }
   const pct = Math.min(100, Math.round((me.xp - 100 * me.level * me.level) / (me.nextLevelXp - 100 * me.level * me.level) * 100));
   return (
-    <div className="flex flex-col gap-3 rounded-md border bg-card p-4">
+    <div className="flex flex-col gap-3 rounded-card bg-card shadow-card p-4">
       <div className="flex items-center justify-between gap-2">
         <h2 className="text-sm font-semibold">Backstage Play</h2>
         <Link href="/play?focus=me" className="text-xs underline underline-offset-4">Open the office</Link>
       </div>
       <div className="flex items-center gap-3 text-sm">
-        <span className="rounded bg-accent px-2 py-1 font-medium">Level {me.level}</span>
+        <span className="rounded bg-surface-2 px-2 py-1 font-medium">Level {me.level}</span>
         <div className="flex min-w-0 flex-1 flex-col gap-1">
           <div className="h-1.5 w-full overflow-hidden rounded bg-muted"><div className="h-full bg-foreground" style={{ width: `${pct}%` }} /></div>
           <span className="text-xs text-muted-foreground">{me.xp} XP · next level at {me.nextLevelXp}{me.today ? ` · +${me.today} today` : ""}</span>

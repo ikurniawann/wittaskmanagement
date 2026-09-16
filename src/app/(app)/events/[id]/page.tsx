@@ -229,7 +229,7 @@ export default async function EventPage({ params }: PageProps<"/events/[id]">) {
           </p>
         ) : (
           <>
-            <div className="flex flex-col gap-2 rounded-md border bg-card p-4">
+            <div className="flex flex-col gap-2 rounded-card bg-card shadow-card p-4">
               <div className="flex flex-wrap items-baseline justify-between gap-2">
                 <span className="text-2xl font-semibold tabular-nums">
                   {progress.pct !== null ? `${progress.pct}%` : "—"}
@@ -264,7 +264,7 @@ export default async function EventPage({ params }: PageProps<"/events/[id]">) {
               </div>
             </div>
 
-            <ul className="grid gap-x-6 gap-y-1 rounded-md border bg-card px-4 py-3 sm:grid-cols-2">
+            <ul className="grid gap-x-6 gap-y-1 rounded-card bg-card shadow-card px-4 py-3 sm:grid-cols-2">
               {divisionSummary.map((d) => (
                 <li key={d.id}>
                   <Link

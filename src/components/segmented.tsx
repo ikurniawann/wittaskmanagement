@@ -20,7 +20,7 @@ export function Segmented({
   const [value, setValue] = useState(defaultValue ?? options[0]?.value ?? "");
 
   return (
-    <div className="inline-flex flex-wrap gap-0.5 rounded-lg border bg-muted/40 p-0.5">
+    <div className="inline-flex flex-wrap gap-1 rounded-full bg-card p-1 shadow-card">
       <input type="hidden" name={name} value={value} />
       {options.map((option) => {
         const active = value === option.value;
@@ -35,9 +35,9 @@ export function Segmented({
             }}
             aria-pressed={active}
             className={cn(
-              "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-all duration-150",
+              "flex h-8 items-center gap-1.5 rounded-full px-3.5 text-xs font-semibold transition-all duration-150",
               active
-                ? "bg-background text-foreground shadow-sm ring-1 ring-border"
+                ? "bg-ink text-on-ink"
                 : "text-muted-foreground hover:text-foreground",
             )}
           >

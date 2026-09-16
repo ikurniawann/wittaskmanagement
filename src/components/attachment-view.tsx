@@ -25,7 +25,7 @@ export function AttachmentView({
     <a
       href={`/api/files/${path}`}
       download={name ?? true}
-      className="inline-flex w-fit items-center gap-2 rounded-md border px-3 py-1.5 text-xs font-medium transition-colors hover:bg-accent"
+      className="inline-flex w-fit items-center gap-2 rounded-md border px-3 py-1.5 text-xs font-medium transition-colors hover:bg-surface-2"
     >
       <Paperclip className="size-3.5" />
       {name ?? "Attachment"}

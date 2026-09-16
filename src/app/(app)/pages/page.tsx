@@ -90,12 +90,12 @@ function PageGroup({
           {empty}
         </p>
       ) : (
-        <ul className="flex flex-col divide-y rounded-md border bg-card">
+        <ul className="flex flex-col divide-y rounded-card bg-card shadow-card">
           {items.map((page) => (
             <li key={page.id}>
               <Link
                 href={`/pages/${page.id}`}
-                className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-accent/30"
+                className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-surface-2"
               >
                 <FileText className="size-4 shrink-0 text-muted-foreground" />
                 <span className="flex min-w-0 flex-1 flex-col">
