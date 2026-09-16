@@ -59,10 +59,19 @@ export function AppFrame({
       />
       {fullscreen ? null : <div className="hidden shrink-0 md:block print:hidden">{sidebar}</div>}
       <div className="relative flex min-w-0 flex-1 flex-col gap-3">
-        <header className="flex min-h-14 shrink-0 items-center gap-2 sm:gap-3 print:hidden">
-          {headerLeft}
-          <div ref={setSlot} className="hidden min-w-0 flex-1 md:block" />
-          <div className="ml-auto flex shrink-0 items-center gap-2 sm:gap-3">{headerRight}</div>
+        {/* same width and inset as the page content below, so the title in
+            the slot lines up with the first card on wide screens */}
+        <header className="flex min-h-14 shrink-0 items-center print:hidden">
+          <div
+            className={cn(
+              "mx-auto flex w-full items-center gap-2 px-1 sm:gap-3",
+              fullscreen ? "max-w-none" : "max-w-[1400px]",
+            )}
+          >
+            {headerLeft}
+            <div ref={setSlot} className="hidden min-w-0 flex-1 md:block" />
+            <div className="ml-auto flex shrink-0 items-center gap-2 sm:gap-3">{headerRight}</div>
+          </div>
         </header>
         <main
           className={cn(

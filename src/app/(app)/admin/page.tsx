@@ -11,6 +11,7 @@ import { AgentKeysCard } from "./agent-keys-card";
 import { MegatixPanel } from "./megatix-panel";
 import { DivisionsCard } from "./divisions-card";
 import { AdminTabs } from "./admin-tabs";
+import { PageHeader } from "@/components/page-header";
 
 export const metadata: Metadata = { title: "Admin" };
 
@@ -60,12 +61,7 @@ export default async function AdminPage() {
     <section className="flex flex-col gap-6">
       {/* wraps on a phone: the title block and the quick links do not fit one row */}
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <div className="flex flex-col gap-1">
-          <h1 className="text-3xl font-semibold tracking-tight">Admin</h1>
-          <p className="text-sm text-muted-foreground">
-            Manage users, divisions, and org-wide settings.
-          </p>
-        </div>
+        <PageHeader title={<>Admin</>} description={<>Manage users, divisions, and org-wide settings.</>} />
         <div className="flex items-center gap-4">
         <Link
           href="/admin/storage"

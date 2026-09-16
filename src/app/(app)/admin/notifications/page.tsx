@@ -6,6 +6,7 @@ import { can } from "@/lib/permissions";
 import { listEditableTemplates } from "@/lib/whatsapp/template-store";
 import { TEMPLATE_SPECS } from "@/lib/whatsapp/templates";
 import { TemplateEditorList } from "./template-editor";
+import { PageHeader } from "@/components/page-header";
 
 export const metadata: Metadata = { title: "Notification templates" };
 
@@ -26,14 +27,9 @@ export default async function NotificationTemplatesPage() {
         >
           ← Admin
         </Link>
-        <h1 className="text-3xl font-semibold tracking-tight">
-          Notification templates
-        </h1>
-        <p className="max-w-2xl text-sm text-muted-foreground">
-          The wording of the WhatsApp messages the app sends. Edit freely —
+        <PageHeader title={<>Notification templates</>} description={<>The wording of the WhatsApp messages the app sends. Edit freely —
           any language works. Placeholders in braces are filled in per
-          recipient; leave a template alone to keep the default wording.
-        </p>
+          recipient; leave a template alone to keep the default wording.</>} />
       </div>
 
       <TemplateEditorList specs={TEMPLATE_SPECS} bodies={bodies} />

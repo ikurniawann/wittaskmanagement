@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { sessionActor } from "@/lib/auth/session-actor";
 import { listAccessLog } from "@/lib/dataroom/service";
 import { can } from "@/lib/permissions";
+import { PageHeader } from "@/components/page-header";
 
 export const metadata: Metadata = { title: "Dataroom activity" };
 
@@ -39,12 +40,9 @@ export default async function DataroomActivityPage({
         >
           ← Dataroom
         </Link>
-        <h1 className="text-2xl font-semibold tracking-tight">Activity</h1>
-        <p className="max-w-2xl text-sm text-muted-foreground">
-          Every upload, download and change, newest first. You see the entries
+        <PageHeader title={<>Activity</>} description={<>Every upload, download and change, newest first. You see the entries
           for folders you can open — a sealed folder&apos;s activity stays with
-          the people on its list.
-        </p>
+          the people on its list.</>} />
       </div>
 
       {rows.length === 0 ? (

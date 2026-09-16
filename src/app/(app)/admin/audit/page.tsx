@@ -7,6 +7,7 @@ import { listActiveEvents } from "@/lib/events/service";
 import { listUsersWithMemberships } from "@/lib/org/service";
 import { can } from "@/lib/permissions";
 import { AuditFilterBar } from "./filter-bar";
+import { PageHeader } from "@/components/page-header";
 
 export const metadata: Metadata = { title: "Audit log" };
 
@@ -49,9 +50,7 @@ export default async function AuditPage({
         >
           ← Admin
         </Link>
-        <h1 className="text-2xl font-semibold tracking-tight">
-          Audit log
-        </h1>
+        <PageHeader title={<>Audit log</>} />
       </div>
 
       <AuditFilterBar

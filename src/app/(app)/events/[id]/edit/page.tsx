@@ -9,6 +9,7 @@ import {
 import { wibInputValue } from "@/lib/tasks/dates";
 import { can } from "@/lib/permissions";
 import { EditEventForm } from "./edit-event-form";
+import { PageHeader } from "@/components/page-header";
 
 export const metadata: Metadata = { title: "Edit project" };
 
@@ -29,7 +30,7 @@ export default async function EditEventPage({
 
   return (
     <section className="mx-auto flex w-full max-w-xl flex-col gap-8">
-      <h1 className="text-3xl font-semibold tracking-tight">Edit project</h1>
+      <PageHeader title={<>Edit project</>} />
       <EditEventForm
         event={{
           id: event.id,

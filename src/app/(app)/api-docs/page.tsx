@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { sessionActor } from "@/lib/auth/session-actor";
 import { can } from "@/lib/permissions";
 import { SwaggerView } from "./swagger-view";
+import { PageHeader } from "@/components/page-header";
 
 export const metadata: Metadata = { title: "API docs" };
 
@@ -15,14 +16,9 @@ export default async function ApiDocsPage() {
 
   return (
     <section className="flex flex-col gap-6">
-      <div className="flex flex-col gap-1">
-        <h1 className="text-3xl font-semibold tracking-tight">API docs</h1>
-        <p className="text-sm text-muted-foreground">
-          The Agent API, endpoint by endpoint. Press <span className="font-medium">Authorize</span>,
+      <PageHeader title={<>API docs</>} description={<>The Agent API, endpoint by endpoint. Press <span className="font-medium">Authorize</span>,
           paste an agent key from Admin and the WhatsApp number the agent should act for, then try
-          any call live against this instance.
-        </p>
-      </div>
+          any call live against this instance.</>} />
       <SwaggerView specUrl="/api/openapi" />
     </section>
   );

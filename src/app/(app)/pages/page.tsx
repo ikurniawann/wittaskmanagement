@@ -8,6 +8,7 @@ import { sessionActor } from "@/lib/auth/session-actor";
 import { listPages } from "@/lib/pages/standalone-service";
 import { can } from "@/lib/permissions";
 import { createPageAction } from "./actions";
+import { PageHeader } from "@/components/page-header";
 
 export const metadata: Metadata = { title: "Pages" };
 
@@ -25,13 +26,8 @@ export default async function PagesIndex() {
   return (
     <section className="flex flex-col gap-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
-        <div className="flex flex-col gap-1">
-          <h1 className="text-3xl font-semibold tracking-tight">Pages</h1>
-          <p className="max-w-2xl text-sm text-muted-foreground">
-            Notes, SOPs and summaries that do not belong to a single event. A
-            new page is private to you until you share it.
-          </p>
-        </div>
+        <PageHeader title={<>Pages</>} description={<>Notes, SOPs and summaries that do not belong to a single event. A
+            new page is private to you until you share it.</>} />
         <form action={createPageAction} className="flex items-end gap-2">
           <Input
             name="title"

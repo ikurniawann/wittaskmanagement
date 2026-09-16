@@ -8,6 +8,7 @@ import { parseMonthParam } from "@/lib/calendar/month-param";
 import { listActiveEvents } from "@/lib/events/service";
 import { can } from "@/lib/permissions";
 import { listEventTasks } from "@/lib/tasks/service";
+import { PageHeader } from "@/components/page-header";
 
 export const metadata: Metadata = { title: "Calendar" };
 
@@ -48,14 +49,7 @@ export default async function CalendarPage({
   return (
     <section className="flex flex-col gap-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
-        <div className="flex flex-col gap-1">
-          <h1 className="text-3xl font-semibold tracking-tight">
-            Calendar
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Show dates and task deadlines across every event, one month at a time.
-          </p>
-        </div>
+        <PageHeader title={<>Calendar</>} description={<>Show dates and task deadlines across every event, one month at a time.</>} />
       </div>
 
       <CalendarMonthNav basePath="/calendar" year={year} monthIndex={monthIndex} />

@@ -8,6 +8,7 @@ import { can } from "@/lib/permissions";
 import { getTemplate, listTemplates } from "@/lib/templates/service";
 import { deleteItemAction, deleteTemplateAction } from "./actions";
 import { AddItemForm, NewTemplateForm } from "./template-forms";
+import { PageHeader } from "@/components/page-header";
 
 export const metadata: Metadata = { title: "Playbooks" };
 
@@ -34,13 +35,8 @@ export default async function TemplatesPage({
         >
           ← Admin
         </Link>
-        <h1 className="text-2xl font-semibold tracking-tight">
-          Project playbooks
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          Reusable checklists per division — due dates count back from show
-          day when a playbook is applied to a project.
-        </p>
+        <PageHeader title={<>Project playbooks</>} description={<>Reusable checklists per division — due dates count back from show
+          day when a playbook is applied to a project.</>} />
       </div>
 
       <div className="flex flex-wrap items-center gap-2">

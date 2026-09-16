@@ -14,6 +14,7 @@ import { can } from "@/lib/permissions";
 import { cn } from "@/lib/utils";
 import { markPaidAction, removeLineAction } from "./actions";
 import { AddLineForm, NewExpenseForm } from "./forms";
+import { PageHeader } from "@/components/page-header";
 
 export const metadata: Metadata = { title: "Budget" };
 
@@ -51,11 +52,7 @@ export default async function BudgetPage({
 
   return (
     <section className="flex flex-col gap-8">
-      <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold tracking-tight">
-          Budget
-        </h1>
-      </div>
+      <PageHeader title={<>Budget</>} />
 
       {/* totals strip */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">

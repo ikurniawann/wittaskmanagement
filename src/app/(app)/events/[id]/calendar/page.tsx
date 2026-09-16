@@ -8,6 +8,7 @@ import { buildCalendarEntries, type CalendarTask } from "@/lib/calendar/aggregat
 import { parseMonthParam } from "@/lib/calendar/month-param";
 import { getEvent } from "@/lib/events/service";
 import { listEventTasks } from "@/lib/tasks/service";
+import { PageHeader } from "@/components/page-header";
 
 export const metadata: Metadata = { title: "Calendar" };
 
@@ -50,10 +51,7 @@ export default async function EventCalendarPage({
     <section className="flex flex-col gap-6">
       <div className="flex flex-col gap-1">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h1 className="text-2xl font-semibold tracking-tight">
-            Schedule
-          </h1>
-          <ScheduleViewToggle eventId={id} active="calendar" />
+          <PageHeader title={<>Schedule</>}><ScheduleViewToggle eventId={id} active="calendar" /></PageHeader>
         </div>
       </div>
 

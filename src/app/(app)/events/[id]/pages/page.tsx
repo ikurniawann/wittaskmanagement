@@ -8,6 +8,7 @@ import { getEvent } from "@/lib/events/service";
 import { listEventPages } from "@/lib/pages/service";
 import { can } from "@/lib/permissions";
 import { createPageAction } from "./actions";
+import { PageHeader } from "@/components/page-header";
 
 export const metadata: Metadata = { title: "Pages" };
 
@@ -33,11 +34,7 @@ export default async function EventPagesPage({
   return (
     <section className="flex flex-col gap-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
-        <div className="flex flex-col gap-1">
-          <h1 className="text-2xl font-semibold tracking-tight">
-            Pages
-          </h1>
-        </div>
+        <PageHeader title={<>Pages</>} />
         <form action={createPageAction}>
           <input type="hidden" name="eventId" value={id} />
           <Button type="submit" className="gap-1.5">

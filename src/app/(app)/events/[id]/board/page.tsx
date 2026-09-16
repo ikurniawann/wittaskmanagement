@@ -14,6 +14,7 @@ import {
   listMembersForDivisions,
 } from "@/lib/tasks/service";
 import { cn } from "@/lib/utils";
+import { PageHeader } from "@/components/page-header";
 
 export const metadata: Metadata = { title: "Board" };
 
@@ -70,11 +71,7 @@ export default async function BoardPage({
   return (
     <section className="flex flex-col gap-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <div className="flex flex-col gap-1">
-          <h1 className="text-2xl font-semibold tracking-tight">
-            {allMode ? "All departments board" : `${division!.name} board`}
-          </h1>
-        </div>
+        <PageHeader title={<>{allMode ? "All departments board" : `${division!.name} board`}</>} />
         {createOptions.length > 0 ? (
           <NewTaskDialog
             canRestrictIn={createOptions

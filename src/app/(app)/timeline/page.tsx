@@ -17,6 +17,7 @@ import {
 } from "@/lib/timeline/service";
 import { cn } from "@/lib/utils";
 import { ThreadView } from "./thread-view";
+import { PageHeader } from "@/components/page-header";
 
 export const metadata: Metadata = { title: "Timeline" };
 
@@ -82,12 +83,7 @@ export default async function TimelinePage({
 
   return (
     <section className="mx-auto flex w-full max-w-2xl flex-col gap-6">
-      <div className="flex flex-col gap-1">
-        <h1 className="text-3xl font-semibold tracking-tight">
-          Timeline
-        </h1>
-        <p className="text-sm text-muted-foreground">What every division is talking about, as it happens.</p>
-      </div>
+      <PageHeader title={<>Timeline</>} description={<>What every division is talking about, as it happens.</>} />
 
       <div className="flex gap-1 border-b">
         {(

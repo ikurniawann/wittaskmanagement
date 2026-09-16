@@ -13,6 +13,7 @@ import { listDivisions } from "@/lib/org/service";
 import { can } from "@/lib/permissions";
 import { NewApprovalForm } from "./new-approval-form";
 import { APPROVAL_STATUS_META, formatIDR, TYPE_LABELS } from "./shared";
+import { PageHeader } from "@/components/page-header";
 
 export const metadata: Metadata = { title: "Approvals" };
 
@@ -41,14 +42,7 @@ export default async function ApprovalsPage() {
   return (
     <section className="flex flex-col gap-10">
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <div className="flex flex-col gap-1">
-          <h1 className="text-3xl font-semibold tracking-tight">
-            Approvals
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Requests waiting for a decision, and where yours stand.
-          </p>
-        </div>
+        <PageHeader title={<>Approvals</>} description={<>Requests waiting for a decision, and where yours stand.</>} />
         {myDivisions.length > 0 ? (
           <NewApprovalForm
             divisions={myDivisions.map((d) => ({ id: d.id, name: d.name }))}

@@ -25,6 +25,7 @@ import {
 import { listMyTasks } from "@/lib/tasks/service";
 import { WorkDrilldown } from "./work-drilldown";
 import { cn } from "@/lib/utils";
+import { PageHeader } from "@/components/page-header";
 
 export const metadata: Metadata = { title: "My Tasks" };
 
@@ -208,9 +209,7 @@ export default async function MyTasksPage({
   return (
     <section className="flex flex-col gap-6">
       <div className="flex flex-col gap-4">
-        <h1 className="text-3xl font-semibold tracking-tight">
-          Your work
-        </h1>
+        <PageHeader title={<>Your work</>} />
         <PlayProgress userId={actor.id} compact />
         <nav className="flex gap-1 overflow-x-auto border-b">
           {TABS.map((t) => (

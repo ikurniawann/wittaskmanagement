@@ -11,6 +11,7 @@ import { listActiveEvents } from "@/lib/events/service";
 import { can } from "@/lib/permissions";
 import { AssistantChat } from "./assistant-chat";
 import { HistoryPanel } from "./history-panel";
+import { PageHeader } from "@/components/page-header";
 
 export async function generateMetadata(): Promise<Metadata> {
   const { getBranding } = await import("@/lib/org/branding");
@@ -44,15 +45,8 @@ export default async function AssistantPage({
 
   return (
     <section className="flex min-h-[calc(100svh-8rem)] flex-col gap-4">
-      <div className="flex flex-col gap-1">
-        <h1 className="text-3xl font-semibold tracking-tight">
-          {branding.assistantName}
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          Ask about any project or the whole portfolio — predictions come with
-          reasons, grounded in your live data. Chats are saved to your history.
-        </p>
-      </div>
+      <PageHeader title={<>{branding.assistantName}</>} description={<>Ask about any project or the whole portfolio — predictions come with
+          reasons, grounded in your live data. Chats are saved to your history.</>} />
       <div className="flex flex-1 flex-col gap-8 lg:flex-row">
         <HistoryPanel
           groups={history.groups.map((group) => ({

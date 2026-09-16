@@ -34,6 +34,7 @@ import {
   type TaskStatus,
 } from "@/lib/tasks/service";
 import { ListControls } from "./list-controls";
+import { PageHeader } from "@/components/page-header";
 
 export const metadata: Metadata = { title: "Task list" };
 
@@ -154,11 +155,7 @@ export default async function TaskListPage({
   return (
     <section className="flex flex-col gap-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
-        <div className="flex flex-col gap-1">
-          <h1 className="text-2xl font-semibold tracking-tight">
-            Task list
-          </h1>
-        </div>
+        <PageHeader title={<>Task list</>} />
         <div className="flex items-center gap-2">
           {/* outside the create gate: someone who may only read still
               chooses how they read */}

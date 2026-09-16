@@ -7,6 +7,7 @@ import { DISK_FLOOR_BYTES, formatBytes } from "@/lib/dataroom/quota";
 import { freeDiskBytes } from "@/lib/dataroom/storage";
 import { can } from "@/lib/permissions";
 import { DefaultQuotaForm, StorageTable } from "./storage-table";
+import { PageHeader } from "@/components/page-header";
 
 export const metadata: Metadata = { title: "Storage" };
 
@@ -34,12 +35,9 @@ export default async function StoragePage() {
         >
           ← Admin
         </Link>
-        <h1 className="text-3xl font-semibold tracking-tight">Storage</h1>
-        <p className="max-w-2xl text-sm text-muted-foreground">
-          How much dataroom space each project uses. Lowering a limit never
+        <PageHeader title={<>Storage</>} description={<>How much dataroom space each project uses. Lowering a limit never
           deletes anything — the project simply cannot upload again until it is
-          back under.
-        </p>
+          back under.</>} />
       </div>
 
       <div className="flex flex-wrap items-end justify-between gap-4 rounded-card bg-card shadow-card p-4">

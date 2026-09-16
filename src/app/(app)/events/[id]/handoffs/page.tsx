@@ -9,6 +9,7 @@ import { can } from "@/lib/permissions";
 import { listHandoffs } from "@/lib/tasks/service";
 import { handoffDecideAction } from "../../../tasks/actions";
 import { HandoffRequestForm } from "./request-form";
+import { PageHeader } from "@/components/page-header";
 
 export const metadata: Metadata = { title: "Handoffs" };
 
@@ -40,14 +41,7 @@ export default async function HandoffsPage({
 
   return (
     <section className="flex flex-col gap-8">
-      <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold tracking-tight">
-          Handoffs
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          Request work from another division — no more lost chat messages.
-        </p>
-      </div>
+      <PageHeader title={<>Handoffs</>} description={<>Request work from another division — no more lost chat messages.</>} />
 
       {myFromDivisions.length > 0 ? (
         <HandoffRequestForm

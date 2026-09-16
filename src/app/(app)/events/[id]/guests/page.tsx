@@ -8,6 +8,7 @@ import {
 } from "@/lib/external/service";
 import { can } from "@/lib/permissions";
 import { InviteForm, InviteList, SubmissionReviewList } from "./guests-ui";
+import { PageHeader } from "@/components/page-header";
 
 export const metadata: Metadata = { title: "Guests" };
 
@@ -35,15 +36,8 @@ export default async function GuestsPage({
 
   return (
     <section className="flex flex-col gap-10">
-      <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold tracking-tight">
-          External guests
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          Vendors, artist management, and partners — scoped to one division,
-          magic-link access, every submission reviewed.
-        </p>
-      </div>
+      <PageHeader title={<>External guests</>} description={<>Vendors, artist management, and partners — scoped to one division,
+          magic-link access, every submission reviewed.</>} />
 
       {invitableDivisions.length > 0 ? (
         <InviteForm

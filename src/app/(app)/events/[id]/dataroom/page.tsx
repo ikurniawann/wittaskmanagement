@@ -13,6 +13,7 @@ import { listDivisions, listUsersWithMemberships } from "@/lib/org/service";
 import { can } from "@/lib/permissions";
 import { DataroomBrowser } from "./dataroom-browser";
 import { SealedMembers } from "./sealed-members";
+import { PageHeader } from "@/components/page-header";
 
 export const metadata: Metadata = { title: "Dataroom" };
 
@@ -53,12 +54,7 @@ export default async function DataroomPage({
   return (
     <section className="flex flex-col gap-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
-        <div className="flex flex-col gap-1">
-          <h1 className="text-2xl font-semibold tracking-tight">Dataroom</h1>
-          <p className="text-sm text-muted-foreground">
-            Documents for this project. Every open and download is recorded.
-          </p>
-        </div>
+        <PageHeader title={<>Dataroom</>} description={<>Documents for this project. Every open and download is recorded.</>} />
         <div className="flex items-center gap-4">
         <Link
           href={`/events/${eventId}/dataroom/activity`}

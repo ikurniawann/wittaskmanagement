@@ -7,6 +7,7 @@ import { AvatarUploader } from "./avatar-uploader";
 import { sessionActor } from "@/lib/auth/session-actor";
 import { PlayProgress } from "@/components/play-progress";
 import { ProfileForm } from "./profile-form";
+import { PageHeader } from "@/components/page-header";
 
 export const metadata: Metadata = { title: "Profile" };
 
@@ -41,15 +42,10 @@ export default async function ProfilePage() {
       <PlayProgress userId={actor.id} />
       <div className="flex items-center gap-4">
         <AvatarUploader name={me.name} avatarPath={me.avatarPath} />
-        <div className="flex flex-col gap-0.5">
-          <h1 className="text-3xl font-semibold tracking-tight">{me.name}</h1>
-          <p className="text-sm text-muted-foreground">
-            {me.role}
+        <PageHeader title={<>{me.name}</>} description={<>{me.role}
             {memberships.length > 0
               ? ` · ${memberships.map((m) => `${m.name}${m.role === "head" ? " (head)" : ""}`).join(", ")}`
-              : ""}
-          </p>
-        </div>
+              : ""}</>} />
       </div>
 
       <ProfileForm

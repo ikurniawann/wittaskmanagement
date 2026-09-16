@@ -17,6 +17,7 @@ import {
   wibDayKey,
 } from "@/lib/tickets/service";
 import { cn } from "@/lib/utils";
+import { PageHeader } from "@/components/page-header";
 
 export const metadata: Metadata = { title: "Ticket sales" };
 
@@ -234,9 +235,7 @@ export default async function TicketsPage({
   return (
     <section className="flex flex-col gap-8">
       <div className="flex flex-col gap-3">
-        <h1 className="text-2xl font-semibold tracking-tight">
-          Ticket sales
-        </h1>
+        <PageHeader title={<>Ticket sales</>} />
         {/* Tessera | Megatix | Manual — a tab per channel so neither
             platform's figures are ever read as the whole show */}
         <div className="flex w-fit rounded-md border p-0.5 text-sm">

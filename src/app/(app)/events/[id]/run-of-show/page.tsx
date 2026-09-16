@@ -5,6 +5,7 @@ import { getEvent } from "@/lib/events/service";
 import { can } from "@/lib/permissions";
 import { listRunOfShow } from "@/lib/run-of-show/service";
 import { RosEditor, PrintButton } from "./ros-ui";
+import { PageHeader } from "@/components/page-header";
 
 export const metadata: Metadata = { title: "Run sheet" };
 
@@ -32,9 +33,7 @@ export default async function RunOfShowPage({
     <section className="flex flex-col gap-6 print:gap-3">
       <div className="flex flex-wrap items-end justify-between gap-4 print:hidden">
         <div className="flex flex-col gap-1">
-          <h1 className="text-2xl font-semibold tracking-tight">
-            Run of show
-          </h1>
+          <PageHeader title={<>Run of show</>} />
           {!canManage ? (
             <p className="text-xs text-muted-foreground">
               Read-only — the rundown is maintained by Production & Operations.

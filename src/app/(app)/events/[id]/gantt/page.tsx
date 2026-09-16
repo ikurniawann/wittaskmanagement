@@ -12,6 +12,7 @@ import {
   listEventTasks,
 } from "@/lib/tasks/service";
 import { cn } from "@/lib/utils";
+import { PageHeader } from "@/components/page-header";
 
 export const metadata: Metadata = { title: "Gantt" };
 
@@ -151,10 +152,7 @@ export default async function EventGanttPage({
     <section className="flex flex-col gap-6">
       <div className="flex flex-col gap-1">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h1 className="text-2xl font-semibold tracking-tight">
-            Schedule
-          </h1>
-          <ScheduleViewToggle eventId={id} active="gantt" />
+          <PageHeader title={<>Schedule</>}><ScheduleViewToggle eventId={id} active="gantt" /></PageHeader>
         </div>
       </div>
 

@@ -11,6 +11,7 @@ import { profiles } from "@/db/schema";
 import { sessionActor } from "@/lib/auth/session-actor";
 import { can } from "@/lib/permissions";
 import { PreferencesForm } from "./preferences-form";
+import { PageHeader } from "@/components/page-header";
 
 export const metadata: Metadata = { title: "Settings" };
 
@@ -81,15 +82,8 @@ export default async function SettingsPage({
 
   return (
     <section className="flex flex-col gap-8">
-      <div className="flex flex-col gap-1">
-        <h1 className="text-3xl font-semibold tracking-tight">
-          Settings
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          Notifications and digests — your name and password live in your{" "}
-          <a href="/profile" className="underline underline-offset-4">profile</a>.
-        </p>
-      </div>
+      <PageHeader title={<>Settings</>} description={<>Notifications and digests — your name and password live in your{" "}
+          <a href="/profile" className="underline underline-offset-4">profile</a>.</>} />
 
       {canManageOrg ? (
         <div className="flex w-fit rounded-md border p-0.5 text-sm">
