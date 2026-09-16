@@ -1,8 +1,9 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { useSyncExternalStore, type ReactNode } from "react";
+import { useState, useSyncExternalStore, type ReactNode } from "react";
 import { getPlayActive, subscribePlayActive } from "@/lib/play/active-store";
+import { HeaderSlotContext } from "@/lib/ui/header-slot";
 import { cn } from "@/lib/utils";
 
 // Route-aware shell frame. The WIT UI style canvas (2026-09-16): a soft grey
@@ -26,16 +27,23 @@ export function isFullscreenRoute(pathname: string): boolean {
 
 export function AppFrame({
   sidebar,
-  header,
+  headerLeft,
+  headerRight,
   bottomBar,
   children,
 }: {
   sidebar: ReactNode;
-  header: ReactNode;
+  /** drawer button + phone logo */
+  headerLeft: ReactNode;
+  /** primary action, bell, phone search */
+  headerRight: ReactNode;
   bottomBar: ReactNode;
   children: ReactNode;
 }) {
   const pathname = usePathname();
+  // the page title portals in here (PageHeader) so the header row is never
+  // an empty strip above the page
+  const [slot, setSlot] = useState<HTMLElement | null>(null);
   // while the Play canvas is mounted (even under the task peek modal) the frame
   // keeps the canvas layout — see src/lib/play/active-store.ts
   const playActive = useSyncExternalStore(subscribePlayActive, getPlayActive, () => false);
@@ -43,6 +51,7 @@ export function AppFrame({
   const bare = isBareRoute(pathname) || playActive;
 
   return (
+    <HeaderSlotContext.Provider value={slot}>
     <div className="relative flex h-dvh gap-3 overflow-hidden bg-surface p-3 lg:gap-4 lg:p-4 print:h-auto print:overflow-visible print:bg-white print:p-0">
       <div
         aria-hidden
@@ -50,7 +59,11 @@ export function AppFrame({
       />
       {fullscreen ? null : <div className="hidden shrink-0 md:block print:hidden">{sidebar}</div>}
       <div className="relative flex min-w-0 flex-1 flex-col gap-3">
-        {header}
+        <header className="flex min-h-14 shrink-0 items-center gap-2 sm:gap-3 print:hidden">
+          {headerLeft}
+          <div ref={setSlot} className="hidden min-w-0 flex-1 md:block" />
+          <div className="ml-auto flex shrink-0 items-center gap-2 sm:gap-3">{headerRight}</div>
+        </header>
         <main
           className={cn(
             "min-h-0 w-full flex-1",
@@ -74,5 +87,6 @@ export function AppFrame({
       </div>
       {bare ? null : bottomBar}
     </div>
+    </HeaderSlotContext.Provider>
   );
 }

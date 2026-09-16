@@ -7,6 +7,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { sessionActor } from "@/lib/auth/session-actor";
 import { CalendarRange } from "lucide-react";
 import { EmptyState } from "@/components/empty-state";
+import { PageHeader } from "@/components/page-header";
 import { listActiveEvents, listArchivedEvents } from "@/lib/events/service";
 import { can } from "@/lib/permissions";
 import { eventColorClass } from "@/lib/events/colors";
@@ -38,59 +39,43 @@ export default async function EventsPage({
   const canArchive = can(actor, "event.archive");
 
   return (
-    <section className="flex flex-col gap-8">
-      {/* wraps on a phone: title, the Active/Archived toggle and the New button
-          are three things that do not share 360px */}
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div className="flex flex-col gap-1">
-          <h1 className="text-3xl font-semibold tracking-tight">
-            Projects
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            {showArchived
-              ? "Put away, and hidden from every other list until brought back."
-              : "Every active project — open one to reach its board, budget, and team."}
-          </p>
+    <section className="flex flex-col gap-4">
+      <PageHeader
+        title="Projects"
+        description={
+          showArchived
+            ? "Put away, and hidden from every other list until brought back."
+            : "Every active project — open one to reach its board, calendar and dataroom."
+        }
+      >
+        {/* a filter rather than a sidebar entry: an archived project is still
+            a project, and this is opened a few times a year */}
+        <div className="flex rounded-full bg-card p-1 text-xs shadow-card">
+          <Link
+            href="/events"
+            className={cn(
+              "rounded-full px-3 py-1.5 font-semibold transition-colors",
+              showArchived ? "text-muted-foreground hover:text-foreground" : "bg-ink text-on-ink",
+            )}
+          >
+            Active
+          </Link>
+          <Link
+            href="/events?view=archived"
+            className={cn(
+              "flex items-center gap-1.5 rounded-full px-3 py-1.5 font-semibold transition-colors",
+              showArchived ? "bg-ink text-on-ink" : "text-muted-foreground hover:text-foreground",
+            )}
+          >
+            Archived
+            {archivedCount > 0 ? (
+              <span className={cn("rounded-full px-1.5 text-[10px]", showArchived ? "bg-white/20" : "bg-surface")}>
+                {archivedCount}
+              </span>
+            ) : null}
+          </Link>
         </div>
-        <div className="flex items-center gap-3">
-          {/* a filter rather than a sidebar entry: an archived project is still
-              a project, and this is opened a few times a year */}
-          <div className="flex rounded-md border p-0.5 text-xs">
-            <Link
-              href="/events"
-              className={cn(
-                "rounded px-2.5 py-1 transition-colors",
-                showArchived
-                  ? "text-muted-foreground hover:text-foreground"
-                  : "bg-surface-2 font-medium",
-              )}
-            >
-              Active
-            </Link>
-            <Link
-              href="/events?view=archived"
-              className={cn(
-                "flex items-center gap-1.5 rounded px-2.5 py-1 transition-colors",
-                showArchived
-                  ? "bg-surface-2 font-medium"
-                  : "text-muted-foreground hover:text-foreground",
-              )}
-            >
-              Archived
-              {archivedCount > 0 ? (
-                <span className="rounded-full bg-muted-foreground/20 px-1.5 text-[10px]">
-                  {archivedCount}
-                </span>
-              ) : null}
-            </Link>
-          </div>
-          {canCreate && !showArchived ? (
-            <Link href="/events/new" className={buttonVariants()}>
-              New project ↗
-            </Link>
-          ) : null}
-        </div>
-      </div>
+      </PageHeader>
 
       {events.length === 0 ? (
         <EmptyState

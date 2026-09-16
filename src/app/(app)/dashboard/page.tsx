@@ -17,6 +17,7 @@ import { Countdown } from "@/components/countdown";
 import { DependencyBadge } from "@/components/dependency-badge";
 import { EventChip } from "@/components/event-chip";
 import { HealthBadge } from "@/components/health-badge";
+import { PageHeader } from "@/components/page-header";
 import { CardTitleRow, SplitStats, StatCard } from "@/components/stat-card";
 import { PriorityIcon } from "@/components/task-meta";
 import { buttonVariants } from "@/components/ui/button";
@@ -83,19 +84,11 @@ export default async function DashboardPage() {
 
   return (
     <section className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">
-            Dashboard<span className="text-accent">.</span>
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            The whole portfolio at a glance — approvals, milestones, bottlenecks.
-          </p>
-        </div>
-        <p className="hidden text-xs text-muted-foreground md:block">
-          {dtDate.format(new Date())} · WIB
-        </p>
-      </div>
+      <PageHeader
+        title="Dashboard"
+        description="The whole portfolio at a glance — approvals, milestones, bottlenecks."
+        meta={`${dtDate.format(new Date())} · WIB`}
+      />
 
       {/* hero grid */}
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1.5fr_1fr]">

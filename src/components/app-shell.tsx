@@ -171,8 +171,8 @@ export async function AppShell({ children }: { children: ReactNode }) {
     />
   );
 
-  const header = (
-    <header className="flex h-14 shrink-0 items-center gap-2 sm:gap-3 print:hidden">
+  const headerLeft = (
+    <>
       {/* the drawer button shows on phones, and on desktop for fullscreen routes */}
       {drawer("header")}
       {/* phone header sits on the light canvas: dark logo in light mode, white
@@ -183,34 +183,31 @@ export async function AppShell({ children }: { children: ReactNode }) {
         {/* eslint-disable-next-line @next/next/no-img-element -- static asset */}
         <img src="/logowit.png" alt="" aria-hidden className="hidden h-5 w-auto dark:block" />
       </span>
-      {session?.user ? (
-        <>
-          {/* phones have no rail, so the search rides the header there; the
-              rail's instance owns ⌘K on larger screens */}
-          <div className="ml-auto md:hidden">
-            <CommandPalette variant="icon" hotkey={false} />
-          </div>
-          <span className="ml-auto hidden md:block" />
-          {createHref ? (
-            <Link
-              href={createHref}
-              className={cn(buttonVariants({ variant: "primary" }), "hidden sm:inline-flex")}
-            >
-              <Plus /> {createLabel}
-            </Link>
-          ) : null}
-          <NotificationsBell />
-        </>
-      ) : null}
-    </header>
+    </>
   );
+
+  const headerRight = session?.user ? (
+    <>
+      {/* phones have no rail, so the search rides the header there; the
+          rail's instance owns ⌘K on larger screens */}
+      <div className="md:hidden">
+        <CommandPalette variant="icon" hotkey={false} />
+      </div>
+      {createHref ? (
+        <Link href={createHref} className={cn(buttonVariants({ variant: "primary" }), "hidden sm:inline-flex")}>
+          <Plus /> {createLabel}
+        </Link>
+      ) : null}
+      <NotificationsBell />
+    </>
+  ) : null;
 
   // phone bar: the four most-used destinations; everything else is in the drawer
   const barItems = items.filter((i) => ["/my-tasks", "/events", "/timeline", "/dashboard"].includes(i.href));
   const bottomBar = <BottomBar items={barItems} createHref={createHref} createLabel={createLabel} />;
 
   return (
-    <AppFrame sidebar={sidebar} header={header} bottomBar={bottomBar}>
+    <AppFrame sidebar={sidebar} headerLeft={headerLeft} headerRight={headerRight} bottomBar={bottomBar}>
       {children}
     </AppFrame>
   );
