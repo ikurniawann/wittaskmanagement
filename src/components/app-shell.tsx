@@ -175,8 +175,14 @@ export async function AppShell({ children }: { children: ReactNode }) {
     <header className="flex h-14 shrink-0 items-center gap-2 sm:gap-3 print:hidden">
       {/* the drawer button shows on phones, and on desktop for fullscreen routes */}
       {drawer("header")}
-      {/* eslint-disable-next-line @next/next/no-img-element -- static asset */}
-      <img src="/logowit.png" alt={`${branding.orgShortName} ${branding.productName}`} className="h-5 w-auto md:hidden" />
+      {/* phone header sits on the light canvas: dark logo in light mode, white
+          in dark mode (Owner 2026-09-17); the rail and drawer stay white-on-ink */}
+      <span className="flex items-center md:hidden">
+        {/* eslint-disable-next-line @next/next/no-img-element -- static asset */}
+        <img src="/logowitdark.png" alt={`${branding.orgShortName} ${branding.productName}`} className="h-5 w-auto dark:hidden" />
+        {/* eslint-disable-next-line @next/next/no-img-element -- static asset */}
+        <img src="/logowit.png" alt="" aria-hidden className="hidden h-5 w-auto dark:block" />
+      </span>
       {session?.user ? (
         <>
           {/* phones have no rail, so the search rides the header there; the
