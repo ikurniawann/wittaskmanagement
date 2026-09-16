@@ -43,7 +43,7 @@ export function MobileNav({
             <button
               type="button"
               aria-label="Menu"
-              className="flex size-11 items-center justify-center rounded-2xl text-on-ink-muted transition-colors hover:bg-white/10 hover:text-white"
+              className="flex size-11 items-center justify-center rounded-[12px] text-on-ink-muted transition-colors hover:bg-white/10 hover:text-white"
             >
               <Menu className="size-5" />
             </button>
@@ -64,7 +64,7 @@ export function MobileNav({
       <SheetContent
         side="left"
         showCloseButton={false}
-        className="w-72 rounded-r-[28px] border-0 bg-ink p-0 text-on-ink"
+        className="w-72 rounded-r-[18px] border-0 bg-ink p-0 text-on-ink"
       >
         <div className="flex h-14 shrink-0 items-center justify-between px-4">
           <SheetTitle className="text-sm font-bold tracking-tight text-white">
@@ -76,7 +76,7 @@ export function MobileNav({
             type="button"
             aria-label="Close menu"
             onClick={close}
-            className="flex size-9 items-center justify-center rounded-xl text-on-ink-muted hover:bg-white/10 hover:text-white"
+            className="flex size-9 items-center justify-center rounded-[10px] text-on-ink-muted hover:bg-white/10 hover:text-white"
           >
             <X className="size-4" />
           </button>

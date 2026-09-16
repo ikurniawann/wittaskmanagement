@@ -70,8 +70,8 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
-  --radius-card: 1.5rem;
-  --radius-hero: 1.75rem;
+  --radius-card: 1rem;
+  --radius-hero: 1.25rem;
   /* elevation ladder of the WIT UI style (2026-09-16): cards float on the
      canvas, nothing carries a border except inputs and table rows */
   --shadow-card: 0 1px 2px rgb(16 17 18 / 0.03), 0 8px 24px -12px rgb(16 17 18 / 0.12);
@@ -150,9 +150,9 @@
   --chart-3: #c0c0c0;
   --chart-4: #e5262e;
   --chart-5: #2f6fed;
-  /* 16px base: rounded-md ≈ 13px (rows, chips inside cards), rounded-lg 16px
-     (inputs, nested panels), rounded-xl 22px; cards use rounded-card (24). */
-  --radius: 1rem;
+  /* 12px base (Owner 2026-09-17, "too rounded"): rounded-md ≈ 10px, rounded-lg
+     12px (inputs, rows), rounded-xl 17px; cards use rounded-card (16px). */
+  --radius: 0.75rem;
   --shadow-elev: var(--shadow-card);
   --shadow-elev-hover: 0 2px 4px rgb(16 17 18 / 0.05), 0 14px 32px -12px rgb(16 17 18 / 0.2);
   /* functional colors — status + priority coding on dots, icons and chips */

@@ -159,7 +159,7 @@ export function CommandPalette({
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="flex h-11 w-full items-center gap-2.5 rounded-full bg-card px-4 text-sm text-muted-foreground shadow-card transition-colors hover:text-foreground"
+          className="flex h-11 w-full items-center gap-2.5 rounded-[12px] bg-card px-4 text-sm text-muted-foreground shadow-card transition-colors hover:text-foreground"
           aria-label="Search (Ctrl+K)"
         >
           <Search className="size-4 shrink-0" />

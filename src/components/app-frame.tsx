@@ -55,7 +55,7 @@ export function AppFrame({
           className={cn(
             "min-h-0 w-full flex-1",
             bare
-              ? "flex flex-col overflow-hidden rounded-[28px]"
+              ? "flex flex-col overflow-hidden rounded-[18px]"
               : "overflow-y-auto overscroll-contain pb-24 pr-0.5 md:pb-2 print:overflow-visible",
           )}
         >

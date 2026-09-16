@@ -69,7 +69,7 @@ export function RailItem({
       data-active={active}
       onClick={onNavigate}
       className={cn(
-        "relative flex shrink-0 items-center rounded-2xl text-on-ink-muted transition-colors hover:bg-white/10 hover:text-white data-[active=true]:bg-accent data-[active=true]:text-white data-[active=true]:shadow-glow [&_svg]:size-5",
+        "relative flex shrink-0 items-center rounded-[12px] text-on-ink-muted transition-colors hover:bg-white/10 hover:text-white data-[active=true]:bg-accent data-[active=true]:text-white data-[active=true]:shadow-glow [&_svg]:size-5",
         expanded ? "h-11 w-full gap-3 px-3" : "size-11 justify-center",
       )}
     >
@@ -107,7 +107,7 @@ export function RailProjectLink({
     <div className="flex flex-col">
       <div
         className={cn(
-          "flex items-center rounded-2xl pr-1 transition-colors",
+          "flex items-center rounded-[12px] pr-1 transition-colors",
           active ? "bg-white/10 text-white" : "text-on-ink-muted hover:bg-white/10 hover:text-white",
         )}
       >
@@ -151,7 +151,7 @@ export function RailProjectLink({
                 href={subHref}
                 onClick={onNavigate}
                 className={cn(
-                  "truncate rounded-xl px-2.5 py-1.5 text-[11px] font-semibold uppercase tracking-wider transition-colors",
+                  "truncate rounded-[10px] px-2.5 py-1.5 text-[11px] font-semibold uppercase tracking-wider transition-colors",
                   subActive ? "bg-white/10 text-white" : "text-on-ink-muted hover:text-white",
                 )}
               >
@@ -222,7 +222,7 @@ export function RailWorkspace({
         onClick={() => setOpen((v) => !v)}
         title={expanded ? undefined : name}
         className={cn(
-          "flex items-center rounded-2xl border border-white/10 bg-ink-2 text-left transition-colors hover:bg-ink-3",
+          "flex items-center rounded-[12px] border border-white/10 bg-ink-2 text-left transition-colors hover:bg-ink-3",
           expanded ? "w-full gap-3 p-2.5" : "size-11 justify-center border-transparent bg-transparent",
         )}
       >
@@ -246,7 +246,7 @@ export function RailWorkspace({
             if ((e.target as HTMLElement).closest("a,button")) setOpen(false);
           }}
           className={cn(
-            "absolute z-50 w-56 rounded-2xl border border-white/10 bg-ink-2 p-1.5 text-on-ink shadow-float animate-in fade-in-0 zoom-in-95",
+            "absolute z-50 w-56 rounded-[14px] border border-white/10 bg-ink-2 p-1.5 text-on-ink shadow-float animate-in fade-in-0 zoom-in-95",
             // expanded: above the card; collapsed: beside the rail, so a 224px
             // menu never hangs off the left edge of the screen
             expanded ? "bottom-full left-0 mb-2" : "bottom-0 left-full ml-3",
@@ -261,7 +261,7 @@ export function RailWorkspace({
 
 /** A row inside the workspace menu — links and the sign-out form share it. */
 export const railMenuRowClass =
-  "flex h-10 w-full items-center gap-2.5 rounded-xl px-3 text-sm font-medium text-on-ink-muted transition-colors hover:bg-white/10 hover:text-white [&_svg]:size-4";
+  "flex h-10 w-full items-center gap-2.5 rounded-[10px] px-3 text-sm font-medium text-on-ink-muted transition-colors hover:bg-white/10 hover:text-white [&_svg]:size-4";
 
 export function Rail({
   short,
@@ -289,14 +289,14 @@ export function Rail({
   return (
     <aside
       className={cn(
-        "flex h-full flex-col rounded-[28px] bg-ink py-4 text-on-ink shadow-float transition-[width] duration-200",
+        "flex h-full flex-col rounded-[18px] bg-ink py-4 text-on-ink shadow-float transition-[width] duration-200",
         expanded ? "w-60 px-3" : "w-[4.75rem] items-center",
       )}
     >
       <Link
         href="/"
         className={cn(
-          "flex h-11 shrink-0 items-center rounded-2xl bg-white/5",
+          "flex h-11 shrink-0 items-center rounded-[12px] bg-white/5",
           expanded ? "w-full gap-3 px-3" : "size-11 justify-center",
         )}
         title={`${short} ${product}`}
@@ -357,7 +357,7 @@ export function Rail({
         onClick={() => setRailExpanded(!expanded)}
         aria-label={expanded ? "Collapse menu" : "Expand menu"}
         className={cn(
-          "mt-3 flex h-10 shrink-0 items-center justify-center rounded-2xl border border-white/10 text-xs font-semibold text-on-ink-muted transition-colors hover:bg-white/10 hover:text-white",
+          "mt-3 flex h-10 shrink-0 items-center justify-center rounded-[12px] border border-white/10 text-xs font-semibold text-on-ink-muted transition-colors hover:bg-white/10 hover:text-white",
           expanded ? "w-full gap-2" : "size-10",
         )}
       >

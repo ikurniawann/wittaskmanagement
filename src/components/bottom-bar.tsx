@@ -35,7 +35,7 @@ export function BottomBar({
         href={item.href}
         aria-label={item.label}
         data-active={active}
-        className="relative flex size-11 items-center justify-center rounded-2xl text-on-ink-muted transition-colors data-[active=true]:bg-accent data-[active=true]:text-white data-[active=true]:shadow-glow [&_svg]:size-5"
+        className="relative flex size-11 items-center justify-center rounded-[12px] text-on-ink-muted transition-colors data-[active=true]:bg-accent data-[active=true]:text-white data-[active=true]:shadow-glow [&_svg]:size-5"
       >
         <Icon strokeWidth={active ? 2.4 : 2} />
         {item.badge && item.badge > 0 ? (
@@ -51,7 +51,7 @@ export function BottomBar({
     <nav
       aria-label="Primary"
       className={cn(
-        "fixed inset-x-3 z-40 flex h-[68px] items-center justify-between rounded-[22px] bg-ink px-3 text-on-ink shadow-float md:hidden print:hidden",
+        "fixed inset-x-3 z-40 flex h-[68px] items-center justify-between rounded-[18px] bg-ink px-3 text-on-ink shadow-float md:hidden print:hidden",
         "bottom-[max(0.75rem,env(safe-area-inset-bottom))]",
       )}
     >

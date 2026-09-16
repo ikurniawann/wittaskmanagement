@@ -194,19 +194,6 @@ export async function AppShell({ children }: { children: ReactNode }) {
             </Link>
           ) : null}
           <NotificationsBell />
-          <Link
-            href="/profile"
-            title="Your profile"
-            className="flex h-11 shrink-0 items-center gap-2.5 rounded-full bg-card pl-1.5 pr-1.5 shadow-card transition-colors hover:bg-surface-2 xl:pr-3"
-          >
-            <UserAvatar name={session.user.name ?? "?"} src={avatarPath} className="size-8 text-[11px]" />
-            <span className="hidden min-w-0 flex-col leading-tight xl:flex">
-              <span className="max-w-[10rem] truncate text-xs font-semibold">{session.user.name}</span>
-              <span className="max-w-[10rem] truncate text-[10px] text-muted-foreground">
-                {session.user.email}
-              </span>
-            </span>
-          </Link>
         </>
       ) : null}
     </header>
