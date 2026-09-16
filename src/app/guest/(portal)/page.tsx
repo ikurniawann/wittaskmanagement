@@ -91,7 +91,7 @@ export default async function GuestHome() {
               return (
                 <li
                   key={type}
-                  className="flex flex-col gap-2 rounded-lg border bg-card p-4"
+                  className="flex flex-col gap-2 rounded-card bg-card shadow-card p-4"
                 >
                   <div className="flex items-start justify-between gap-3">
                     <span className="font-medium">{definition.title}</span>
@@ -129,7 +129,7 @@ export default async function GuestHome() {
           Your tasks
         </h2>
         {tasks.length === 0 ? (
-          <p className="rounded-md border bg-card px-4 py-6 text-sm text-muted-foreground">
+          <p className="rounded-card bg-card shadow-card px-4 py-6 text-sm text-muted-foreground">
             Nothing assigned to you yet.
           </p>
         ) : (
@@ -137,7 +137,7 @@ export default async function GuestHome() {
             {tasks.map((task) => (
               <li
                 key={task.id}
-                className="flex flex-col gap-3 rounded-lg border bg-card p-4"
+                className="flex flex-col gap-3 rounded-card bg-card shadow-card p-4"
               >
                 <div className="flex flex-wrap items-center gap-3">
                   <PriorityIcon priority={task.priority} />

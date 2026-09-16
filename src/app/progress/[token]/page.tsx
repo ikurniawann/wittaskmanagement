@@ -60,7 +60,7 @@ const STATUS_LABEL: Record<string, string> = {
 
 function Stat({ label, value, tone }: { label: string; value: string; tone?: "bad" }) {
   return (
-    <div className="flex flex-col gap-1 rounded-md border bg-card p-4">
+    <div className="flex flex-col gap-1 rounded-card bg-card shadow-card p-4">
       <span className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
         {label}
       </span>
@@ -130,7 +130,7 @@ function ProjectView({ view }: { view: ProjectSummaryView }) {
           <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
             By division
           </h2>
-          <ul className="flex flex-col divide-y rounded-md border bg-card">
+          <ul className="flex flex-col divide-y rounded-card bg-card shadow-card">
             {view.divisions.map((d) => (
               <li key={d.name} className="flex items-center gap-3 px-4 py-2.5 text-sm">
                 <span className="min-w-0 flex-1 truncate">{d.name}</span>
@@ -150,7 +150,7 @@ function ProjectView({ view }: { view: ProjectSummaryView }) {
         <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
           Tasks ({view.tasks.length})
         </h2>
-        <ul className="flex flex-col divide-y rounded-md border bg-card">
+        <ul className="flex flex-col divide-y rounded-card bg-card shadow-card">
           {view.tasks.length === 0 ? (
             <li className="px-4 py-6 text-center text-sm text-muted-foreground">
               No tasks yet.
@@ -163,7 +163,7 @@ function ProjectView({ view }: { view: ProjectSummaryView }) {
               <details className="group">
                 <summary
                   className={cn(
-                    "flex cursor-pointer list-none items-center gap-3 px-4 py-2.5 text-sm transition-colors hover:bg-accent/40",
+                    "flex cursor-pointer list-none items-center gap-3 px-4 py-2.5 text-sm transition-colors hover:bg-surface-2",
                     t.subtasks.length === 0 && "cursor-default",
                   )}
                 >
@@ -283,7 +283,7 @@ function TaskView({
       </div>
 
       {view.description.trim() ? (
-        <p className="whitespace-pre-wrap rounded-md border bg-card p-4 text-sm">
+        <p className="whitespace-pre-wrap rounded-card bg-card shadow-card p-4 text-sm">
           {view.description}
         </p>
       ) : null}
@@ -293,7 +293,7 @@ function TaskView({
           <h2 className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
             <ListChecks className="size-3.5" /> Checklist {checklist.done}/{checklist.total}
           </h2>
-          <ul className="flex flex-col divide-y rounded-md border bg-card">
+          <ul className="flex flex-col divide-y rounded-card bg-card shadow-card">
             {checklist.items.map((item, i) => (
               <li key={`${item.title}-${i}`} className="flex items-center gap-3 px-4 py-2.5 text-sm">
                 {item.done ? (

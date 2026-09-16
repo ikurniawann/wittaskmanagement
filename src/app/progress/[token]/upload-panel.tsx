@@ -52,7 +52,7 @@ export function UploadPanel({
   };
 
   return (
-    <div className="flex w-full flex-col gap-3 rounded-md border bg-card p-4">
+    <div className="flex w-full flex-col gap-3 rounded-card bg-card shadow-card p-4">
       <h2 className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
         <Upload className="size-3.5" /> Upload Progress Files
       </h2>

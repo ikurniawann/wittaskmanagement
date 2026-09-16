@@ -25,7 +25,7 @@ export default async function GuestLayout({
     return (
       <div className="flex min-h-svh flex-col items-center justify-center gap-6 px-4">
         <Logo short={branding.orgShortName} product={branding.productName} className="text-sm" />
-        <div className="flex max-w-sm flex-col gap-3 rounded-lg border bg-card p-5">
+        <div className="flex max-w-sm flex-col gap-3 rounded-card bg-card shadow-card p-5">
           <h1 className="text-lg font-semibold">Access ended</h1>
           <p className="text-sm text-muted-foreground">
             Your invite has expired or been revoked. Contact your liaison

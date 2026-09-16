@@ -85,7 +85,7 @@ async function FolderView({
         </nav>
       ) : null}
 
-      <ul className="flex flex-col divide-y rounded-md border bg-card">
+      <ul className="flex flex-col divide-y rounded-card bg-card shadow-card">
         {empty ? (
           <li className="px-4 py-6 text-center text-sm text-muted-foreground">
             This folder is empty.
@@ -96,7 +96,7 @@ async function FolderView({
           <li key={folder.id}>
             <Link
               href={`/share/${token}?path=${folder.id}`}
-              className="flex items-center gap-2.5 px-4 py-2.5 text-sm transition-colors hover:bg-accent/40"
+              className="flex items-center gap-2.5 px-4 py-2.5 text-sm transition-colors hover:bg-surface-2"
             >
               <Folder className="size-4 shrink-0 text-folder" />
               <span className="min-w-0 flex-1 truncate font-medium">{folder.name}</span>
@@ -123,7 +123,7 @@ async function FolderView({
               <a
                 href={`/api/share/${token}?file=${file.id}&download=1`}
                 aria-label={`Download ${file.name}`}
-                className="shrink-0 rounded-md p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                className="shrink-0 rounded-md p-1 text-muted-foreground transition-colors hover:bg-surface-2 hover:text-foreground"
               >
                 <Download className="size-4" />
               </a>
@@ -197,13 +197,13 @@ export default async function SharePage({
           <iframe
             src={`/api/share/${token}`}
             title={resolution.share.fileName}
-            className="h-[70svh] w-full rounded-md border bg-card"
+            className="h-[70svh] w-full rounded-card bg-card shadow-card"
           />
           <div className="flex flex-wrap items-center justify-between gap-2">
             {resolution.share.allowDownload ? (
               <a
                 href={`/api/share/${token}?download=1`}
-                className="flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-sm transition-colors hover:bg-accent/40"
+                className="flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-sm transition-colors hover:bg-surface-2"
               >
                 <Download className="size-4" /> Download
               </a>

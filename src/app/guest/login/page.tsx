@@ -46,7 +46,7 @@ export default async function GuestLoginPage({
       <div className="flex w-full max-w-sm flex-col gap-8">
         <Logo short={branding.orgShortName} product={branding.productName} className="text-sm" />
         {failed ? (
-          <div className="flex flex-col gap-2 rounded-lg border bg-card p-5">
+          <div className="flex flex-col gap-2 rounded-card bg-card shadow-card p-5">
             <h1 className="text-lg font-semibold">Link tidak valid</h1>
             <p className="text-sm text-muted-foreground">
               This invite link is invalid, expired, or has been revoked. Ask
@@ -54,7 +54,7 @@ export default async function GuestLoginPage({
             </p>
           </div>
         ) : token ? (
-          <form action={continueAction} className="flex flex-col gap-4 rounded-lg border bg-card p-5">
+          <form action={continueAction} className="flex flex-col gap-4 rounded-card bg-card shadow-card p-5">
             <input type="hidden" name="token" value={token} />
             <h1 className="text-lg font-semibold">Welcome</h1>
             <p className="text-sm text-muted-foreground">
@@ -64,7 +64,7 @@ export default async function GuestLoginPage({
             <Button type="submit">Enter the portal ↗</Button>
           </form>
         ) : (
-          <div className="flex flex-col gap-2 rounded-lg border bg-card p-5">
+          <div className="flex flex-col gap-2 rounded-card bg-card shadow-card p-5">
             <h1 className="text-lg font-semibold">Missing invite link</h1>
             <p className="text-sm text-muted-foreground">
               Open the invite link from your email to access the portal.
