@@ -55,7 +55,10 @@ export function EventContextBar({
   const current = pathname.split("/")[3] ?? "";
 
   return (
-    <div className="sticky top-14 z-30 -mx-4 mb-6 flex flex-col border-b bg-background/95 px-4 backdrop-blur sm:-mx-6 sm:px-6">
+    // sticks to the top of <main>'s own scroll box (the shell header is
+    // outside it); the old top-14 offset pushed the bar down over the row
+    // beneath it (Owner 2026-09-21)
+    <div className="sticky top-0 z-30 mb-4 flex flex-col rounded-card bg-card/95 px-5 shadow-card backdrop-blur">
       {/* identity row */}
       <div className="flex items-center gap-3 pt-3">
         <Link
@@ -67,7 +70,7 @@ export function EventContextBar({
             aria-hidden
             className={cn("size-7 shrink-0 rounded-lg", swatch)}
           />
-          <span className="truncate font-heading text-lg font-semibold tracking-tight">
+          <span className="truncate text-lg font-bold tracking-tight">
             {name}
           </span>
         </Link>
@@ -96,7 +99,7 @@ export function EventContextBar({
       </div>
 
       {/* tabs — the same pages the sidebar expands into */}
-      <nav className="-mb-px flex gap-1 overflow-x-auto pt-2">
+      <nav className="flex gap-1 overflow-x-auto pt-2 [scrollbar-width:none]">
         {EVENT_SUBPAGES.map((page) => {
           const active =
             current === page.path ||
@@ -107,9 +110,9 @@ export function EventContextBar({
               key={page.path}
               href={`/events/${eventId}/${page.path}`}
               className={cn(
-                "shrink-0 whitespace-nowrap border-b-2 px-3 pb-2 pt-1 text-[13px] transition-colors",
+                "shrink-0 whitespace-nowrap border-b-2 px-3 pb-2.5 pt-1 text-sm font-semibold transition-colors",
                 active
-                  ? "border-foreground font-medium text-foreground"
+                  ? "border-accent text-foreground"
                   : "border-transparent text-muted-foreground hover:text-foreground",
               )}
             >

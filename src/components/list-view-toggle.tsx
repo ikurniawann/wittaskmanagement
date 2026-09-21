@@ -26,7 +26,7 @@ export function ListViewToggle({
   };
 
   return (
-    <div className="flex rounded-md border p-0.5">
+    <div className="flex rounded-full bg-card p-1 shadow-card">
       {(
         [
           { key: "list", icon: <List className="size-3.5" />, label: "List view" },

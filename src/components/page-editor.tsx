@@ -198,7 +198,7 @@ function Toolbar({ editor }: { editor: Editor }) {
   };
 
   return (
-    <div className="sticky top-14 z-20 -mx-1 flex flex-wrap items-center gap-1 rounded-md border bg-background/95 px-2 py-1.5 backdrop-blur">
+    <div className="sticky top-0 z-20 -mx-1 flex flex-wrap items-center gap-1 rounded-md border bg-background/95 px-2 py-1.5 backdrop-blur">
       <BlockPicker editor={editor} />
       <Divider />
       <ColorPicker editor={editor} />
